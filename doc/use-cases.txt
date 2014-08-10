@@ -1,0 +1,146 @@
+Use cases for TDD/Genofix 
+==================================================
+
+
+Common preconditions (required for all use cases): 
+-------------------------------------------------------
+
+P1. The working environment is Scala-enabled Eclipse IDE
+P2. The program synthesis/improvement framework to be developed ('framework' in short) is implemented as an Eclipse plugin. 
+
+
+Special requirements (common for all use cases) 
+---------------------------------------------------------
+
+R1. If possible, all time-consuming activities (in particular, the synthesis process) should run asynchronously (as background tasks), so that the user can interact with the GUI in the meantime.
+R2. The actions of the framework are not allowed to permanently modify the original user's source code. Such actions may result in modifying/pasting some code in the editor, but the source files should not be saved. It should be possible to undo such pastes. 
+
+
+Use Case 1: Synthesizing simple expression from examples in GP-style
+------------------------------------------------------------
+
+Primary actor: GP practitioner/researcher
+
+Intent: User wants to synthesize a Scala expression that implements a functionality described by a set of examples
+
+Preconditions: 
+1. User has a file (CSV) containing a set of examples given as (input, output) pairs, where input is a vector of numbers, and output is a number
+
+Basic flow (steps):
+2. User creates a Scala class (or object) in Eclipse
+3. User places the caret in the class body
+4. User launches (via menu item or button) the function 'Synthesize from examples'
+5. The 'Select data source' dialog appears
+6. User picks the data source (the abovementioned file in the simplest case; alternatives: database connection?)
+7. The synthesis engine synthesizes (within seconds, say < 10 seconds) one or a few (up to five) candidate member functions that implement the mapping described by examples. The candidate functions get pasted  which look like this: 
+
+def exact0( val x : Double ) = x*x*x + 0.5*x*x + 7
+def exact1( val x : Double ) = x*x*x + x + 2
+
+def approximate0( val x : Double ) = x*x + x + 2
+
+Exact function should be (probably) preferred. 
+
+The function names inform whether the particular function realizes the desired functionality exactly or approximately. If there are more than one input variable, the signature should look like this: 
+
+def exact0( val x0 : Double, val x1 : Double ) = x*x*x + 0.5*x*x + 7
+
+If the CSV file contains variable names in the header, those names should be used in function signature (after transformation to valid Scala identifiers)
+
+8. Additional information on the synthesized function can be provided in comments. For instance, For the approximate functions, the comment should contain the error committed by the function, like this: 
+
+/* Function approximate0
+ * MAD = 3.88e-3  MSE = 8.68e-3  MAX_ERR = 5.68e-2 
+* /
+
+Such comments can optionally contain also information on other aspects of synthesis process and synthesized function, e.g,:
+- the number of expressions. 
+- the name of the data source used for synthesis
+
+9. If the user is not satisfied with the synthesized functions, he can launch the 'Continue synthesis' function, which continues synthesis and provides new candidate solutions (in this case, the 'Select data source' dialog does not appear again)
+
+The options of the synthesis process are stored in a configuration file; these include: 
+- max number of functions to be synthesized (more precisely: to be pasted in the class)
+- max size of the synthesized expressions (in terms)
+- time budget allocated to a single run of the synthesis process
+- the set of instructions/operators to be used for synthesis (e.g. $plus, $minus, ...)
+
+Future extensions: 
+- other datatypes (Int, Numeric, Boolean, String, Seq)
+- allowing multi-type expressions
+
+
+Use Case 2: Correcting an existing Scala expression using examples 
+------------------------------------------------------------------
+
+Primary actor: GP practitioner/researcher
+
+Intent: User wants to 'improve' an existing Scala expression/function using set of examples
+
+Preconditions: 
+1. As 1.1
+2. User has Scala class/object with a function of signature as in 1.7. The class must compile without errors (i.e., it has to be syntactically correct). 
+
+Basic flow (steps):
+3. User places the caret in a function.
+4. User launches the 'Improve' action
+5. As 1.5
+6. As 1.6
+7. The framework transforms the function into internal representation suitable for program manipulation (AST), checks its conformance with the data source, synthesizes new candidate solutions, and presents them to the user as in 1.7. The original (user's) function is not removed from the code (but it can be annotated with a comment as in 1.8. 
+
+Further interaction proceeds as in Use Case 1. 
+
+
+Use Case 3: Optimizing an existing Scala expression for non-functional properties 
+---------------------------------------------------------------------------------
+
+Primary actor: Software engineer, Coder
+
+Intent: User wants to 'improve' an existing correct Scala expression/function for nonfunctional properties
+
+Preconditions: 
+1. As 2.2, and 
+2. The function is assumed to be also semantically correct (i.e., it does what the user wants it to do).
+
+Basic flow (steps):
+3. User places the caret in a function.
+4. User launches the 'Improve X' action, where X is one of the following performance measures: 
+- time efficiency
+- size
+5. The framework generates a set of test cases from the function, and uses them to synthesize candidate functions as in 1.7. This time however, only exact candidate solutions are considered viable (feasible), and the objective for the synthesis process is one of the above performance measures. 
+
+Note: Generating tests in step 5 can be challenging without additional information (there simply may be too many of them). This problem can be alleviated by: 
+- driving test selection by user
+- relying on additional constraints (e.g., require(), ensuring() etc.)
+
+
+Use Case 4: Generating tests to validate an existing Scala expression 
+---------------------------------------------------------------------
+
+Primary actor: Tester
+
+Intent: User needs to detect bugs in an existing Scala expression/function and, to that aim, he wants to generate additional tests from an existing test. 
+
+Preconditions: 
+1. As 2.2, and
+2. The user has at least one test that the function in 2.2 passes. 
+
+Basic flow (steps):
+3. User places the caret in a function.
+4. User launches the 'Test' action
+5. The framework determines (based on the source code) which tests refer to the function. If there is more than one such tests, it asks the user which of them should be used (called 'reference test' in the following). For simplicity, only tests in the same source file are considered. 
+6. The framework synthesizes a few tests based on the reference test. They are presented to the user in a similar manner as in 1.7 and 2.7, i.e., their source code is pasted next to the reference test function, in the same testing object/class. 
+
+
+Use Case 5: Test-driven software development (TDD)
+--------------------------------------------------
+
+TODO 
+
+Use Case 6: Synthesis of expressions from formal specification 
+--------------------------------------------------------------
+(via Design by Contract)
+TODO 
+
+
+
