@@ -1,0 +1,101 @@
+package scevo.evo
+
+import scevo.tools.TRandom
+
+trait SearchAlgorithm[S <: Solution, ES <: EvaluatedSolution]
+  extends ((State[S], Seq[ES]) => Option[(State[S], Seq[ES], ES)])
+
+class SearchAlgorithmWithEval[S <: Solution, ES <: EvaluatedSolution](
+  val searchOperators: Seq[(ES => S, Double)],
+  val evalFunction: S => Option[ES],
+  val selection: Selection[ES], // (Seq[ES], Int, Seq[ES]) => Seq[ES],
+  val rng: TRandom)
+  extends SearchAlgorithm[S, ES] {
+
+  assert(searchOperators.length > 0, "At least one search operator should be declared")
+  assert(searchOperators.map(_._2).sum == 1, "Operators' probabilities should sum up to 1.0")
+  assert(searchOperators.forall(_._2 >= 0), "Operators' probabilities cannot be negative.")
+
+  def apply(current: State[S], previous: Seq[ES] = Seq[ES]()): Option[(State[S], Seq[ES], ES)] = {
+    // Evaluation of an individual may end with None, which signals infeasible solution
+    val evaluated = current.solutions.map(evalFunction(_)).flatten
+    // parallel version: val evaluated = current.solutions.par.map(evalFunction(_, current)).flatten.seq
+    if (evaluated.isEmpty)  // In case no individual passed the evaluation stage
+      // This is really a problem; can occur also at the first step of search. TODO: will need to move search operators to the beginning of this function. 
+      return None
+    else {
+      //println( "To select: " + current.solutions.length )
+      val selected = selection(evaluated, current.solutions.length, previous)
+      //println( "Selected: " + selected.length )
+      val offspring = selected.map( {
+          val r = rng.nextDouble
+          var sum: Double = 0
+          searchOperators.find(e => { sum += e._2; sum >= r }).get._1(_)
+        })
+      val bestInThisGeneration = new BestSelector[ES].apply(evaluated)
+      Some(new State(offspring), evaluated, bestInThisGeneration)
+    }
+  }
+
+  /*
+   * TODO: This other form of apply() is intended to be used with NSGA2. 
+   * Because of that, it has to start with selection stage. 
+   *
+  def apply2(current: State[ES], previous: Seq[ES] = Seq[ES]()): Option[(State[ES], Seq[ES], ES)] = {
+
+      val selected = selection(current.solutions, current.solutions.length, previous)
+
+    // Evaluation of an individual may end with None, which signals infeasible solution
+    var evaluated = Seq[ES]()
+    var i = 0
+    while( evaluated.size < current.solutions.length) {
+      val parent = if( i < selected.length ) selected(i)
+    	else selected( rng.nextInt(selected.length))
+          val r = rng.nextDouble
+          var sum: Double = 0
+          val offspring = searchOperators.find(e => { sum += e._2; sum >= r }).get._1(parent)
+          evaluated = evaluated ++ evalFunction(offspring)  // Note: option!
+    }
+      
+//      offspring.map(evalFunction(_, current)).flatten
+    // parallel version: val evaluated = current.solutions.par.map(evalFunction(_, current)).flatten.seq
+    if (evaluated.isEmpty)  // In case no individual passed the evaluation stage
+      // This is really a problem; can occur also at the first step of search. TODO: will need to move search operators to the beginning of this function. 
+      return None
+    else {
+      println( "To select: " + current.solutions.length )
+
+      val bestInThisGeneration = new BestSelector[ES].apply(evaluated)
+      Some((new State(offspring), evaluated, bestInThisGeneration))
+    }
+  }
+    * 
+    */
+
+}
+
+class BestSelector[ ES <: EvaluatedSolution ] {
+  def apply(set: Seq[ES]): ES = {
+    var best = set(0)
+    set.tail.foreach(e => if (e.betterThan(best).getOrElse(false)) best = e)
+    best
+  }
+}
+
+trait Selection[+ES <: EvaluatedSolution]
+//  extends ((Seq[ES], Int, Seq[ES]) => Seq[ES]) 
+{
+  def apply[ T>: ES <: EvaluatedSolution ] (pool : Seq[T], numToGenerate : Int, previous : Seq[T]) :  Seq[T]  
+}
+
+class TournamentSelection[ES <: EvaluatedSolution](tournSize: Int, rng: TRandom)
+  extends Selection[ES] {
+
+  assert(tournSize >= 2, "Tournament size has to be at least 2")
+
+  override def apply[ T >: ES <: EvaluatedSolution ](pool: Seq[T], numToGenerate: Int, previous: Seq[T] ): Seq[T] =
+    (0 until numToGenerate).map(_ => {
+      val participants = for (i <- 0 until tournSize) yield pool(rng.nextInt(pool.length))
+      new BestSelector[T].apply(participants)
+    })
+}
