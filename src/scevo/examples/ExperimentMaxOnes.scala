@@ -68,6 +68,10 @@ abstract class ExperimentMaxOnes(args: Array[String]) extends Experiment(args) {
 /* Genetic Algorithm
  */
 class ExperimentMaxOnesGA(args: Array[String]) extends ExperimentMaxOnes(args) {
+
+  val tournamentSize = options("tournamentSize").toInt
+  assert(tournamentSize > 1, "Tournament size should be > 1")
+
   override def selection = new TournamentSelection[BitVectorEvaluated](tournamentSize, rng)
 }
 

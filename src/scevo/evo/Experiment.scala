@@ -6,13 +6,11 @@ import java.net.UnknownHostException
 import java.util.Calendar
 import java.lang.management.ManagementFactory
 import java.net.InetAddress
-
+import scevo.tools.OptionParser
 
 abstract class Experiment(args: Array[String]) {
 
-  type OptionMap = Map[String, String]
-
-  val options = nextOption(Map(), args.toList)
+  val options = OptionParser(args.toList)
 
   val seed = options("seed").toInt
   val rng = new Random(seed)
@@ -27,9 +25,6 @@ abstract class Experiment(args: Array[String]) {
 
   val maxTime = options("maxTime").toLong
   assert(maxTime > 0, "MaxTime should be > 0")
-
-  val tournamentSize = options("tournamentSize").toInt
-  assert(tournamentSize > 1, "Tournament size should be > 1")
 
   val operatorProbs = options("operatorProbs").toString.split(",").map(e => e.toDouble).toList
   assert(maxGenerations > 0, "Number of generations should be > 0")
@@ -78,14 +73,5 @@ abstract class Experiment(args: Array[String]) {
     }
   }
 
-  def nextOption(map: OptionMap, list: List[String]): OptionMap = {
-    list match {
-      case Nil => map
-      case option :: value :: tail =>
-        nextOption(map ++ Map(option.slice(2, option.length) -> value), tail)
-      // (slicing to remove the --)
-      case option :: tail => throw new Exception("Unknown option " + option)
-    }
-  }
 }
 
