@@ -1,20 +1,23 @@
 package scevo.evo
 
+import scala.collection.immutable.Seq
 
-class State[S <: Solution]( val solutions : Seq[S] ) {
-  
-    assert( solutions.size > 0, "The set of working solutions in a state cannot be empty" )
-//  def getSolutions : Seq[Solution]
+/* Search state. Not to be confused with the state of the search *algorithm/process*, 
+ */
 
+class State[ES <: EvaluatedSolution[_ <: Evaluation]](val solutions: Seq[ES], val iteration: Int) {
+
+  require(solutions.size > 0, "The set of working solutions in a state cannot be empty")
 }
-
 
 object State {
 
-  def apply[S <: Solution]( popSize : Int, genSolution: => S ) : State[S] = {
-    assert( popSize > 0, "Population cannot be empty" )
+  def apply[ES <: EvaluatedSolution[_ <: Evaluation]](solutions: Seq[ES], iteration: Int = 0) =
+    new State[ES](solutions, iteration)
 
-	new State( for( i <- 0 until popSize) yield genSolution )
+  def apply[ES <: EvaluatedSolution[_ <: Evaluation]](popSize: Int, genSolution: => ES): State[ES] = {
+    require(popSize > 0, "Population cannot be empty")
+    new State(for (i <- 0 until popSize) yield genSolution, 0)
   }
 
 }

@@ -8,7 +8,10 @@ import java.lang.management.ManagementFactory
 import java.net.InetAddress
 import scevo.tools.OptionParser
 
-abstract class Experiment(args: Array[String]) {
+/*
+ * Note that Experiment makes no reference to Solution types; only EvaluatedSolution
+ */
+abstract class Experiment[ES <: EvaluatedSolution[_ <: Evaluation]](args: Array[String]) {
 
   val options = OptionParser(args.toList)
 
@@ -26,7 +29,7 @@ abstract class Experiment(args: Array[String]) {
   val maxTime = options("maxTime").toLong
   assert(maxTime > 0, "MaxTime should be > 0")
 
-  val operatorProbs = options("operatorProbs").toString.split(",").map(e => e.toDouble).toList
+  val operatorProbs = options("operatorProbs").toString.split(",").map(_.toDouble).toList
   assert(maxGenerations > 0, "Number of generations should be > 0")
 
   // Prepare result database and fill it with technical parameters of the experiment
@@ -47,19 +50,23 @@ abstract class Experiment(args: Array[String]) {
 
   rdb.saveWorkingState
 
-  val scMaxTime = new StopConditionMaxTime(maxTime)
-  val scMaxGeneration = new StopConditionMaxGenerations(maxGenerations)
+  val scMaxTime = new MaxTime[ES](maxTime)
+  val scMaxGeneration = new MaxGenerations[ES](maxGenerations)
+  def stoppingConditions : List[StoppingCondition[ES]] = List( scMaxTime, scMaxGeneration )
 
-  protected def run: (Evolution[_, _], State[_], EvaluatedSolution)
+  protected def run: IterativeAlgorithm[ES]
+
+   def postGenerationCallback(state: IterativeAlgorithm[ES]): Unit = 
+        println(f"Generation: ${state.currentState.iteration}  BestSoFar: ${state.bestSoFar.eval}")
 
   def launch: Unit = {
 
     try {
-      val result = run
+      val alg  = run
 
-      rdb.setResult("lastGeneration", result._1.generation)
-      rdb.setResult("bestOfRun.fitness", result._3.fitness.toString)
-      rdb.setResult("bestOfRun.genotype", result._3.toString)
+      rdb.setResult("lastGeneration", alg.currentState.iteration )
+      rdb.setResult("bestOfRun.fitness", alg.bestSoFar.eval )
+      rdb.setResult("bestOfRun.genotype", alg.bestSoFar.toString() )
       rdb.put("status", "completed")
     } catch {
       case e: Exception => {
@@ -74,4 +81,6 @@ abstract class Experiment(args: Array[String]) {
   }
 
 }
+
+
 

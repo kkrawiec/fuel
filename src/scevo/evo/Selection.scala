@@ -1,50 +1,65 @@
 package scevo.evo
 
+import scala.collection.immutable.Seq
+
 import scevo.tools.TRandom
 
-object BestSelector {
-  def apply[ES <: EvaluatedSolution](set: Seq[ES]): ES = {
-    require(set.nonEmpty)
-    var best = set(0)
-    set.tail.foreach(e => if (e.betterThan(best).getOrElse(false)) best = e)
-    best
+/* Selector is intended to operate in two phases: 
+ * 1. When created, it can prepare helper data structures (or perform 'batch selection', as NSGAII does)
+ * 2. Then, single applications of next() should return selected individuals. 
+ * next() should never fail, because an algorithm may need to call it more than numSelected times
+ */
+
+trait Selector[ES <: EvaluatedSolution[E], E <: Evaluation] {
+  def next: ES
+  def numSelected: Int
+}
+
+trait Selection[ES <: EvaluatedSolution[E], E <: Evaluation] {
+  def selector(history: Seq[State[ES]]): Selector[ES,E]
+}
+
+class TournamentSelection[ES <: EvaluatedSolution[E], E <: Evaluation] (val tournSize: Int, rng: TRandom)
+  extends Selection[ES,E] {
+  require(tournSize >= 2, "Tournament size has to be at least 2")
+  override def selector(history: Seq[State[ES]]) = new Selector[ES,E] {
+    private val pool = history.head.solutions
+    override val numSelected = pool.size
+    override def next: ES =
+      BestSelector(for (i <- 0 until tournSize) yield pool(rng.nextInt(pool.size))).asInstanceOf[ES]
   }
 }
 
-trait Selection[+ES <: EvaluatedSolution] {
-  def apply[T >: ES <: EvaluatedSolution](pool: Seq[T], numToGenerate: Int, previous: Seq[T]): Seq[T]
+class MuLambdaSelection[ES <: EvaluatedSolution[E], E <: Evaluation]
+  extends Selection[ES,E] {
+  override def selector(history: Seq[State[ES]]) = new Selector[ES,E] {
+    val pool = if (history.size == 1)
+      history.head.solutions
+    else
+      history.head.solutions ++ history.tail.head.solutions
+    private val selected = pool.sortWith((a, b) => a.eval.betterThan(b.eval))
+    override val numSelected = history.head.solutions.size
+    private var i = -1
+    override def next: ES = {
+      i = (i + 1) % numSelected
+      selected(i)
+    }
+  }
 }
 
-class TournamentSelection[ES <: EvaluatedSolution](tournSize: Int, rng: TRandom)
-  extends Selection[ES] {
-
-  require(tournSize >= 2, "Tournament size has to be at least 2")
-
-  // ignores previous
-  override def apply[T >: ES <: EvaluatedSolution](pool: Seq[T], numToGenerate: Int, previous: Seq[T]): Seq[T] =
-    (0 until numToGenerate).map(_ => {
-      val participants = for (i <- 0 until tournSize) yield pool(rng.nextInt(pool.length))
-      BestSelector.apply(participants)
-    })
+class GreedyBestSelection[ES <: EvaluatedSolution[E], E <: Evaluation] 
+extends Selection[ES,E] {
+  override def selector(history: Seq[State[ES]]) = new Selector[ES,E] {
+    override val numSelected = 1
+    override val next: ES = BestSelector(history.head.solutions).asInstanceOf[ES]
+  }
 }
 
-class GreedyBestSelection[ES <: EvaluatedSolution] extends Selection[ES] {
-
-  override def apply[T >: ES <: EvaluatedSolution](pool: Seq[T], numToGenerate: Int, previous: Seq[T]): Seq[T] = {
-    require(numToGenerate == 1)
-    Seq(BestSelector.apply(pool))
-  } ensuring (_.size == 1)
-}
-
-/* Caveat: this is not an exact implementation of 1+1, because this framework cannot implement backtracking yet 
- * 
- */
-class OnePlusOneSelection[ES <: EvaluatedSolution] extends Selection[ES] {
-
-  override def apply[T >: ES <: EvaluatedSolution](pool: Seq[T], numToGenerate: Int, previous: Seq[T]): Seq[T] = {
-    require(numToGenerate == 1)
-    println(pool.head)
-    if (previous.nonEmpty) println(previous.head)
-    Seq(BestSelector.apply(pool ++ previous))
-  } ensuring (_.size == 1)
+object BestSelector {
+  def apply(set: Seq[EvaluatedSolution[Evaluation]]): EvaluatedSolution[Evaluation] = {
+    require(set.nonEmpty)
+    var best = set.head
+    set.tail.foreach(e => if (e.eval.betterThan(best.eval)) best = e)
+    best
+  }
 }
