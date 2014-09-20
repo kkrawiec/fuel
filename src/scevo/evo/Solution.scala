@@ -53,10 +53,6 @@ class ScalarEvaluationMin(override val v: Double) extends ScalarEvaluation(v) {
 object ScalarEvaluationMin {
   def apply(v: Double) = new ScalarEvaluationMin(v)
 }
-class Semantics[T](val s:Seq[T], override val v: Double) extends ScalarEvaluationMin(v) 
-object Semantics {
-  def apply[T](s : Seq[T], v: Double) = new Semantics(s,v)
-}
 
 
 class MultiobjectiveEvaluation(val v: Seq[ScalarEvaluation]) extends Evaluation {
@@ -89,8 +85,6 @@ object MultiobjectiveEvaluation {
   def apply(v: Seq[ScalarEvaluation]) = new MultiobjectiveEvaluation(v)
 }
 
-class GPSemantics[O](override val v: Double, val s: Seq[O])
-  extends ScalarEvaluationMin(v)
 
 
 

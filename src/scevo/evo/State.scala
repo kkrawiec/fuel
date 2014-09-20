@@ -1,7 +1,5 @@
 package scevo.evo
 
-import scala.collection.immutable.Seq
-
 /* Search state. Not to be confused with the state of the search *algorithm/process*, 
  */
 

@@ -1,6 +1,5 @@
 package scevo.evo
 
-import scala.collection.immutable.Seq
 
 import scevo.tools.TRandom
 
