@@ -101,4 +101,9 @@ object Sandbox {
     }
   }
     * 
-    */
+    *      offspring += (operator match {
+        case op: Function3[ES,ES,ES,S] => op ( parents.next, parents.next, parents.next ) 
+        case op: Function2[ES,ES,S] => op ( parents.next, parents.next ) 
+        case op: Function1[ES,S] => op ( parents.next ) 
+        case _ => throw new Exception("Invalid arity of search operator (>3)")
+ /
