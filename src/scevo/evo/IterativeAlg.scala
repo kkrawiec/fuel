@@ -20,7 +20,7 @@ class Evolution[S <: Solution, ES <: EvaluatedSolution[_ <: Evaluation]](val ini
   private var current: State[ES] = initialState
   override def currentState = current
 
-  private var best = BestSelector(initialState.solutions).asInstanceOf[ES] // Need this :(
+  private var best = BestSelector(initialState.solutions)
   override def bestSoFar = best
 
   var log = List[String]()
@@ -43,10 +43,10 @@ class Evolution[S <: Solution, ES <: EvaluatedSolution[_ <: Evaluation]](val ini
       var nextStep = searchStep(Seq(current))
       current = if (nextStep.isEmpty) {
         log("None of candidate solutions passed the evaluation stage. Restarting. ")
-        State[ES](initialState.solutions, current.iteration + 1)
+        State(initialState.solutions, current.iteration + 1)
       } else {
         val state = nextStep.get
-        val bestOfGen = BestSelector(state.solutions).asInstanceOf[ES]
+        val bestOfGen = BestSelector(state.solutions)
         if (bestOfGen.eval.betterThan(best.eval)) best = bestOfGen
         state
       }

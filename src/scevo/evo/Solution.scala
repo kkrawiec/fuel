@@ -54,7 +54,6 @@ object ScalarEvaluationMin {
   def apply(v: Double) = new ScalarEvaluationMin(v)
 }
 
-
 class MultiobjectiveEvaluation(val v: Seq[ScalarEvaluation]) extends Evaluation {
   override def toString = v.toString
 
@@ -84,19 +83,3 @@ class MultiobjectiveEvaluation(val v: Seq[ScalarEvaluation]) extends Evaluation 
 object MultiobjectiveEvaluation {
   def apply(v: Seq[ScalarEvaluation]) = new MultiobjectiveEvaluation(v)
 }
-
-
-
-
-    /*
-trait MultiobjectiveFitness extends Evaluation {
-  def v: Seq[ScalarEvaluation]
-}
-    val s = v.size
-    require(other.v.size == s)
-    Some((0 until s).map(i => {
-      val c = v(i).compare(other.v(i))
-      if (c >= 0) c else -s
-    }).sum > 0)
-    * 
-    */

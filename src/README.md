@@ -24,7 +24,7 @@ A SearchStepWithEval selects a (nonempty) subset of EvaluatedSolutions; call the
 Then it applies one or more search operator to the parents. 
 A search operator is a function that accepts one or more EvaluatedSolution as arguments. 
 Every application of a search operator results in one or more Solution (not evaluated anymore). 
-The set of created Solutions ('children') undergos evaluation, which results in a set of EvaluatedSolutions, i.e., new search State. 
+The set of created Solutions ('children') undergoes evaluation, which results in a set of EvaluatedSolutions, i.e., new search State. 
 Note that a Solution may not pass the evaluation stage (e.g., because it violates some constraint). 
 
 To conduct a search in a given Solution space using an IterativeAlgorithm, you should create an instance of Experiment. 
@@ -40,16 +40,23 @@ Technical
 The randomized operations rely on tools.TRandom, which is intended to serve as a wrapper for java.util.Random, 
 or any other (possibly better) random number generator. 
 
+Except for Evolution and Experiment, classes are implemented as immutable.
+
+
 TODO
 ====
 
-Fix NSGA
+Consider having single global random number generator in Preamble
+Implement a straightforward island model
 Note: To implement local search within this framework:
 - set population size to 1
 - provide a single search operator that constructs neighborhood
 
 Possibly: detach evaluation from solution; keep a mapping from solutions to evaluations
 
+Done
+====
+Fix NSGA
 
 Older notes
 ===========

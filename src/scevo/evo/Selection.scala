@@ -1,6 +1,6 @@
 package scevo.evo
 
-
+import scevo.Preamble._
 import scevo.tools.TRandom
 
 /* Selector is intended to operate in two phases: 
@@ -15,23 +15,22 @@ trait Selector[ES <: EvaluatedSolution[E], E <: Evaluation] {
 }
 
 trait Selection[ES <: EvaluatedSolution[E], E <: Evaluation] {
-  def selector(history: Seq[State[ES]]): Selector[ES,E]
+  def selector(history: Seq[State[ES]]): Selector[ES, E]
 }
 
-class TournamentSelection[ES <: EvaluatedSolution[E], E <: Evaluation] (val tournSize: Int, rng: TRandom)
-  extends Selection[ES,E] {
+class TournamentSelection[ES <: EvaluatedSolution[E], E <: Evaluation](val tournSize: Int, rng: TRandom)
+  extends Selection[ES, E] {
   require(tournSize >= 2, "Tournament size has to be at least 2")
-  override def selector(history: Seq[State[ES]]) = new Selector[ES,E] {
-    private val pool = history.head.solutions
+  override def selector(history: Seq[State[ES]]) = new Selector[ES, E] {
+    protected val pool = history.head.solutions
     override val numSelected = pool.size
-    override def next: ES =
-      BestSelector(for (i <- 0 until tournSize) yield pool(rng.nextInt(pool.size))).asInstanceOf[ES]
+    override def next = BestSelector(pool(rng, tournSize))
   }
 }
 
 class MuLambdaSelection[ES <: EvaluatedSolution[E], E <: Evaluation]
-  extends Selection[ES,E] {
-  override def selector(history: Seq[State[ES]]) = new Selector[ES,E] {
+  extends Selection[ES, E] {
+  override def selector(history: Seq[State[ES]]) = new Selector[ES, E] {
     val pool = if (history.size == 1)
       history.head.solutions
     else
@@ -46,16 +45,16 @@ class MuLambdaSelection[ES <: EvaluatedSolution[E], E <: Evaluation]
   }
 }
 
-class GreedyBestSelection[ES <: EvaluatedSolution[E], E <: Evaluation] 
-extends Selection[ES,E] {
-  override def selector(history: Seq[State[ES]]) = new Selector[ES,E] {
+class GreedyBestSelection[ES <: EvaluatedSolution[E], E <: Evaluation]
+  extends Selection[ES, E] {
+  override def selector(history: Seq[State[ES]]) = new Selector[ES, E] {
     override val numSelected = 1
-    override val next: ES = BestSelector(history.head.solutions).asInstanceOf[ES]
+    override val next: ES = BestSelector(history.head.solutions)
   }
 }
 
 object BestSelector {
-  def apply(set: Seq[EvaluatedSolution[Evaluation]]): EvaluatedSolution[Evaluation] = {
+  def apply[ES <: EvaluatedSolution[Evaluation]](set: Seq[ES]) = {
     require(set.nonEmpty)
     var best = set.head
     set.tail.foreach(e => if (e.eval.betterThan(best.eval)) best = e)

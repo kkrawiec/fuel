@@ -1,14 +1,62 @@
 package scevo.evo
 
+import scevo.tools.TRandom
+import scevo.Preamble._
+
+/* Implements (with modifications) the NSGAII selection algorithm by Deb et al. 
+ * Solutions are Pareto-ranked, and are selected by running tournament selection 
+ * on ranks. 
+ * 
+ * Modification w.r.t. Deb et al.:
+ * To resolve the ties between ranks, Deb et al. use 'sparsity', a measure based on 
+ * the hypervolume between the neighboring solutions in the same Pareto layer. 
+ * This implementation replaces sparsity with crowding, which is calculated in a 
+ * discrete way: solution's crowding is the number of solutions with this very genotype. 
+ * So what matters for crowding is only how many identical solutions are there, not
+ * how far they are spaced in the Pareto layer. 
+ */
 
 class NSGASelection[ES <: EvaluatedSolution[F], F <: MultiobjectiveEvaluation](
-  val numToGenerate: Int)
+  val numToGenerate: Int, val tournSize: Int, rng: TRandom)
   extends Selection[ES, F] {
 
+  var archive = Seq[ES]()
+
+  // Note: calling selector() changes the state of archive
+  override def selector(history: Seq[State[ES]]) = new Selector[ES, F] {
+    require(numToGenerate <= archive.size + history.head.solutions.size)
+
+    val ranking = paretoRanking((archive ++ history.head.solutions))
+    var capacity = numToGenerate
+    val fullLayers = ranking.takeWhile(r => if (capacity < numToGenerate) false else { capacity -= r.size; true })
+
+    val selected = fullLayers.flatten ++ ( // flatten preserves ordering
+      if (capacity <= 0)
+        None
+      else // the least crowded (i.e, most sparse) individuals from the partial rank
+        ranking(fullLayers.size).toSeq.sortBy(_.eval.crowding).splitAt(capacity)._1)
+
+    archive = selected.map(_.s)
+
+    override def next = BestSelector(selected(rng, tournSize).map(_.s))
+    override val numSelected = numToGenerate
+  }
+
+  private class NSGAEval(val rank: Int, val crowding: Int) extends Evaluation {
+    def comparePartial(that: Evaluation): Option[Int] = {
+      val other = that.asInstanceOf[NSGAEval]
+      val rankCmp = rank.compare(other.rank)
+      Some(if (rankCmp != 0) -rankCmp
+      else -crowding.compare(other.crowding))
+    }
+  }
+  // Works as a wrapper around the original ES
+  private class NSGASol(val s: ES, val eval: NSGAEval) extends EvaluatedSolution[NSGAEval]
+
   // TODO: treat indiscernibility and incomparability in the same way
-  def paretoRanking(solutions: Seq[ES]): (List[Set[ES]], Array[Array[Option[Int]]]) = {
+  private def paretoRanking(solutions: Seq[ES]): Seq[Set[NSGASol]] = {
     val n = solutions.length
-    var cmp = Array.ofDim[Option[Int]](n, n)
+    var cmp = Array.ofDim[Option[Int]](n, n) // None means incomparable
     for (i <- 0 until n) {
       for (j <- 0 until i) {
         val v = solutions(i).eval.comparePartial(solutions(j).eval)
@@ -28,70 +76,10 @@ class NSGASelection[ES <: EvaluatedSolution[F], F <: MultiobjectiveEvaluation](
       layers = (layers.:+(rank.map(e => solutions(e))))
       remaining = remaining -- rank
     }
-    //val sparsity = cmp.map( row => 1.0 / row.count( e => e.contains(0)))
     //    println( "Total: " + layers.map( _.size ).sum ) 
-    (layers.toList, cmp)
-  }
-
-  override def selector(history: Seq[State[ES]]) = new Selector[ES, F] {
-
-    val pool = history.head.solutions
-    val previous = if (history.size < 2) List() else history.tail.head.solutions
-
-    val selected = {
-      val (ranking, dominanceMatrix) = paretoRanking((pool ++ previous)) //.asInstanceOf[Seq[MultiobjectiveFitness]])
-      var capacity = numToGenerate
-      val fullLayers = ranking.takeWhile(r => if (capacity < numToGenerate) false else { capacity -= r.size; true })
-      val partialLayer = fullLayers.length
-
-      (fullLayers.flatten ++ { // flatten preserves ordering
-        if (partialLayer == ranking.length || capacity <= 0)
-          None
-        else { // the most sparse individuals from the partial rank
-          val sparsity = ranking(partialLayer).groupBy(s => s.eval.v).map(p => (p._1, p._2.size))
-          ranking(partialLayer).toSeq.sortBy(s => sparsity(s.eval.v)).splitAt(capacity)._1
-        }
-      })
-    }
-
-    private var iter: Int = -1
-    override def next: ES = {
-      iter = (iter + 1) % selected.size
-      selected(iter)
-    }
-    override val numSelected = pool.size
-
+    val crowding = (0 until solutions.size).map(i =>
+      (solutions(i), cmp(i).count(e => e.contains(0)))).toMap
+    (0 until layers.size).map(i =>
+      layers(i).map(s => new NSGASol(s, new NSGAEval(i, crowding(s)))))
   }
 }
-
-/*
-trait Dominance[T <: MultiobjectiveFitness] 
-{
-  def apply(x: T, y: T): Option[Int]
-}
-
-class DominanceMinimized[T <: MultiobjectiveFitness] extends Dominance[T] {
-  override def apply(x: T, y: T): Option[Int] = {
-    val n = x.v.length
-    assert(n == y.v.length)
-    var xBetter: Int = 0
-    var yBetter: Int = 0
-    for (i <- 0 until n)
-      if (x.v(i).better(y.v(i)))
-        xBetter += 1
-      else if (y.v(i).better(x.v(i)))
-        yBetter += 1
-
-    if (xBetter > 0)
-      if (yBetter > 0)
-        None
-      else
-        Some(1)
-    else if (yBetter > 0)
-      Some(-1)
-    else
-      Some(0)
-  }
-}
-* 
-*/
