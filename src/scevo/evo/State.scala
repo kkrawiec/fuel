@@ -4,7 +4,6 @@ package scevo.evo
  */
 
 class State[ES <: EvaluatedSolution[_ <: Evaluation]](val solutions: Seq[ES], val iteration: Int) {
-
   require(solutions.size > 0, "The set of working solutions in a state cannot be empty")
 }
 

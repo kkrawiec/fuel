@@ -31,14 +31,12 @@ class TournamentSelection[ES <: EvaluatedSolution[E], E <: Evaluation](val tourn
 class MuLambdaSelection[ES <: EvaluatedSolution[E], E <: Evaluation]
   extends Selection[ES, E] {
   override def selector(history: Seq[State[ES]]) = new Selector[ES, E] {
-    val pool = if (history.size == 1)
-      history.head.solutions
-    else
-      history.head.solutions ++ history.tail.head.solutions
+    val pool = history.head.solutions ++ (if (history.size > 1)
+      history.tail.head.solutions else None )
     private val selected = pool.sortWith((a, b) => a.eval.betterThan(b.eval))
     override val numSelected = history.head.solutions.size
     private var i = -1
-    override def next: ES = {
+    override def next = {
       i = (i + 1) % numSelected
       selected(i)
     }
@@ -49,7 +47,7 @@ class GreedyBestSelection[ES <: EvaluatedSolution[E], E <: Evaluation]
   extends Selection[ES, E] {
   override def selector(history: Seq[State[ES]]) = new Selector[ES, E] {
     override val numSelected = 1
-    override val next: ES = BestSelector(history.head.solutions)
+    override val next = BestSelector(history.head.solutions)
   }
 }
 

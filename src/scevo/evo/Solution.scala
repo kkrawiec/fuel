@@ -55,6 +55,7 @@ object ScalarEvaluationMin {
 }
 
 class MultiobjectiveEvaluation(val v: Seq[ScalarEvaluation]) extends Evaluation {
+  require( v.nonEmpty )
   override def toString = v.toString
 
   def comparePartial(that: Evaluation): Option[Int] = {

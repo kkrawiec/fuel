@@ -1,6 +1,5 @@
 package scevo.examples
 
-import scala.collection.immutable.Seq
 import org.junit.Test
 import scevo.evo.EvaluatedSolution
 import scevo.evo.Evolution

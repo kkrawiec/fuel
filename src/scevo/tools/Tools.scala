@@ -1,6 +1,5 @@
 package scevo.tools
 
-import scala.collection.immutable.Seq
 import scala.reflect.runtime.universe._
 import scala.tools.reflect.ToolBox
 
@@ -15,7 +14,6 @@ object Combinations {
     }
   }
   def apply(m: Int, n: Int) : Seq[Seq[Int]] = apply( Seq.range(0, m), n )
- 
 }
 
 
