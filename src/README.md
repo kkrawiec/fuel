@@ -2,7 +2,7 @@ ScEvo = Evolutionary Computation framework in Scala
 ===================================================
 Krzysztof Krawiec
 krawiec@cs.put.poznan.pl
-June-Sep 2014
+June-Sept 2014
 
 General philosophy
 ===================
@@ -48,10 +48,6 @@ TODO
 
 Consider having single global random number generator in Preamble
 Implement a straightforward island model
-Note: To implement local search within this framework:
-- set population size to 1
-- provide a single search operator that constructs neighborhood
-
 Possibly: detach evaluation from solution; keep a mapping from solutions to evaluations
 
 Done

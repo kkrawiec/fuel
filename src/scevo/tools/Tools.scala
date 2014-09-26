@@ -13,9 +13,8 @@ object Combinations {
       case _ => elems.flatMap(e => apply(elems, n - 1).map(g => List(e) ++ g))
     }
   }
-  def apply(m: Int, n: Int) : Seq[Seq[Int]] = apply( Seq.range(0, m), n )
+  def apply(m: Int, n: Int): Seq[Seq[Int]] = apply(Seq.range(0, m), n)
 }
-
 
 object CodeExecutor {
   def apply(code: String) = {
@@ -30,7 +29,19 @@ object CodeExecutor {
   }
 }
 
+object Stats {
 
+  def descriptive(l: Seq[Double]) = {
+    require(l.nonEmpty)
+    (l.min, l.sum / l.size, l.max)
+  }
+
+  def basic(l: Seq[Double]) = {
+    val (sMin, sMean, sMax) = descriptive(l)
+    f"Min: $sMin  Avg: $sMean%.2f  Max: $sMax"
+  }
+
+}
 object Entropy {
   def bothWays[T, U](x: Seq[T], y: Seq[U]) = {
     require(x.size == y.size)
@@ -46,9 +57,9 @@ object Entropy {
   }
   //    joint.foreach( {case (pair:(T,U),cnt:Int) => 
   def main(args: Array[String]) {
-    println( bothWays[Int, Int](Seq(1, 2, 2, 3, 4, 4), Seq(3, 3, 0, 3, 4, 4)) )
-    println( bothWays[Int, Int](Seq(1, 2, 2, 3, 4, 4), Seq(3, 0, 0, 8, 2, 2)) )
-    println( bothWays[Int, Int](Seq(1, 1, 1, 1, 1, 1), Seq(3, 0, 0, 8, 2, 2)) )
-    println( bothWays[Int, Int]( 0 until 7, 0 until 7 ) )
+    println(bothWays[Int, Int](Seq(1, 2, 2, 3, 4, 4), Seq(3, 3, 0, 3, 4, 4)))
+    println(bothWays[Int, Int](Seq(1, 2, 2, 3, 4, 4), Seq(3, 0, 0, 8, 2, 2)))
+    println(bothWays[Int, Int](Seq(1, 1, 1, 1, 1, 1), Seq(3, 0, 0, 8, 2, 2)))
+    println(bothWays[Int, Int](0 until 7, 0 until 7))
   }
 }

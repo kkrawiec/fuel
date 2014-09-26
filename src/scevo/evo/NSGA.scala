@@ -2,6 +2,7 @@ package scevo.evo
 
 import scevo.tools.TRandom
 import scevo.Preamble._
+import scala.collection.mutable.MutableList
 
 /* Implements (with modifications) the NSGAII selection algorithm by Deb et al. 
  * Solutions are Pareto-ranked, and are selected by running tournament selection 
@@ -65,19 +66,18 @@ class NSGASelection[ES <: EvaluatedSolution[F], F <: MultiobjectiveEvaluation](
       }
       cmp(i)(i) = Some(0)
     }
-    import scala.collection.mutable.MutableList
     var layers = MutableList[Set[ES]]()
     var remaining = (0 until n).toSet
     while (!remaining.isEmpty) {
       //      println( "aa: " + remaining.size )
       val dominated = remaining.filter(i =>
         remaining.find(j => cmp(i)(j).getOrElse(1) < 0).isDefined)
-      val rank = if (dominated.isEmpty) remaining else remaining -- dominated
+      val rank = remaining -- dominated
       layers = (layers.:+(rank.map(e => solutions(e))))
       remaining = remaining -- rank
     }
     //    println( "Total: " + layers.map( _.size ).sum ) 
-    val crowding = (0 until solutions.size).map(i =>
+    val crowding = (0 until n).map(i =>
       (solutions(i), cmp(i).count(e => e.contains(0)))).toMap
     (0 until layers.size).map(i =>
       layers(i).map(s => new NSGASol(s, new NSGAEval(i, crowding(s)))))
