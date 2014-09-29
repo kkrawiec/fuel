@@ -23,7 +23,7 @@ object CodeExecutor {
       val ast = toolBox.parse(code)
       toolBox.compile(ast)()
     } catch {
-      case e: Exception => throw new Exception(
+      case e: Throwable => throw new Exception(
         "Error when parsing/compiling/executing Scala code: " + code, e)
     }
   }
