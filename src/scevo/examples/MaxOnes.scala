@@ -94,18 +94,13 @@ object ExperimentMaxOnesSLS {
 }
 
 final class TestExperiment {
+  // val params = "--seed 8 --populationSize 100 --maxTime 300000 --maxGenerations 1000 --operatorProbs 0.5,0.5 --numVars 200"
+  val params = "--numVars 200  --tournamentSize 7  --operatorProbs 0.5,0.5"
+  @Test
+  def testExperimentMaxOnesGA =
+    ExperimentMaxOnesGA.main(params.split("\\s+"))
 
   @Test
-  def testExperimentMaxOnesGA: Unit = {
-    // Warning: single spaces only!
-    val params = "--seed 8 --tournamentSize 7 --populationSize 100 --maxTime 300000 --maxGenerations 1000 --operatorProbs 0.5,0.5 --numVars 200"
-    ExperimentMaxOnesGA.main(params.split(" "))
-  }
-
-  @Test
-  def testExperimentMaxOnesSLS: Unit = {
-    // Warning: single spaces only!
-    val params = "--seed 8 --populationSize 1 --maxTime 300000 --maxGenerations 100 --operatorProbs 0.5,0.5 --numVars 10"
-    ExperimentMaxOnesSLS.main(params.split(" "))
-  }
+  def testExperimentMaxOnesSLS =
+    ExperimentMaxOnesSLS.main((params + " --populationSize 1").split("\\s+"))
 }

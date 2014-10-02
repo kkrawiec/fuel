@@ -55,7 +55,7 @@ object ScalarEvaluationMin {
 }
 
 class MultiobjectiveEvaluation(val v: Seq[ScalarEvaluation]) extends Evaluation {
-  require( v.nonEmpty )
+  require(v.nonEmpty)
   override def toString = v.toString
 
   def comparePartial(that: Evaluation): Option[Int] = {
@@ -83,4 +83,12 @@ class MultiobjectiveEvaluation(val v: Seq[ScalarEvaluation]) extends Evaluation 
 }
 object MultiobjectiveEvaluation {
   def apply(v: Seq[ScalarEvaluation]) = new MultiobjectiveEvaluation(v)
+}
+
+class TestOutcomes(override val v: Seq[ScalarEvaluationMax]) extends MultiobjectiveEvaluation(v) {
+  require(v.forall(e => e.v >= 0 && e.v <= 1))
+  def allPassed = v.forall(e => e.v == 1)
+}
+class BinaryTestOutcomes(override val v: Seq[ScalarEvaluationMax]) extends TestOutcomes(v) {
+  require(v.forall(e => e.v == 0 || e.v == 1))
 }
