@@ -15,6 +15,7 @@ trait IterativeAlgorithm[ES <: EvaluatedSolution[_ <: Evaluation]] {
   def apply(postGenerationCallback: (IterativeAlgorithm[ES] => Unit) = ((_: IterativeAlgorithm[ES]) => ())): State[ES]
 }
 
+
 class Evolution[S <: Solution, ES <: EvaluatedSolution[_ <: Evaluation]](val initialState: State[ES],
   val searchStep: SearchStep[ES],
   val stopConditions: Seq[StoppingCondition[ES]])
@@ -52,3 +53,6 @@ class Evolution[S <: Solution, ES <: EvaluatedSolution[_ <: Evaluation]](val ini
     current
   }
 }
+
+
+

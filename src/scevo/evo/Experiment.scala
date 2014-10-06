@@ -25,7 +25,7 @@ abstract class Experiment[ES <: EvaluatedSolution[_ <: Evaluation]](args: Array[
   val maxGenerations = options.getOrElse("maxGenerations", "50").toInt
   assert(maxGenerations > 0, "Number of generations should be > 0")
 
-  val maxTime = options.getOrElse("maxTime", "300000").toLong
+  val maxTime = options.getOrElse("maxTime", "86400000").toLong
   assert(maxTime > 0, "MaxTime should be > 0")
 
   // TODO: 
@@ -55,7 +55,7 @@ abstract class Experiment[ES <: EvaluatedSolution[_ <: Evaluation]](args: Array[
   val scMaxGeneration = new MaxGenerations[ES](maxGenerations)
   def stoppingConditions: List[StoppingCondition[ES]] = List(scMaxTime, scMaxGeneration)
 
-  protected def run: IterativeAlgorithm[ES]
+  protected def run: Option[IterativeAlgorithm[ES]]
 
   def postGenerationCallback(state: IterativeAlgorithm[ES]): Unit =
     println(f"Generation: ${state.currentState.iteration}  BestSoFar: ${state.bestSoFar.eval}")
@@ -63,11 +63,13 @@ abstract class Experiment[ES <: EvaluatedSolution[_ <: Evaluation]](args: Array[
   def launch: Unit = {
 
     try {
-      val alg = run
-
-      rdb.setResult("lastGeneration", alg.currentState.iteration)
-      rdb.setResult("bestOfRun.fitness", alg.bestSoFar.eval)
-      rdb.setResult("bestOfRun.genotype", alg.bestSoFar.toString())
+      val res = run
+      if (res.isDefined) {
+        val alg = res.get
+        rdb.setResult("lastGeneration", alg.currentState.iteration)
+        rdb.setResult("bestOfRun.fitness", alg.bestSoFar.eval)
+        rdb.setResult("bestOfRun.genotype", alg.bestSoFar.toString())
+      }
       rdb.put("status", "completed")
     } catch {
       case e: Exception => {

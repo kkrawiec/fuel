@@ -3,6 +3,8 @@ package scevo.evo
 import scevo.tools.TRandom
 import scevo.Preamble._
 import scala.collection.mutable.MutableList
+import scala.collection.immutable.SortedSet
+import scala.annotation.tailrec
 
 /* Implements (with modifications) the NSGAII selection algorithm by Deb et al. 
  * Solutions are Pareto-ranked, and are selected by running tournament selection 
@@ -37,13 +39,14 @@ class NSGASelection[ES <: EvaluatedSolution[F], F <: MultiobjectiveEvaluation](
       else // the least crowded (i.e, most sparse) individuals from the partial rank
         ranking(fullLayers.size).toSeq.sortBy(_.eval.crowding).splitAt(capacity)._1)
 
-    archive = selected.map(_.s)
+    archive = selected.map(_.eval.s)
 
-    override def next = BestSelector(selected(rng, tournSize).map(_.s))
+    override def next = BestSelector(selected(rng, tournSize).map(_.eval.s))
     override val numSelected = numToGenerate
   }
 
-  private class NSGAEval(val rank: Int, val crowding: Int) extends Evaluation {
+  private class NSGAEval(val rank: Int, val s: ES, val sols: Seq[ES]) extends Evaluation {
+    lazy val crowding = sols.count(_ equals s)
     def comparePartial(that: Evaluation): Option[Int] = {
       val other = that.asInstanceOf[NSGAEval]
       val rankCmp = rank.compare(other.rank)
@@ -52,34 +55,24 @@ class NSGASelection[ES <: EvaluatedSolution[F], F <: MultiobjectiveEvaluation](
     }
   }
   // Works as a wrapper around the original ES
-  private class NSGASol(val s: ES, val eval: NSGAEval) extends EvaluatedSolution[NSGAEval]
+  private class NSGASol(val eval: NSGAEval) extends EvaluatedSolution[NSGAEval]
 
   // TODO: treat indiscernibility and incomparability in the same way
-  private def paretoRanking(solutions: Seq[ES]): Seq[Set[NSGASol]] = {
-    val n = solutions.length
-    var cmp = Array.ofDim[Option[Int]](n, n) // None means incomparable
-    for (i <- 0 until n) {
-      for (j <- 0 until i) {
-        val v = solutions(i).eval.comparePartial(solutions(j).eval)
-        cmp(i)(j) = v
-        cmp(j)(i) = if (v.isEmpty) None else Some(-v.get)
-      }
-      cmp(i)(i) = Some(0)
+  private def paretoRanking(solutions: Seq[ES]): Seq[Seq[NSGASol]] = {
+    @tailrec def reversePareto(dominating: Map[Int, Set[Int]], layers: List[Seq[Int]] = List()): List[Seq[Int]] = {
+      val (lastLayer, rest) = dominating.partition(e => e._2.isEmpty)
+      val ll = lastLayer.keys.toSeq
+      if (rest.isEmpty)
+        ll :: layers
+      else
+        reversePareto(rest.map(s => (s._1, s._2.diff(ll.toSet))), ll :: layers)
     }
-    var layers = MutableList[Set[ES]]()
-    var remaining = (0 until n).toSet
-    while (!remaining.isEmpty) {
-      //      println( "aa: " + remaining.size )
-      val dominated = remaining.filter(i =>
-        remaining.find(j => cmp(i)(j).getOrElse(1) < 0).isDefined)
-      val rank = remaining -- dominated
-      layers = (layers.:+(rank.map(e => solutions(e))))
-      remaining = remaining -- rank
-    }
-    //    println( "Total: " + layers.map( _.size ).sum ) 
-    val crowding = (0 until n).map(i =>
-      (solutions(i), cmp(i).count(e => e.contains(0)))).toMap
+    val sols = 0 until solutions.length
+    val dominating = sols.map(i =>
+      (i, sols.filter(o =>
+        solutions(i).eval.comparePartial(solutions(o).eval).getOrElse(0) > 0).toSet)).toMap
+    val layers = reversePareto(dominating).toSeq.reverse
     (0 until layers.size).map(i =>
-      layers(i).map(s => new NSGASol(s, new NSGAEval(i, crowding(s)))))
+      layers(i).map(j => new NSGASol(new NSGAEval(i, solutions(j), solutions))))
   }
-}
+}  

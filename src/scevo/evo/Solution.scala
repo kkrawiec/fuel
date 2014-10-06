@@ -1,5 +1,7 @@
 package scevo.evo
 
+import org.junit.Test
+
 /*
  * Represents a non-evaluated solution
  */
@@ -36,6 +38,11 @@ abstract class ScalarEvaluation(val v: Double) extends Evaluation with Ordered[S
   override def comparePartial(that: Evaluation): Option[Int] =
     Some(compare(that.asInstanceOf[ScalarEvaluation]))
   override def toString = v.toString
+  override def equals(that: Any) = that match {
+    case other: ScalarEvaluation => v == other.v
+    case _ => false
+  }
+  override def hashCode = v.hashCode
 }
 
 class ScalarEvaluationMax(override val v: Double) extends ScalarEvaluation(v) {
@@ -62,33 +69,49 @@ class MultiobjectiveEvaluation(val v: Seq[ScalarEvaluation]) extends Evaluation 
     val other = that.asInstanceOf[MultiobjectiveEvaluation]
     val n = v.length
     require(n == other.v.length)
-    var xBetter: Int = 0
-    var yBetter: Int = 0
-    for (i <- 0 until n)
-      if (v(i) > other.v(i)) // note: overloaded operator
-        xBetter += 1
-      else if (v(i) < other.v(i)) // note: overloaded operator
-        yBetter += 1
-
-    if (xBetter > 0)
-      if (yBetter > 0)
+    var xBetter: Boolean = false
+    var yBetter: Boolean = false
+    for (i <- 0 until n) {
+      val c = v(i).compare(other.v(i))
+      if (c > 0)
+        xBetter = true
+      else if (c < 0)
+        yBetter = true
+    }
+    if (xBetter)
+      if (yBetter)
         None
       else
         Some(1)
-    else if (yBetter > 0)
+    else if (yBetter)
       Some(-1)
     else
       Some(0)
   }
+  override def equals(that: Any) = that match {
+    case other: MultiobjectiveEvaluation => v.size == other.v.size && (0 until v.size).forall(i => v(i) == other.v(i))
+    case _ => false
+  }
+  override def hashCode = v.map(_.hashCode).reduce(_ ^ _)
 }
+
 object MultiobjectiveEvaluation {
   def apply(v: Seq[ScalarEvaluation]) = new MultiobjectiveEvaluation(v)
 }
 
 class TestOutcomes(override val v: Seq[ScalarEvaluationMax]) extends MultiobjectiveEvaluation(v) {
   require(v.forall(e => e.v >= 0 && e.v <= 1))
-  def allPassed = v.forall(e => e.v == 1)
+  def allPassed = v.forall(_.v == 1)
 }
 class BinaryTestOutcomes(override val v: Seq[ScalarEvaluationMax]) extends TestOutcomes(v) {
   require(v.forall(e => e.v == 0 || e.v == 1))
+}
+
+final class TestEvaluation {
+  @Test
+  def test: Unit = {
+    val x = ScalarEvaluationMin(3.0)
+    val y = ScalarEvaluationMin(3.0)
+    println(x equals y)
+  }
 }

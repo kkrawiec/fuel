@@ -67,9 +67,9 @@ abstract class ExperimentMaxOnes(args: Array[String]) extends Experiment[BitVect
   val scIdealFitness = new BestHasProperty[BitVectorEvaluated]((s: BitVectorEvaluated) => s.eval.v == numVars)
   lazy val evol = new Evolution[BitVector, BitVectorEvaluated](initialState, searchAlg, List(scIdealFitness, scMaxGeneration, scMaxTime))
 
-  override protected def run: IterativeAlgorithm[BitVectorEvaluated] = {
+  override protected def run: Option[IterativeAlgorithm[BitVectorEvaluated]] = {
     evol.apply(super.postGenerationCallback)
-    evol
+    Some(evol)
   }
 }
 
