@@ -1,12 +1,12 @@
 package scevo.evo
 
-import scevo.tools.TRandom
-import scevo.Preamble._
-import scala.collection.mutable.MutableList
-import scala.collection.immutable.SortedSet
 import scala.annotation.tailrec
+
 import org.junit.Test
+
+import scevo.Preamble.seq2rndApply
 import scevo.tools.Random
+import scevo.tools.TRandom
 
 /* Implements (with modifications) the NSGAII selection algorithm by Deb et al. 
  * Solutions are Pareto-ranked, and are selected by running tournament selection 
@@ -26,6 +26,7 @@ import scevo.tools.Random
  * Note: By being statefull (archive), this selection method assumes that the new solutions 
  * and the ones in the archive can be sensibly compared. 
  */
+
 class NSGAEval(val rank: Int, val crowding: Int) extends Evaluation {
   def comparePartial(that: Evaluation): Option[Int] = {
     val other = that.asInstanceOf[NSGAEval]
@@ -44,8 +45,6 @@ class NSGASelectionNoArchive[ES <: EvaluatedSolution[F], F <: MultiobjectiveEval
   extends Selection[ES, F] {
 
   def archive = Seq[ES]() // fixed, won't change
-
-  // Note: calling selector() changes the state of archive
   override def selector(history: Seq[State[ES]]) = new NSGASelector(history)
 
   class NSGASelector(history: Seq[State[ES]]) extends Selector[ES, F] {
@@ -61,7 +60,6 @@ class NSGASelectionNoArchive[ES <: EvaluatedSolution[F], F <: MultiobjectiveEval
     override val numSelected = numToGenerate
   }
 
-  // TODO: treat indiscernibility and incomparability in the same way
   private def paretoRanking(solutions: Seq[ES]): Seq[Seq[NSGASol[ES, F]]] = {
     @tailrec def pareto(dominating: Map[Int, Set[Int]], layers: List[Seq[Int]] = List()): List[Seq[Int]] = {
       val (lastLayer, rest) = dominating.partition(e => e._2.isEmpty)

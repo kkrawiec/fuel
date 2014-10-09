@@ -1,45 +1,43 @@
 package scevo.examples
 
 import org.junit.Test
+
+import scevo.evo.BestHasProperty
 import scevo.evo.EvaluatedSolution
 import scevo.evo.Evolution
 import scevo.evo.Experiment
 import scevo.evo.GreedyBestSelection
+import scevo.evo.IterativeAlgorithm
 import scevo.evo.ScalarEvaluation
+import scevo.evo.ScalarEvaluationMax
+import scevo.evo.SearchStepWithEval
 import scevo.evo.Selection
+import scevo.evo.Selector
 import scevo.evo.Solution
 import scevo.evo.State
 import scevo.evo.TournamentSelection
 import scevo.tools.TRandom
-import scevo.evo.IterativeAlgorithm
-import scevo.evo.Selector
-import scevo.evo.BestHasProperty
-import scevo.evo.ScalarEvaluation
-import scevo.evo.ScalarEvaluationMax
-import scevo.evo.SearchStepWithEval
 
 class BitVector(val v: Seq[Boolean]) extends Solution {
-  override val toString = v.map(if (_) "1" else "0").reduce((b1, b2) => b1 + b2)
+  override val toString = v.map(if (_) "1" else "0").reduce(_ + _)
 }
 
 class BitVectorEvaluated(override val v: Seq[Boolean]) extends BitVector(v) with EvaluatedSolution[ScalarEvaluation] {
-  def this(numVars: Integer, r: TRandom) =
-    this(v = 0 until numVars map (i => r.nextBoolean))
 
   override val eval = ScalarEvaluationMax(v.count(b => b)) //ensuring (_.v >= 0 && _.v <= v.size)
 
   def mutateOneBit(rng: TRandom) = {
     val bitToMutate = rng.nextInt(v.size)
-    new BitVector(0 until v.size map (i => if (i == bitToMutate) !v(i) else v(i)))
+    new BitVector(v.updated(bitToMutate, !v(bitToMutate)))
   } ensuring (_.v.size == v.size)
 
-  def onePointCrossover(other: BitVectorEvaluated, rng: TRandom): (BitVector, BitVector) = {
+  def onePointCrossover(other: BitVectorEvaluated, rng: TRandom) = {
     require(other.v.size == v.size)
     val cuttingPoint = rng.nextInt(v.size)
-    val me = v.splitAt(cuttingPoint)
-    val oth = other.v.splitAt(cuttingPoint)
-    (new BitVector(me._1 ++ oth._2), new BitVector(me._2 ++ oth._1))
-  } ensuring (r => r._1.v.size == v.size && r._2.v.size == v.size)
+    val (myHead, myTail) = v.splitAt(cuttingPoint)
+    val (hisHead, hisTail) = other.v.splitAt(cuttingPoint)
+    List(new BitVector(myHead ++ hisTail), new BitVector(hisHead ++ myTail))
+  } ensuring (r => r(0).v.size == v.size && r(1).v.size == v.size)
 }
 
 abstract class ExperimentMaxOnes(args: Array[String]) extends Experiment[BitVectorEvaluated](args) {
@@ -48,13 +46,11 @@ abstract class ExperimentMaxOnes(args: Array[String]) extends Experiment[BitVect
 
   val evalFunc: BitVector => Option[BitVectorEvaluated] = bv => Some(new BitVectorEvaluated(bv.v))
 
-  val initialState = State(for (i <- 0 until populationSize) yield new BitVectorEvaluated(numVars, rng))
-
-  def xover(a: BitVectorEvaluated, b: BitVectorEvaluated) = { val r = a.onePointCrossover(b, rng); List(r._1, r._2) }
+  val initialState = State((0 until populationSize).map(_ => new BitVectorEvaluated(0 until numVars map (_ => rng.nextBoolean))))
 
   val searchOperators: Seq[(Selector[BitVectorEvaluated, ScalarEvaluation] => List[BitVector], Double)] = Seq(
     (source => List(source.next.mutateOneBit(rng)), operatorProbs(0)),
-    (source => xover(source.next, source.next), operatorProbs(1)))
+    (source => source.next.onePointCrossover(source.next, rng), operatorProbs(1)))
 
   def selection: Selection[BitVectorEvaluated, ScalarEvaluation]
 

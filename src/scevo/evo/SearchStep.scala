@@ -33,6 +33,7 @@ class SearchStepWithEval[S <: Solution, ES <: EvaluatedSolution[E], E <: Evaluat
     val source = selection.selector(history)
 
     var offspring = scala.collection.mutable.MutableList[S]()
+    // Note: This loop will iterate forever is non of the search operators manages to produce a solution. 
     while (offspring.size < source.numSelected) {
       val r = rng.nextDouble
       var sum: Double = 0

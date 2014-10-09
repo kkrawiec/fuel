@@ -16,7 +16,7 @@ A space of Solutions can be searched using an IterativeAlgorithm (e.g., Evolutio
 At any given moment, an IterativeAlgorithm is in a certain State, which is a set of one or more EvaluatedSolutions. 
 An IterativeAlgorithm can use one or more StoppingCondition to decide whether search should be terminated. 
 
-To move from one State to another, IterativeAlgorithm uses SearchStep. 
+To move from one State to another, IterativeAlgorithm uses a SearchStep. 
 SearchStep takes the previous history of States (composed of at least the last State), and produces a new State. 
 A SearchStep can (but does not have to) refer to solutions' Evaluation; in that case it is a SearchStepWithEval
 
@@ -34,25 +34,35 @@ The Experiment conducts the search, collects its results in ResultDatabase, and 
 
 For an example, see examples.MaxOnes
 
+More details
+============
+
+* The evaluation process may reveal that the solution being evaluated is infeasible. This is why an evaluation function should be Solution => Option[EvaluatedSolution]. 
+* Many search algorithms evaluate solutions in the context of other solutions in population (e.g., coevolutionary algorithms). For this reason, SearchStep assumes that evaluation is a function Seq[Solution] => Seq[EvaluatedSolution]
+* To meet the requirements of various methods, selection takes place in two phases: 
+- First, a Selector object is created. 
+- Then, the Selector object is used like an iterator, which returns a solution with every call of next() method. 
+* A search operator is allowed to fail, in which case it returns an empty list of Solutions. 
+
 Technical
 =========
 
-The randomized operations rely on tools.TRandom, which is intended to serve as a wrapper for java.util.Random, 
+* The randomized operations rely on tools.TRandom, which is intended to serve as a wrapper for java.util.Random, 
 or any other (possibly better) random number generator. 
-
-Except for Evolution and Experiment, classes are implemented as immutable.
-
+* Except for Evolution and Experiment, classes are implemented as immutable.
+* Passing random number generators to many methods may be annoying, but allows avoiding global variables. 
 
 TODO
 ====
 
-Consider having single global random number generator in Preamble
-Implement a straightforward island model
-Possibly: detach evaluation from solution; keep a mapping from solutions to evaluations
+* Consider having single global random number generator in Preamble (or in general a map Thread.id() => TRandom)
+* Implement a straightforward island model
+* Possibly: detach evaluation from solution; keep a mapping from solutions to evaluations
 
 Done
 ====
-Fix NSGA
+
+* Fix NSGA
 
 Older notes
 ===========

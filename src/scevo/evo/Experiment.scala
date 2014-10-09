@@ -1,12 +1,13 @@
 package scevo.evo
 
-import scevo.tools.ResultDatabase
-import scevo.tools.Random
-import java.net.UnknownHostException
-import java.util.Calendar
 import java.lang.management.ManagementFactory
 import java.net.InetAddress
+import java.net.UnknownHostException
+import java.util.Calendar
+
 import scevo.tools.OptionParser
+import scevo.tools.Random
+import scevo.tools.ResultDatabase
 
 /*
  * Note that Experiment makes no reference to Solution types; only EvaluatedSolution
