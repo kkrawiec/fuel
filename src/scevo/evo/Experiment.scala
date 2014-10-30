@@ -14,7 +14,7 @@ import scevo.tools.ResultDatabase
 trait Experiment[ES <: EvaluatedSolution[_ <: Evaluation]] {
   this: Options  =>
 
-  protected def run: Option[IterativeAlgorithm[ES]]
+  def run: Option[IterativeAlgorithm[ES]]
 
   // General parameters read in from the command line
   val populationSize = options.getOrElse("populationSize", "1000").toInt
@@ -41,7 +41,7 @@ trait Experiment[ES <: EvaluatedSolution[_ <: Evaluation]] {
   def postGenerationCallback(state: IterativeAlgorithm[ES]): Unit =
     println(f"Generation: ${state.currentState.iteration}  BestSoFar: ${state.bestSoFar.eval}")
 
-  def launch: Unit = {
+  def launch: Option[IterativeAlgorithm[ES]] = {
 
     val startTime = System.currentTimeMillis()
     try {
@@ -53,6 +53,7 @@ trait Experiment[ES <: EvaluatedSolution[_ <: Evaluation]] {
         rdb.setResult("bestOfRun.genotype", alg.bestSoFar.toString())
       }
       rdb.put("status", "completed")
+      res
     } catch {
       case e: Exception => {
         rdb.put("status", "error: " + e.getLocalizedMessage + e.getStackTrace().mkString(" ")) // .toString.replace('\n', ' '))
@@ -62,6 +63,7 @@ trait Experiment[ES <: EvaluatedSolution[_ <: Evaluation]] {
       rdb.setResult("totalTimeSystem", System.currentTimeMillis() - startTime)
       rdb.setResult("system.endTime", Calendar.getInstance().getTime().toString)
       rdb.save
+      None
     }
   }
 

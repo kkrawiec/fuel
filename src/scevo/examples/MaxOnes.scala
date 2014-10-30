@@ -78,7 +78,7 @@ abstract class ExperimentMaxOnes(args: Array[String])
   val scIdealFitness = new BestHasProperty[BitVectorEvaluated]((s: BitVectorEvaluated) => s.eval.v == numVars)
   lazy val evol = new Evolution[BitVector, BitVectorEvaluated](initialState, searchAlg, List(scIdealFitness, scMaxGeneration, scMaxTime))
 
-  override protected def run: Option[IterativeAlgorithm[BitVectorEvaluated]] = {
+  override def run: Option[IterativeAlgorithm[BitVectorEvaluated]] = {
     evol.apply(super.postGenerationCallback)
     Some(evol)
   }
@@ -87,7 +87,7 @@ abstract class ExperimentMaxOnes(args: Array[String])
 /* Genetic Algorithm
  */
 object ExperimentMaxOnesGA {
-  def main(args: Array[String]) = new ExperimentMaxOnes(args) {
+  def main(args: Array[String]): Unit = new ExperimentMaxOnes(args) {
     val tournamentSize = options("tournamentSize").toInt
     assert(tournamentSize > 1, "Tournament size should be > 1")
     override def selection = new TournamentSelection[BitVectorEvaluated, ScalarEvaluation](tournamentSize, rng)
@@ -97,7 +97,7 @@ object ExperimentMaxOnesGA {
 /* Stochastic local search: 
  */
 object ExperimentMaxOnesSLS {
-  def main(args: Array[String]) = new ExperimentMaxOnes(args) {
+  def main(args: Array[String]): Unit = new ExperimentMaxOnes(args) {
     require(populationSize == 1)
     //  override def selection = new OnePlusOneSelection[BitVectorEvaluated]
     override def selection = new GreedyBestSelection[BitVectorEvaluated, ScalarEvaluation]
