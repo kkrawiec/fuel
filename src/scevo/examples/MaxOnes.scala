@@ -8,6 +8,10 @@ import scevo.evo.Evolution
 import scevo.evo.Experiment
 import scevo.evo.GreedyBestSelection
 import scevo.evo.IterativeAlgorithm
+import scevo.evo.Options
+import scevo.evo.OptionsFromArgs
+import scevo.evo.Randomness
+import scevo.evo.Rng
 import scevo.evo.ScalarEvaluation
 import scevo.evo.ScalarEvaluationMax
 import scevo.evo.SearchStepWithEval
@@ -15,6 +19,8 @@ import scevo.evo.Selection
 import scevo.evo.Selector
 import scevo.evo.Solution
 import scevo.evo.State
+import scevo.evo.StochasticSearchOperators
+import scevo.evo.StoppingStd
 import scevo.evo.TournamentSelection
 import scevo.tools.TRandom
 
@@ -40,7 +46,18 @@ class BitVectorEvaluated(override val v: Seq[Boolean]) extends BitVector(v) with
   } ensuring (r => r(0).v.size == v.size && r(1).v.size == v.size)
 }
 
-abstract class ExperimentMaxOnes(args: Array[String]) extends Experiment[BitVectorEvaluated](args) {
+trait GASearchOperators extends StochasticSearchOperators[BitVectorEvaluated, ScalarEvaluation, BitVector] {
+  this: Options with Randomness =>
+  override def operators: Seq[Selector[BitVectorEvaluated, ScalarEvaluation] => Seq[BitVector]] =
+    List(
+      (source => List(source.next.mutateOneBit(rng))),
+      (source => source.next.onePointCrossover(source.next, rng)))
+}
+
+abstract class ExperimentMaxOnes(args: Array[String])
+  extends OptionsFromArgs(args) with Rng
+  with GASearchOperators with StoppingStd[BitVectorEvaluated]
+  with Experiment[BitVectorEvaluated] {
 
   val numVars = options("numVars").toInt
 
@@ -48,9 +65,7 @@ abstract class ExperimentMaxOnes(args: Array[String]) extends Experiment[BitVect
 
   val initialState = State((0 until populationSize).map(_ => new BitVectorEvaluated(0 until numVars map (_ => rng.nextBoolean))))
 
-  val searchOperators: Seq[(Selector[BitVectorEvaluated, ScalarEvaluation] => List[BitVector], Double)] = Seq(
-    (source => List(source.next.mutateOneBit(rng)), operatorProbs(0)),
-    (source => source.next.onePointCrossover(source.next, rng), operatorProbs(1)))
+  val searchOperators = operators.zip(operatorProbs)
 
   def selection: Selection[BitVectorEvaluated, ScalarEvaluation]
 
