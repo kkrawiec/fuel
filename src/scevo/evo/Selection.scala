@@ -15,13 +15,13 @@ trait Selector[ES <: EvaluatedSolution[E], E <: Evaluation] {
 }
 
 trait Selection[ES <: EvaluatedSolution[E], E <: Evaluation] {
-  def selector(history: Seq[State[ES]]): Selector[ES, E]
+  def selector(history: Seq[PopulationState[ES]]): Selector[ES, E]
 }
 
 class TournamentSelection[ES <: EvaluatedSolution[E], E <: Evaluation](val tournSize: Int, rng: TRandom)
   extends Selection[ES, E] {
   require(tournSize >= 2, "Tournament size has to be at least 2")
-  override def selector(history: Seq[State[ES]]) = new Selector[ES, E] {
+  override def selector(history: Seq[PopulationState[ES]]) = new Selector[ES, E] {
     protected val pool = history.head.solutions
     override val numSelected = pool.size
     override def next = BestSelector(pool(rng, tournSize))
@@ -30,7 +30,7 @@ class TournamentSelection[ES <: EvaluatedSolution[E], E <: Evaluation](val tourn
 
 class MuLambdaSelection[ES <: EvaluatedSolution[E], E <: Evaluation]
   extends Selection[ES, E] {
-  override def selector(history: Seq[State[ES]]) = new Selector[ES, E] {
+  override def selector(history: Seq[PopulationState[ES]]) = new Selector[ES, E] {
     val pool = history.head.solutions ++ (if (history.size > 1)
       history.tail.head.solutions else None )
     private val selected = pool.sortWith((a, b) => a.eval.betterThan(b.eval))
@@ -45,7 +45,7 @@ class MuLambdaSelection[ES <: EvaluatedSolution[E], E <: Evaluation]
 
 class GreedyBestSelection[ES <: EvaluatedSolution[E], E <: Evaluation]
   extends Selection[ES, E] {
-  override def selector(history: Seq[State[ES]]) = new Selector[ES, E] {
+  override def selector(history: Seq[PopulationState[ES]]) = new Selector[ES, E] {
     override val numSelected = 1
     override val next = BestSelector(history.head.solutions)
   }

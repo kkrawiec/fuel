@@ -11,14 +11,8 @@ import scevo.tools.ResultDatabase
  * Note that Experiment makes no reference to Solution types; only EvaluatedSolution
  */
 
-trait Experiment[ES <: EvaluatedSolution[_ <: Evaluation]] {
-  this: Options  =>
-
-  def run: Option[IterativeAlgorithm[ES]]
-
-  // General parameters read in from the command line
-  val populationSize = options.getOrElse("populationSize", "1000").toInt
-  assert(populationSize > 0, "Population size should be > 0")
+trait Experiment[S <: State] {
+  this: Algorithm[S] with InitialState[S] with Options =>
 
   // Prepare result database and fill it with technical parameters of the experiment
   val rdb = new ResultDatabase("./")
@@ -38,22 +32,23 @@ trait Experiment[ES <: EvaluatedSolution[_ <: Evaluation]] {
 
   rdb.saveWorkingState
 
-  def postGenerationCallback(state: IterativeAlgorithm[ES]): Unit =
-    println(f"Generation: ${state.currentState.iteration}  BestSoFar: ${state.bestSoFar.eval}")
-
-  def launch: Option[IterativeAlgorithm[ES]] = {
+  def launch: Option[State] = {
 
     val startTime = System.currentTimeMillis()
     try {
-      val res = run
-      if (res.isDefined) {
-        val alg = res.get
-        rdb.setResult("lastGeneration", alg.currentState.iteration)
-        rdb.setResult("bestOfRun.fitness", alg.bestSoFar.eval)
-        rdb.setResult("bestOfRun.genotype", alg.bestSoFar.toString())
+      val state = run(initialState)
+      rdb.setResult("lastGeneration", state.iteration)
+      /*
+      this match {
+        case a: IterativeAlgorithm[_, _, _] => {
+          rdb.setResult("bestOfRun.fitness", a.bestSoFar.eval)
+          rdb.setResult("bestOfRun.genotype", a.bestSoFar.toString)
+        }
       }
+      * 
+      */
       rdb.put("status", "completed")
-      res
+      Some(state)
     } catch {
       case e: Exception => {
         rdb.put("status", "error: " + e.getLocalizedMessage + e.getStackTrace().mkString(" ")) // .toString.replace('\n', ' '))

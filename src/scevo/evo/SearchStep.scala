@@ -7,17 +7,17 @@ import scevo.tools.TRandom
  * A single step (apply()) may include feasibility test, so it may be unsuccessfull, hence Option. 
  * A search operator returns a list of of candidate solutions; possibly empty (if, e.g., feasibility conditions are not met).
  */
-trait SearchStep[ES <: EvaluatedSolution[_ <: Evaluation]] {
-  def apply( history : Seq[State[ES]]) : Option[State[ES]]
+//trait SearchStep[S <: Solution, ES <: EvaluatedSolution[E], E <: Evaluation]{
+trait SearchStep[S <: State]{
+//  this : SearchOperators[ES,E,S] =>
+  def apply( history : Seq[S]) : Option[S]
 }
 
 
-class SearchStepWithEval[S <: Solution, ES <: EvaluatedSolution[E], E <: Evaluation](
-  val searchOperators: Seq[(Selector[ES,E] => Seq[S], Double)],
-  val evalFunction: Seq[S] => Seq[ES],
-  val selection: Selection[ES,E],
-  val rng: TRandom)
-  extends SearchStep[ES]  {
+trait SearchStepStochastic[S <: Solution, ES <: EvaluatedSolution[E], E <: Evaluation]
+  extends SearchStep[PopulationState[ES]]  {
+  this : StochasticSearchOperators[ES,E,S]
+  with Selection[ES,E] with Evaluator[S,ES] with Randomness =>
 
   assert(searchOperators.nonEmpty, "At least one search operator should be declared")
   assert(searchOperators.map(_._2).sum == 1, "Operators' probabilities should sum up to 1.0")
@@ -27,10 +27,10 @@ class SearchStepWithEval[S <: Solution, ES <: EvaluatedSolution[E], E <: Evaluat
    * history is the list of previous search states, with the most recent one being head. 
    * In most cases, it is only the most recent state (keeping entire history may be too memory costly). 
    */
-  def apply(history: Seq[State[ES]]): Option[State[ES]] = {
+  override def apply(history: Seq[PopulationState[ES]]): Option[PopulationState[ES]] = {
     require(history.nonEmpty)
 
-    val source = selection.selector(history)
+    val source = selector(history)
 
     var offspring = scala.collection.mutable.MutableList[S]()
     // Note: This loop will iterate forever is non of the search operators manages to produce a solution. 
@@ -41,12 +41,12 @@ class SearchStepWithEval[S <: Solution, ES <: EvaluatedSolution[E], E <: Evaluat
     }
     // Evaluation of an individual may end with None, which signals infeasible solution
 //    val evaluated = offspring.toIndexedSeq.map(evalFunction(_)).flatten
-    val evaluated = evalFunction( offspring.toList )
+    val evaluated = apply( offspring.toList )
     // parallel version: val evaluated = current.solutions.par.map(evalFunction(_, current)).flatten.seq
     if (evaluated.isEmpty)
       None // In case no individual passed the evaluation stage
     else
-      Some(State[ES](evaluated, history.head.iteration + 1))
+      Some(PopulationState[ES](evaluated, history.head.iteration + 1))
   }
 
 }

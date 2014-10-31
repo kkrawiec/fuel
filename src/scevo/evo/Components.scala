@@ -2,6 +2,7 @@ package scevo.evo
 
 import scevo.tools.OptionParser
 import scevo.tools.Random
+import scevo.tools.TRandom
 
 /*
  * The basic components to be then combined via mixins. 
@@ -23,7 +24,7 @@ abstract class OptionsFromArgs(args: Array[String]) extends Options {
  * Generic randomness provider. 
  */
 trait Randomness {
-  def rng: Random
+  def rng: TRandom
 }
 
 trait Rng extends Randomness {
@@ -33,28 +34,7 @@ trait Rng extends Randomness {
 }
 
 /*
- * Stopping conditions. 
- */
-trait StoppingConditions[ES <: EvaluatedSolution[_ <: Evaluation]] {
-  def stoppingConditions: List[StoppingCondition[ES]]
-}
-
-trait StoppingStd[ES <: EvaluatedSolution[_ <: Evaluation]] extends StoppingConditions[ES] {
-  this: Options =>
-
-  val maxGenerations = options.getOrElse("maxGenerations", "50").toInt
-  assert(maxGenerations > 0, "Number of generations should be > 0")
-
-  val maxTime = options.getOrElse("maxTime", "86400000").toLong
-  assert(maxTime > 0, "MaxTime should be > 0")
-
-  val scMaxTime = new MaxTime[ES](maxTime)
-  val scMaxGeneration = new MaxGenerations[ES](maxGenerations)
-
-  def stoppingConditions = List(scMaxTime, scMaxGeneration)
-}
-
-/* Search operators. 
+ * Search operators. 
  * 
  */
 trait SearchOperators[ES <: EvaluatedSolution[E], E <: Evaluation, S <: Solution] {
@@ -66,5 +46,17 @@ trait StochasticSearchOperators[ES <: EvaluatedSolution[E], E <: Evaluation, S <
   val operatorProbs = options.getOrElse("operatorProbs", "0.2,0.2,0.2,0.2,0.2").toString.split(",").map(_.toDouble).toList
   assert(operatorProbs.forall(_ >= 0), "Operator probs should be non-negative")
   assert(operatorProbs.sum == 1.0, "Operator probs should sum to 1.0")
+  lazy val searchOperators = operators.zip(operatorProbs)
 }
- 
+
+trait Evaluator[S, ES] extends Function1[Seq[S], Seq[ES]]
+
+trait PostIterationAction[ ES <: EvaluatedSolution[_ <: Evaluation]] {
+  this: IterativeAlgorithm[ES] =>
+  def postIteration: Unit =
+    println(f"Generation: ${currentState.iteration}  BestSoFar: ${bestSoFar.eval}")
+}
+
+trait InitialState[S <: State] {
+  def initialState: S
+}

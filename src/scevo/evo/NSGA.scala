@@ -45,9 +45,9 @@ class NSGASelectionNoArchive[ES <: EvaluatedSolution[F], F <: MultiobjectiveEval
   extends Selection[ES, F] {
 
   def archive = Seq[ES]() // fixed, won't change
-  override def selector(history: Seq[State[ES]]) = new NSGASelector(history)
+  override def selector(history: Seq[PopulationState[ES]]) = new NSGASelector(history)
 
-  class NSGASelector(history: Seq[State[ES]]) extends Selector[ES, F] {
+  class NSGASelector(history: Seq[PopulationState[ES]]) extends Selector[ES, F] {
     require(numToGenerate <= archive.size + history.head.solutions.size)
     val l = archive ++ history.head.solutions
     val ranking = paretoRanking(archive ++ history.head.solutions)
@@ -92,7 +92,7 @@ class NSGASelection[ES <: EvaluatedSolution[F], F <: MultiobjectiveEvaluation](
   var arch = Seq[ES]()
   override def archive = arch
   // Note: calling selector() changes the state of archive
-  override def selector(history: Seq[State[ES]]) = {
+  override def selector(history: Seq[PopulationState[ES]]) = {
     val sel = super.selector(history)
     arch = sel.selected.map(_.s)
     sel
@@ -108,7 +108,7 @@ final class TestNSGA {
   @Test
   def test: Unit = {
     val nsga = new NSGASelection[S, MultiobjectiveEvaluation](5, 3, new Random)
-    val state = new State(List(
+    val state = new PopulationState(List(
       new S(Seq(2, 3, 3)),
       new S(Seq(3, 3, 1)),
       new S(Seq(2, 2, 1)),
