@@ -1,6 +1,8 @@
 package scevo.evo
 
 import scevo.tools.Options
+import scevo.Distribution
+import scevo.tools.TRandom
 
 
 /*
@@ -14,10 +16,12 @@ trait SearchOperators[ES <: EvaluatedSolution[_], S <: Solution] {
 
 trait StochasticSearchOperators[ES <: EvaluatedSolution[_], S <: Solution] extends SearchOperators[ES, S] {
   this: Options =>
-  val operatorProbs = options.getOrElse("operatorProbs", "0.2,0.2,0.2,0.2,0.2").toString.split(",").map(_.toDouble).toList
-  assert(operatorProbs.forall(_ >= 0), "Operator probs should be non-negative")
-  assert(operatorProbs.sum == 1.0, "Operator probs should sum to 1.0")
-  lazy val searchOperators = operators.zip(operatorProbs)
+  val distribution = Distribution(options.getOrElse("operatorProbs", "0.2,0.2,0.2,0.2,0.2")
+  .split(",").map(_.toDouble).toList)
+  require(distribution.d.size == operators.size, "Invalid number of operator probabilities")
+//  lazy val searchOperators = operators.zip(operatorProbs)
+  def operator(rng: TRandom) = operators(distribution(rng))
+
 }
 
 trait Evaluator[S, ES] extends Function1[Seq[S], Seq[ES]]

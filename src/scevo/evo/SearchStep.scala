@@ -29,11 +29,8 @@ trait SearchStepStochastic[S <: Solution, ES <: EvaluatedSolution[_]]
 
     var offspring = scala.collection.mutable.MutableList[S]()
     // Note: This loop will iterate forever is non of the search operators manages to produce a solution. 
-    while (offspring.size < source.numSelected) {
-      val r = rng.nextDouble
-      var sum: Double = 0
-      offspring ++= searchOperators.find(e => { sum += e._2; sum >= r }).get._1(source)
-    }
+    while (offspring.size < source.numSelected) 
+      offspring ++= operator(rng)(source)
     // Evaluation of an individual may end with None, which signals infeasible solution
 //    val evaluated = offspring.toIndexedSeq.map(evalFunction(_)).flatten
     val evaluated = apply( offspring.toList )
