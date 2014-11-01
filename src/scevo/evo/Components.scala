@@ -37,11 +37,12 @@ trait Rng extends Randomness {
  * Search operators. 
  * 
  */
-trait SearchOperators[ES <: EvaluatedSolution[E], E <: Evaluation, S <: Solution] {
-  def operators: Seq[Selector[ES, E] => Seq[S]]
+trait SearchOperators[ES <: EvaluatedSolution[_], S <: Solution] {
+  def operators: Seq[Selector[ES] => Seq[S]]
+  assert(operators.nonEmpty, "At least one search operator should be declared")
 }
 
-trait StochasticSearchOperators[ES <: EvaluatedSolution[E], E <: Evaluation, S <: Solution] extends SearchOperators[ES, E, S] {
+trait StochasticSearchOperators[ES <: EvaluatedSolution[_], S <: Solution] extends SearchOperators[ES, S] {
   this: Options =>
   val operatorProbs = options.getOrElse("operatorProbs", "0.2,0.2,0.2,0.2,0.2").toString.split(",").map(_.toDouble).toList
   assert(operatorProbs.forall(_ >= 0), "Operator probs should be non-negative")

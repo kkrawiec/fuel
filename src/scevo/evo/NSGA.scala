@@ -42,12 +42,12 @@ class NSGASol[ES <: EvaluatedSolution[F], F <: MultiobjectiveEvaluation](val s: 
  */
 class NSGASelectionNoArchive[ES <: EvaluatedSolution[F], F <: MultiobjectiveEvaluation](
   numToGenerate: Int, tournSize: Int, rng: TRandom)
-  extends Selection[ES, F] {
+  extends Selection[ES] {
 
   def archive = Seq[ES]() // fixed, won't change
   override def selector(history: Seq[PopulationState[ES]]) = new NSGASelector(history)
 
-  class NSGASelector(history: Seq[PopulationState[ES]]) extends Selector[ES, F] {
+  class NSGASelector(history: Seq[PopulationState[ES]]) extends Selector[ES] {
     require(numToGenerate <= archive.size + history.head.solutions.size)
     val l = archive ++ history.head.solutions
     val ranking = paretoRanking(archive ++ history.head.solutions)

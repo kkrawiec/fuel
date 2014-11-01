@@ -1,7 +1,5 @@
 package scevo.evo
 
-import scevo.tools.TRandom
-
 /*
  * Iterative search algorithm. apply() is supposed to carry out one iteration. 
  * A single step (apply()) may include feasibility test, so it may be unsuccessfull, hence Option. 
@@ -14,15 +12,10 @@ trait SearchStep[S <: State]{
 }
 
 
-trait SearchStepStochastic[S <: Solution, ES <: EvaluatedSolution[E], E <: Evaluation]
+trait SearchStepStochastic[S <: Solution, ES <: EvaluatedSolution[_]]
   extends SearchStep[PopulationState[ES]]  {
-  this : StochasticSearchOperators[ES,E,S]
-  with Selection[ES,E] with Evaluator[S,ES] with Randomness =>
-
-  assert(searchOperators.nonEmpty, "At least one search operator should be declared")
-  assert(searchOperators.map(_._2).sum == 1, "Operators' probabilities should sum up to 1.0")
-  assert(searchOperators.forall(_._2 >= 0), "Operators' probabilities cannot be negative.")
-
+  this : StochasticSearchOperators[ES,S]
+  with Selection[ES] with Evaluator[S,ES] with Randomness =>
   /*
    * history is the list of previous search states, with the most recent one being head. 
    * In most cases, it is only the most recent state (keeping entire history may be too memory costly). 
@@ -48,6 +41,5 @@ trait SearchStepStochastic[S <: Solution, ES <: EvaluatedSolution[E], E <: Evalu
     else
       Some(PopulationState[ES](evaluated, history.head.iteration + 1))
   }
-
 }
 

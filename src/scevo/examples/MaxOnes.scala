@@ -26,6 +26,7 @@ import scevo.evo.PostIterationAction
 import scevo.evo.InitialState
 import scevo.evo.Evaluator
 import scevo.evo.StoppingConditions
+import scevo.evo.EA
 
 class BitVector(val v: Seq[Boolean]) extends Solution {
   override val toString = v.map(if (_) "1" else "0").reduce(_ + _)
@@ -49,45 +50,66 @@ class BitVectorEvaluated(override val v: Seq[Boolean]) extends BitVector(v) with
   } ensuring (r => r(0).v.size == v.size && r(1).v.size == v.size)
 }
 
-trait GASearchOperators extends StochasticSearchOperators[BitVectorEvaluated, ScalarEvaluation, BitVector] {
+
+trait GASearchOperators extends StochasticSearchOperators[BitVectorEvaluated, BitVector] {
   self: Options with Randomness =>
-  override def operators: Seq[Selector[BitVectorEvaluated, ScalarEvaluation] => Seq[BitVector]] =
+  override def operators: Seq[Selector[BitVectorEvaluated] => Seq[BitVector]] =
     List(
       (source => List(source.next.mutateOneBit(rng))),
       (source => source.next.onePointCrossover(source.next, rng)))
 }
-trait Init extends InitialState[PopulationState[BitVectorEvaluated]]{
-  this : Options with Randomness => 
+trait Init extends InitialState[PopulationState[BitVectorEvaluated]] {
+  this: Options with Randomness =>
   val numVars = options("numVars").toInt
   val populationSize = options.getOrElse("populationSize", "1000").toInt
   assert(populationSize > 0, "Population size should be > 0")
   override def initialState = PopulationState((0 until populationSize).map(_ => new BitVectorEvaluated(0 until numVars map (_ => rng.nextBoolean))))
 }
-trait Eval extends Evaluator[BitVector,BitVectorEvaluated]{
-  def apply(p : Seq[BitVector]) = p.map( s => new BitVectorEvaluated(s.v))
+trait Eval extends Evaluator[BitVector, BitVectorEvaluated] {
+  def apply(p: Seq[BitVector]) = p.map(s => new BitVectorEvaluated(s.v))
 }
-trait TournamentSel extends Selection[BitVectorEvaluated,ScalarEvaluation]{
-  this : Options with Randomness =>
-    val tournamentSize = options("tournamentSize").toInt
-    assert(tournamentSize > 1, "Tournament size should be > 1")
-    val selection = new TournamentSelection[BitVectorEvaluated, ScalarEvaluation](tournamentSize, rng)
-  def selector(history: Seq[PopulationState[BitVectorEvaluated]]) = selection.selector(history)
- }
+
+class MyConfig(args: Array[String]) 
+extends OptionsFromArgs(args) with Init with GASearchOperators with Eval with Rng
+
+
+class ExperimentMaxOnes3(args: Array[String])
+  extends OptionsFromArgs(args) with Rng
+  with EA[BitVector, BitVectorEvaluated]
+  with Init
+  with GASearchOperators
+  with TournamentSelection[BitVectorEvaluated]
+  with StoppingStd[IterativeAlgorithm[BitVectorEvaluated]]
+  with Experiment[PopulationState[BitVectorEvaluated]] {
+
+  def apply(p: Seq[BitVector]) = p.map(s => new BitVectorEvaluated(s.v))
+}
+
+
+class ExperimentMaxOnes2(args: Array[String])
+  extends OptionsFromArgs(args) with Rng
+  with EA[BitVector, BitVectorEvaluated]
+  with Init
+  with GASearchOperators
+  with Eval
+  with TournamentSelection[BitVectorEvaluated]
+  with StoppingStd[IterativeAlgorithm[BitVectorEvaluated]]
+  with Experiment[PopulationState[BitVectorEvaluated]] 
+
 
 class ExperimentMaxOnes(args: Array[String])
   extends OptionsFromArgs(args) with Rng
   with Init
-  with Evolution[BitVector, BitVectorEvaluated, ScalarEvaluation]
+  with Evolution[BitVector, BitVectorEvaluated]
   with GASearchOperators
-  with SearchStepStochastic[BitVector, BitVectorEvaluated, ScalarEvaluation]
+  with SearchStepStochastic[BitVector, BitVectorEvaluated]
   with Eval
   with PostIterationAction[BitVectorEvaluated]
-  with TournamentSel
+  with TournamentSelection[BitVectorEvaluated]
   with StoppingStd[IterativeAlgorithm[BitVectorEvaluated]]
-// Why is this not working:?
-//  with StoppingStd[Evolution[BitVector, BitVectorEvaluated, ScalarEvaluation]]
-  with Experiment[PopulationState[BitVectorEvaluated]] {
-
+  // Why is this not working:?
+  //  with StoppingStd[Evolution[BitVector, BitVectorEvaluated, ScalarEvaluation]]
+  with Experiment[PopulationState[BitVectorEvaluated]] 
 
   /*
   def selection: Selection[BitVectorEvaluated, ScalarEvaluation]
@@ -107,13 +129,12 @@ class ExperimentMaxOnes(args: Array[String])
     Some(evol)
   }
   */
-}
 
 /* Genetic Algorithm
  */
 object ExperimentMaxOnesGA {
-  def main(args: Array[String]): Unit = new ExperimentMaxOnes(args) {
- }.launch
+  def main(args: Array[String]): Unit = new ExperimentMaxOnes2(args) {
+  }.launch
 }
 
 /* Stochastic local search: 

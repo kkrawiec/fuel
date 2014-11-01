@@ -1,33 +1,28 @@
 package scevo.evo
 
-trait StoppingCondition[A <: Algorithm[_ <: State]] extends (A => Boolean)
+trait StoppingCondition[A <: Algorithm[_]] extends (A => Boolean)
 
 class MaxGenerations[A <: Algorithm[_ <: State]](maxGenerations: Int) extends StoppingCondition[A] {
-//class MaxGenerations(maxGenerations: Int) extends StoppingCondition[Algorithm[State]] {
   override def apply(alg: A) = alg.currentState.iteration >= maxGenerations
 }
 
-
-class MaxTime[A <: Algorithm[_ <: State]](maxMillisec: Long) extends StoppingCondition[A] {
+class MaxTime[A <: Algorithm[_]](maxMillisec: Long) extends StoppingCondition[A] {
   val startTime = System.currentTimeMillis()
   override def apply(alg: A) = timeElapsed > maxMillisec
   def timeElapsed = System.currentTimeMillis() - startTime
 }
 
-/*
-class BestHasProperty[A <: IterativeAlgorithm[_ <: PopulationState[ES]], ES<: EvaluatedSolution[ _ <: Evaluation]](val prop: (ES => Boolean)) 
-extends StoppingCondition[PopulationState[ES]] {
+class BestHasProperty[ES <: EvaluatedSolution[_]](val prop: (ES => Boolean))
+  extends StoppingCondition[IterativeAlgorithm[ES]] {
   var found: Option[ES] = None
-  override def apply(alg: Algorithm[PopulationState[ES]]) = {
+  override def apply(alg: IterativeAlgorithm[ES]) = {
     val r = prop(alg.bestSoFar)
     if (r) found = Some(alg.bestSoFar)
     r
   }
 }
-* 
-*/
 
-trait StoppingConditions[A <: Algorithm[_ <: State]] {
+trait StoppingConditions[A <: Algorithm[_]] {
   def stoppingConditions: List[StoppingCondition[A]]
   assert(stoppingConditions.nonEmpty, "At least one stopping condition has to be defined")
 }

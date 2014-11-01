@@ -7,26 +7,24 @@ trait Algorithm[S <: State] {
   def currentState: S
 }
 
-trait IterativeAlgorithm[ES <: EvaluatedSolution[_ <: Evaluation]] extends Algorithm[PopulationState[ES]] {
-//  this : StoppingConditions[IterativeAlgorithm[ES]] =>
+trait IterativeAlgorithm[ES <: EvaluatedSolution[_]] extends Algorithm[PopulationState[ES]] {
+  //  this : StoppingConditions[IterativeAlgorithm[ES]] =>
   override def currentState: PopulationState[ES]
   // Determining the best in population can be costly for large populations, hence this field
   def bestSoFar: ES
-//  def apply(postGenerationCallback: (IterativeAlgorithm[ES] => Unit) = ((_: IterativeAlgorithm[ES]) => ())): State[ES]
+  //  def apply(postGenerationCallback: (IterativeAlgorithm[ES] => Unit) = ((_: IterativeAlgorithm[ES]) => ())): State[ES]
 }
 
 /* 
  * Iterative search algorithm, with every iteration implemented as SearchStep
  */
-trait Evolution[S <: Solution, ES <: EvaluatedSolution[E], E <: Evaluation]
+trait Evolution[S <: Solution, ES <: EvaluatedSolution[_<: Evaluation]]
   extends IterativeAlgorithm[ES] with Logging {
-  this : SearchStepStochastic[S,ES,E] 
-  with StoppingConditions[IterativeAlgorithm[ES]]
-  with PostIterationAction[ES] =>
+  this: SearchStepStochastic[S, ES] with StoppingConditions[IterativeAlgorithm[ES]] with PostIterationAction[ES] =>
 
   private var current: PopulationState[ES] = _
   override def currentState = current
-  private var best : ES = _
+  private var best: ES = _
   override def bestSoFar = best
 
   /* Performs evolutionary run. 
@@ -36,7 +34,7 @@ trait Evolution[S <: Solution, ES <: EvaluatedSolution[E], E <: Evaluation]
   override def run(initialState: PopulationState[ES]): PopulationState[ES] = {
 
     current = initialState
-    best = BestSelector(current.solutions )
+    best = BestSelector(current.solutions)
 
     println("Search process started")
     do {
@@ -58,11 +56,13 @@ trait Evolution[S <: Solution, ES <: EvaluatedSolution[E], E <: Evaluation]
   }
 }
 
-/*
-trait EA[S <: Solution, ES <: EvaluatedSolution[E], E <: Evaluation]
-extends Evolution[S,ES,E] with SearchStepStochastic[S,ES,E]
-with StoppingConditions[Evolution[S,ES,E]]
-with PostIterationAction[ES] with Randomness
-* 
-*/
+trait EA[S <: Solution, ES <: EvaluatedSolution[_ <: Evaluation]]
+  extends Evolution[S, ES]
+  with Options
+  with SearchStepStochastic[S, ES]
+  with Selection[ES]
+  with Evaluator[S, ES]
+  with StochasticSearchOperators[ES, S]
+  with StoppingConditions[IterativeAlgorithm[ES]]
+  with PostIterationAction[ES] with Randomness
 
