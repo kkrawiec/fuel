@@ -4,8 +4,8 @@ import java.lang.management.ManagementFactory
 import java.net.InetAddress
 import java.net.UnknownHostException
 import java.util.Calendar
-
 import scevo.tools.ResultDatabase
+import scevo.tools.Options
 
 /*
  * Note that Experiment makes no reference to Solution types; only EvaluatedSolution

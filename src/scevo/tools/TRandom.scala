@@ -3,6 +3,23 @@ package scevo.tools
 import scala.collection.generic.CanBuildFrom
 
 /*
+ * Generic randomness provider. 
+ */
+trait Randomness {
+  def rng: TRandom
+}
+
+/*
+ * Randomness provider based on java.util.Random
+ */
+trait Rng extends Randomness {
+  this: Options =>
+  val seed = options.getOrElse("seed", "1").toInt
+  override lazy val rng = new Random(seed)
+}
+
+
+/*
  * This trait is intended to enable elegant use of different random number generators
  */
 

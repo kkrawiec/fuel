@@ -1,7 +1,8 @@
 package scevo.evo
 
 import scevo.Preamble._
-import scevo.tools.TRandom
+import scevo.tools.Options
+import scevo.tools.Randomness
 
 /* Selector is intended to operate in two phases: 
  * 1. When created, it can prepare helper data structures (or perform 'batch selection', as NSGAII does)
@@ -21,8 +22,7 @@ trait Selection[ES <: EvaluatedSolution[_]] {
 trait TournamentSelection[ES <: EvaluatedSolution[_ <: Evaluation]]
   extends Selection[ES] {
   this : Options with Randomness =>
-  val tournamentSize = options("tournamentSize").toInt
-  require(tournamentSize >= 2, "Tournament size has to be at least 2")
+  val tournamentSize = paramInt("tournamentSize", _ >= 2)
   override def selector(history: Seq[PopulationState[ES]]) = new Selector[ES] {
     protected val pool = history.head.solutions
     override val numSelected = pool.size

@@ -1,5 +1,7 @@
 package scevo.evo
 
+import scevo.tools.Randomness
+
 /*
  * Iterative search algorithm. apply() is supposed to carry out one iteration. 
  * A single step (apply()) may include feasibility test, so it may be unsuccessfull, hence Option. 

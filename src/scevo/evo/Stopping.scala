@@ -1,5 +1,7 @@
 package scevo.evo
 
+import scevo.tools.Options
+
 trait StoppingCondition[A <: Algorithm[_]] extends (A => Boolean)
 
 class MaxGenerations[A <: Algorithm[_ <: State]](maxGenerations: Int) extends StoppingCondition[A] {
@@ -29,16 +31,7 @@ trait StoppingConditions[A <: Algorithm[_]] {
 
 trait StoppingStd[A <: Algorithm[_ <: State]] extends StoppingConditions[A] {
   this: Options =>
-
-  val maxGenerations = options.getOrElse("maxGenerations", "50").toInt
-  assert(maxGenerations > 0, "Number of generations should be > 0")
-
-  val maxTime = options.getOrElse("maxTime", "86400000").toLong
-  assert(maxTime > 0, "MaxTime should be > 0")
-
-  val scMaxTime = new MaxTime[A](maxTime)
-  val scMaxGeneration = new MaxGenerations[A](maxGenerations)
-
-  def stoppingConditions = List(scMaxTime, scMaxGeneration)
+  def stoppingConditions = List(
+    new MaxTime[A](paramInt("maxTime", 86400000, _ > 0)),
+    new MaxGenerations[A](paramInt("maxGenerations", 50, _ > 0)))
 }
-

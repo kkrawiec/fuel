@@ -1,37 +1,7 @@
 package scevo.evo
 
-import scevo.tools.OptionParser
-import scevo.tools.Random
-import scevo.tools.TRandom
+import scevo.tools.Options
 
-/*
- * The basic components to be then combined via mixins. 
- */
-
-/*
- * Generic option/parameter provider. 
- * TODO: Consider renaming to Parameters
- */
-trait Options {
-  def options: Map[String, String]
-}
-
-abstract class OptionsFromArgs(args: Array[String]) extends Options {
-  override lazy val options = OptionParser(args.toList)
-}
-
-/*
- * Generic randomness provider. 
- */
-trait Randomness {
-  def rng: TRandom
-}
-
-trait Rng extends Randomness {
-  this: Options =>
-  val seed = options.getOrElse("seed", "1").toInt
-  override lazy val rng = new Random(seed)
-}
 
 /*
  * Search operators. 
@@ -52,12 +22,5 @@ trait StochasticSearchOperators[ES <: EvaluatedSolution[_], S <: Solution] exten
 
 trait Evaluator[S, ES] extends Function1[Seq[S], Seq[ES]]
 
-trait PostIterationAction[ ES <: EvaluatedSolution[_ <: Evaluation]] {
-  this: IterativeAlgorithm[ES] =>
-  def postIteration: Unit =
-    println(f"Generation: ${currentState.iteration}  BestSoFar: ${bestSoFar.eval}")
-}
 
-trait InitialState[S <: State] {
-  def initialState: S
-}
+

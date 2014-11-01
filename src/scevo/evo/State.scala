@@ -7,6 +7,10 @@ trait State {
   def iteration: Int
 }
 
+trait InitialState[S <: State] {
+  def initialState: S
+}
+
 class PopulationState[ES <: EvaluatedSolution[_]](val solutions: Seq[ES], override val iteration: Int)
   extends State {
   require(solutions.size > 0, "The set of working solutions in a state cannot be empty")

@@ -1,6 +1,8 @@
 package scevo.evo
 
 import scevo.tools.Logging
+import scevo.tools.Options
+import scevo.tools.Randomness
 
 trait Algorithm[S <: State] {
   def run(initialState: S): S
@@ -13,6 +15,12 @@ trait IterativeAlgorithm[ES <: EvaluatedSolution[_]] extends Algorithm[Populatio
   // Determining the best in population can be costly for large populations, hence this field
   def bestSoFar: ES
   //  def apply(postGenerationCallback: (IterativeAlgorithm[ES] => Unit) = ((_: IterativeAlgorithm[ES]) => ())): State[ES]
+}
+
+trait PostIterationAction[ES <: EvaluatedSolution[_ <: Evaluation]] {
+  this: IterativeAlgorithm[ES] =>
+  def postIteration: Unit =
+    println(f"Generation: ${currentState.iteration}  BestSoFar: ${bestSoFar.eval}")
 }
 
 /* 

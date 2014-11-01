@@ -1,32 +1,28 @@
 package scevo.examples
 
-import org.junit.Test
+import scevo.evo.EA
 import scevo.evo.EvaluatedSolution
+import scevo.evo.Evaluator
 import scevo.evo.Evolution
 import scevo.evo.Experiment
-import scevo.evo.GreedyBestSelection
+import scevo.evo.InitialState
 import scevo.evo.IterativeAlgorithm
-import scevo.evo.Options
-import scevo.evo.OptionsFromArgs
-import scevo.evo.Randomness
-import scevo.evo.Rng
+import scevo.evo.PopulationState
+import scevo.evo.PostIterationAction
 import scevo.evo.ScalarEvaluation
 import scevo.evo.ScalarEvaluationMax
-import scevo.evo.Selection
+import scevo.evo.SearchStepStochastic
 import scevo.evo.Selector
 import scevo.evo.Solution
-import scevo.evo.State
 import scevo.evo.StochasticSearchOperators
 import scevo.evo.StoppingStd
 import scevo.evo.TournamentSelection
+import scevo.tools.Options
+import scevo.tools.OptionsFromArgs
+import scevo.tools.Randomness
+import scevo.tools.Rng
 import scevo.tools.TRandom
-import scevo.evo.PopulationState
-import scevo.evo.SearchStepStochastic
-import scevo.evo.PostIterationAction
-import scevo.evo.InitialState
-import scevo.evo.Evaluator
-import scevo.evo.StoppingConditions
-import scevo.evo.EA
+import scevo.evo.BestHasProperty
 
 class BitVector(val v: Seq[Boolean]) extends Solution {
   override val toString = v.map(if (_) "1" else "0").reduce(_ + _)
@@ -50,9 +46,8 @@ class BitVectorEvaluated(override val v: Seq[Boolean]) extends BitVector(v) with
   } ensuring (r => r(0).v.size == v.size && r(1).v.size == v.size)
 }
 
-
 trait GASearchOperators extends StochasticSearchOperators[BitVectorEvaluated, BitVector] {
-  self: Options with Randomness =>
+  this: Options with Randomness =>
   override def operators: Seq[Selector[BitVectorEvaluated] => Seq[BitVector]] =
     List(
       (source => List(source.next.mutateOneBit(rng))),
@@ -60,18 +55,16 @@ trait GASearchOperators extends StochasticSearchOperators[BitVectorEvaluated, Bi
 }
 trait Init extends InitialState[PopulationState[BitVectorEvaluated]] {
   this: Options with Randomness =>
-  val numVars = options("numVars").toInt
-  val populationSize = options.getOrElse("populationSize", "1000").toInt
-  assert(populationSize > 0, "Population size should be > 0")
+  val numVars = paramInt("numVars", _ > 0)
+  val populationSize = paramInt("populationSize", 1000, _ > 0)
   override def initialState = PopulationState((0 until populationSize).map(_ => new BitVectorEvaluated(0 until numVars map (_ => rng.nextBoolean))))
 }
 trait Eval extends Evaluator[BitVector, BitVectorEvaluated] {
   def apply(p: Seq[BitVector]) = p.map(s => new BitVectorEvaluated(s.v))
 }
 
-class MyConfig(args: Array[String]) 
-extends OptionsFromArgs(args) with Init with GASearchOperators with Eval with Rng
-
+class MyConfig(args: Array[String])
+  extends OptionsFromArgs(args) with Init with GASearchOperators with Eval with Rng
 
 class ExperimentMaxOnes3(args: Array[String])
   extends OptionsFromArgs(args) with Rng
@@ -82,9 +75,10 @@ class ExperimentMaxOnes3(args: Array[String])
   with StoppingStd[IterativeAlgorithm[BitVectorEvaluated]]
   with Experiment[PopulationState[BitVectorEvaluated]] {
 
+  override def stoppingConditions = super.stoppingConditions :+
+    new BestHasProperty[BitVectorEvaluated](_.eval.v == numVars)
   def apply(p: Seq[BitVector]) = p.map(s => new BitVectorEvaluated(s.v))
 }
-
 
 class ExperimentMaxOnes2(args: Array[String])
   extends OptionsFromArgs(args) with Rng
@@ -94,8 +88,7 @@ class ExperimentMaxOnes2(args: Array[String])
   with Eval
   with TournamentSelection[BitVectorEvaluated]
   with StoppingStd[IterativeAlgorithm[BitVectorEvaluated]]
-  with Experiment[PopulationState[BitVectorEvaluated]] 
-
+  with Experiment[PopulationState[BitVectorEvaluated]]
 
 class ExperimentMaxOnes(args: Array[String])
   extends OptionsFromArgs(args) with Rng
@@ -109,31 +102,12 @@ class ExperimentMaxOnes(args: Array[String])
   with StoppingStd[IterativeAlgorithm[BitVectorEvaluated]]
   // Why is this not working:?
   //  with StoppingStd[Evolution[BitVector, BitVectorEvaluated, ScalarEvaluation]]
-  with Experiment[PopulationState[BitVectorEvaluated]] 
-
-  /*
-  def selection: Selection[BitVectorEvaluated, ScalarEvaluation]
-
-  // Need laziness here as selection will be defined only *after* child class'es 
-  // construction is completed. 
-  lazy val searchAlg = new SearchStepWithEval[BitVector, BitVectorEvaluated, ScalarEvaluation](
-    searchOperators, s => s.map(evalFunc(_)).flatten,
-    selection, rng)
-
-  val scIdealFitness = new BestHasProperty[BitVectorEvaluated]((s: BitVectorEvaluated) => s.eval.v == numVars)
-  lazy val evol = new Evolution[BitVector, BitVectorEvaluated](initialState, searchAlg, List(scIdealFitness, scMaxGeneration, scMaxTime))
-  * 
-
-  override def run: Option[IterativeAlgorithm[BitVectorEvaluated]] = {
-    evol.apply(super.postGenerationCallback)
-    Some(evol)
-  }
-  */
+  with Experiment[PopulationState[BitVectorEvaluated]]
 
 /* Genetic Algorithm
  */
 object ExperimentMaxOnesGA {
-  def main(args: Array[String]): Unit = new ExperimentMaxOnes2(args) {
+  def main(args: Array[String]): Unit = new ExperimentMaxOnes3(args) {
   }.launch
 }
 
