@@ -64,7 +64,9 @@ object ScalarEvaluationMin {
 class MultiobjectiveEvaluation(val v: Seq[ScalarEvaluation]) extends Evaluation {
   require(v.nonEmpty)
   override def toString = v.toString
-
+  /*
+   * Not very elegant, but much faster:
+   */
   def comparePartial(that: Evaluation): Option[Int] = {
     val other = that.asInstanceOf[MultiobjectiveEvaluation]
     val n = v.length
@@ -78,15 +80,12 @@ class MultiobjectiveEvaluation(val v: Seq[ScalarEvaluation]) extends Evaluation 
       else if (c < 0)
         yBetter = true
     }
-    if (xBetter)
-      if (yBetter)
-        None
-      else
-        Some(1)
-    else if (yBetter)
-      Some(-1)
-    else
-      Some(0)
+    (xBetter, yBetter) match {
+      case (true, true) => None
+      case (true, false) => Some(1)
+      case (false, true) => Some(-1)
+      case _ => Some(0)
+    }
   }
   override def equals(that: Any) = that match {
     case other: MultiobjectiveEvaluation => v.size == other.v.size && (0 until v.size).forall(i => v(i) == other.v(i))

@@ -24,17 +24,14 @@ trait SearchStepStochastic[S <: Solution, ES <: EvaluatedSolution[_]]
    */
   override def apply(history: Seq[PopulationState[ES]]): Option[PopulationState[ES]] = {
     require(history.nonEmpty)
-
     val source = selector(history)
-
     var offspring = scala.collection.mutable.MutableList[S]()
     // Note: This loop will iterate forever is non of the search operators manages to produce a solution. 
     while (offspring.size < source.numSelected) 
       offspring ++= operator(rng)(source)
-    // Evaluation of an individual may end with None, which signals infeasible solution
-//    val evaluated = offspring.toIndexedSeq.map(evalFunction(_)).flatten
     val evaluated = apply( offspring.toList )
     // parallel version: val evaluated = current.solutions.par.map(evalFunction(_, current)).flatten.seq
+    // Evaluation of an individual may end with None, which signals infeasible solution
     if (evaluated.isEmpty)
       None // In case no individual passed the evaluation stage
     else

@@ -3,10 +3,12 @@ package scevo.evo
 import scevo.tools.Logging
 import scevo.tools.Options
 import scevo.tools.Randomness
+import scevo.tools.ResultDatabase
 
 trait Algorithm[S <: State] {
-  def run(initialState: S): S
   def currentState: S
+  def run(initialState: S): S
+  def run(initialState: S, rdb: ResultDatabase): S = run(initialState)
 }
 
 trait IterativeAlgorithm[ES <: EvaluatedSolution[_]] extends Algorithm[PopulationState[ES]] {
@@ -14,7 +16,11 @@ trait IterativeAlgorithm[ES <: EvaluatedSolution[_]] extends Algorithm[Populatio
   override def currentState: PopulationState[ES]
   // Determining the best in population can be costly for large populations, hence this field
   def bestSoFar: ES
-  //  def apply(postGenerationCallback: (IterativeAlgorithm[ES] => Unit) = ((_: IterativeAlgorithm[ES]) => ())): State[ES]
+  override def run(initialState: PopulationState[ES], rdb: ResultDatabase): PopulationState[ES] = {
+    val s = super.run(initialState, rdb)
+    rdb.setResult("lastGeneration", s.iteration)
+    s
+  }
 }
 
 trait PostIterationAction[ES <: EvaluatedSolution[_ <: Evaluation]] {
@@ -26,7 +32,7 @@ trait PostIterationAction[ES <: EvaluatedSolution[_ <: Evaluation]] {
 /* 
  * Iterative search algorithm, with every iteration implemented as SearchStep
  */
-trait Evolution[S <: Solution, ES <: EvaluatedSolution[_<: Evaluation]]
+trait Evolution[S <: Solution, ES <: EvaluatedSolution[_ <: Evaluation]]
   extends IterativeAlgorithm[ES] with Logging {
   this: SearchStepStochastic[S, ES] with StoppingConditions[IterativeAlgorithm[ES]] with PostIterationAction[ES] =>
 
@@ -61,6 +67,12 @@ trait Evolution[S <: Solution, ES <: EvaluatedSolution[_<: Evaluation]]
 
     println("Search process completed")
     current
+  }
+  override def run(initialState: PopulationState[ES], rdb: ResultDatabase): PopulationState[ES] = {
+    val s = super.run(initialState, rdb)
+    rdb.setResult("bestOfRun.fitness", bestSoFar.eval)
+    rdb.setResult("bestOfRun.genotype", bestSoFar.toString)
+    s
   }
 }
 

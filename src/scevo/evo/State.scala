@@ -21,9 +21,9 @@ object PopulationState {
   def apply[ES <: EvaluatedSolution[_]](solutions: Seq[ES], iteration: Int = 0) =
     new PopulationState[ES](solutions, iteration)
 
-  def apply[ES <: EvaluatedSolution[_]](popSize: Int, genSolution: => ES): PopulationState[ES] = {
+  def apply[ES <: EvaluatedSolution[_]](popSize: Int, genSolution: () => ES): PopulationState[ES] = {
     require(popSize > 0, "Population cannot be empty")
-    new PopulationState(for (i <- 0 until popSize) yield genSolution, 0)
+    new PopulationState(for (i <- 0 until popSize) yield genSolution(), 0)
   }
 
 }

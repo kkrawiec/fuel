@@ -1,6 +1,7 @@
 package scevo.evo
 
-import scevo.Preamble._
+import scevo.Distribution
+import scevo.Preamble.seq2rndApply
 import scevo.tools.Options
 import scevo.tools.Randomness
 
@@ -21,8 +22,8 @@ trait Selection[ES <: EvaluatedSolution[_]] {
 
 trait TournamentSelection[ES <: EvaluatedSolution[_ <: Evaluation]]
   extends Selection[ES] {
-  this : Options with Randomness =>
-  val tournamentSize = paramInt("tournamentSize", _ >= 2)
+  this: Options with Randomness =>
+  val tournamentSize = paramInt("tournamentSize", 7, _ >= 2)
   override def selector(history: Seq[PopulationState[ES]]) = new Selector[ES] {
     protected val pool = history.head.solutions
     override val numSelected = pool.size
@@ -30,11 +31,22 @@ trait TournamentSelection[ES <: EvaluatedSolution[_ <: Evaluation]]
   }
 }
 
+trait FitnessProportionateSelection[ES <: EvaluatedSolution[_ <: ScalarEvaluation]]
+  extends Selection[ES] {
+  this: Randomness =>
+  override def selector(history: Seq[PopulationState[ES]]) = new Selector[ES] {
+    protected val pool = history.head.solutions
+    val distribution = Distribution.fromAnything(pool.map(_.eval.v))
+    override val numSelected = pool.size
+    override def next = pool(distribution(rng))
+  }
+}
+
 trait MuLambdaSelection[ES <: EvaluatedSolution[_ <: Evaluation]]
   extends Selection[ES] {
   override def selector(history: Seq[PopulationState[ES]]) = new Selector[ES] {
     val pool = history.head.solutions ++ (if (history.size > 1)
-      history.tail.head.solutions else None )
+      history.tail.head.solutions else None)
     private val selected = pool.sortWith((a, b) => a.eval.betterThan(b.eval))
     override val numSelected = history.head.solutions.size
     private var i = -1

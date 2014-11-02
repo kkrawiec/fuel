@@ -57,12 +57,15 @@ trait Init extends InitialState[PopulationState[BitVectorEvaluated]] {
   this: Options with Randomness =>
   val numVars = paramInt("numVars", _ > 0)
   val populationSize = paramInt("populationSize", 1000, _ > 0)
-  override def initialState = PopulationState((0 until populationSize).map(_ => new BitVectorEvaluated(0 until numVars map (_ => rng.nextBoolean))))
+  override def initialState = PopulationState(populationSize, () => new BitVectorEvaluated(List.fill(numVars)(rng.nextBoolean)))
 }
 trait Eval extends Evaluator[BitVector, BitVectorEvaluated] {
   def apply(p: Seq[BitVector]) = p.map(s => new BitVectorEvaluated(s.v))
 }
 
+/* Possible use cases:
+ * 
+ */
 class MyConfig(args: Array[String])
   extends OptionsFromArgs(args) with Init with GASearchOperators with Eval with Rng
 
