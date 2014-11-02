@@ -6,7 +6,7 @@ import scevo.evo.Evaluator
 import scevo.evo.Evolution
 import scevo.evo.Experiment
 import scevo.evo.InitialState
-import scevo.evo.IterativeAlgorithm
+import scevo.evo.PopulationAlgorithm
 import scevo.evo.PopulationState
 import scevo.evo.PostIterationAction
 import scevo.evo.ScalarEvaluation
@@ -75,7 +75,7 @@ class ExperimentMaxOnes3(args: Array[String])
   with Init
   with GASearchOperators
   with TournamentSelection[BitVectorEvaluated]
-  with StoppingStd[IterativeAlgorithm[BitVectorEvaluated]]
+  with StoppingStd[PopulationAlgorithm[BitVectorEvaluated]]
   with Experiment[PopulationState[BitVectorEvaluated]] {
 
   override def stoppingConditions = super.stoppingConditions :+
@@ -90,7 +90,7 @@ class ExperimentMaxOnes2(args: Array[String])
   with GASearchOperators
   with Eval
   with TournamentSelection[BitVectorEvaluated]
-  with StoppingStd[IterativeAlgorithm[BitVectorEvaluated]]
+  with StoppingStd[PopulationAlgorithm[BitVectorEvaluated]]
   with Experiment[PopulationState[BitVectorEvaluated]]
 
 class ExperimentMaxOnes(args: Array[String])
@@ -102,7 +102,7 @@ class ExperimentMaxOnes(args: Array[String])
   with Eval
   with PostIterationAction[BitVectorEvaluated]
   with TournamentSelection[BitVectorEvaluated]
-  with StoppingStd[IterativeAlgorithm[BitVectorEvaluated]]
+  with StoppingStd[PopulationAlgorithm[BitVectorEvaluated]]
   // Why is this not working:?
   //  with StoppingStd[Evolution[BitVector, BitVectorEvaluated, ScalarEvaluation]]
   with Experiment[PopulationState[BitVectorEvaluated]]

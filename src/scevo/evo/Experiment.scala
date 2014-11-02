@@ -13,7 +13,7 @@ import scevo.tools.ResultDatabase
  */
 
 trait Experiment[S <: State] {
-  this: Algorithm[S] with InitialState[S] with Options =>
+  this: Algorithm[S] with Options =>
 
   // Prepare result database and fill it with technical parameters of the experiment
   val rdb = new ResultDatabase("./")
@@ -31,12 +31,12 @@ trait Experiment[S <: State] {
   rdb.put("status", "initialized")
   rdb.saveWorkingState
 
-  protected def runExperiment(initialState: S, rdb: ResultDatabase) = run(initialState, rdb)
+  protected def runExperiment(rdb: ResultDatabase) = run(rdb)
 
   def launch: Option[State] = {
     val startTime = System.currentTimeMillis()
     try {
-      val state = runExperiment(initialState, rdb)
+      val state = runExperiment(rdb)
       rdb.put("status", "completed")
       Some(state)
     } catch {
