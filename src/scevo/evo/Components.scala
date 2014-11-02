@@ -15,7 +15,7 @@ trait SearchOperators[ES <: EvaluatedSolution[_], S <: Solution] {
 
 trait StochasticSearchOperators[ES <: EvaluatedSolution[_], S <: Solution] extends SearchOperators[ES, S] {
   this: Options =>
-  val prob = options.get("operatorProbs")
+  val prob = paramString("operatorProbs")
   val distribution = Distribution(
     if (prob.isDefined)
       prob.get.split(",").map(_.toDouble)

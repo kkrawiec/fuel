@@ -14,7 +14,7 @@ trait Randomness {
  */
 trait Rng extends Randomness {
   this: Options =>
-  val seed = options.getOrElse("seed", "1").toInt
+  val seed = paramInt("seed", 1)
   override lazy val rng = new Random(seed)
 }
 

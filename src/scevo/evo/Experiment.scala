@@ -18,7 +18,7 @@ trait Experiment[S <: State] {
   // Prepare result database and fill it with technical parameters of the experiment
   val rdb = new ResultDatabase("./")
   println("Result file: " + rdb.fname)
-  options.foreach(t => rdb.put(t._1, t._2))
+  retrievedOptions.foreach(t => rdb.put(t._1, t._2))
   try {
     rdb.setResult("system.hostname", InetAddress.getLocalHost().getHostName());
   } catch {
@@ -47,6 +47,8 @@ trait Experiment[S <: State] {
     } finally {
       rdb.setResult("totalTimeSystem", System.currentTimeMillis() - startTime)
       rdb.setResult("system.endTime", Calendar.getInstance().getTime().toString)
+      // Do this again, something may have changed during run:
+      retrievedOptions.foreach(t => rdb.put(t._1, t._2))
       rdb.save
       None
     }

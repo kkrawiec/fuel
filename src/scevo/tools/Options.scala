@@ -7,10 +7,26 @@ import scala.collection.immutable.TreeMap
  * TODO: Consider renaming to Parameters
  */
 trait Options {
-  def options: Map[String, String] // TODO: String => String
-  def paramString(id: String) = options(id)
-  def paramInt(id: String) = options(id).toInt
-  def paramInt(id: String, default: Int) = options.getOrElse(id, default.toString).toInt
+  protected def options: String => Option[String]
+
+  // Stores the values of retrieved options, *including the default values*
+  val retrievedOptions = scala.collection.mutable.Map[String, String]()
+
+  protected def getOption(id: String) = {
+    val v = options(id)
+    if (v.isDefined)
+      retrievedOptions.put(id, v.get)
+    v
+  }
+  protected def getOption(id: String, default: Any) = {
+    val v = options(id).getOrElse(default.toString)
+    retrievedOptions.put(id, v)
+    v
+  }
+
+  def paramString(id: String) = getOption(id)
+  def paramInt(id: String) = getOption(id).get.toInt
+  def paramInt(id: String, default: Int) = getOption(id, default).toInt
   def paramInt(id: String, validator: Int => Boolean): Int = {
     val v = paramInt(id)
     assert(validator(v), s"Parameter $id invalidates $validator")
@@ -21,8 +37,8 @@ trait Options {
     assert(validator(v), s"Parameter $id invalidates $validator")
     v
   }
-  def paramDouble(id: String) = options(id).toDouble
-  def paramDouble(id: String, default: Double) = options.getOrElse(id, default.toString).toDouble
+  def paramDouble(id: String) = options(id).get.toDouble
+  def paramDouble(id: String, default: Double) = getOption(id, default).toDouble
   def paramDouble(id: String, validator: Double => Boolean): Double = {
     val v = paramDouble(id)
     assert(validator(v), s"Parameter $id invalidates $validator")
@@ -37,7 +53,8 @@ trait Options {
 
 abstract class OptionsFromArgs(args: Array[String]) extends Options {
   def this(params: String) = this(params.split("\\s+"))
-  override lazy val options = OptionParser(args.toList)
+  private val opt = OptionParser(args.toList)
+  override protected def options = (id: String) => opt.get(id)
 }
 
 /*
