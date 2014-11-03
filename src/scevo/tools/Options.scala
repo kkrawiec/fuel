@@ -24,8 +24,9 @@ trait Options {
     v
   }
 
+  // TODO: not consequent: paramString returns Option, while paramInt a value
   def paramString(id: String) = getOption(id)
-  def paramInt(id: String) = getOption(id).get.toInt
+  def paramInt(id: String) = getOption(id).getOrElse({ throw new Exception(s"Parameter $id not found");""}).toInt
   def paramInt(id: String, default: Int) = getOption(id, default).toInt
   def paramInt(id: String, validator: Int => Boolean): Int = {
     val v = paramInt(id)
