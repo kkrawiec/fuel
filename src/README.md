@@ -55,7 +55,7 @@ or any other (possibly better) random number generator.
 TODO
 ====
 
-* Consider having single global random number generator in Preamble (or in general a map Thread.id() => TRandom)
+* introduce scaps.evo.Defaults
 * Implement a straightforward island model
 * Possibly: detach evaluation from solution; keep a mapping from solutions to evaluations
 

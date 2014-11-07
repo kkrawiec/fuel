@@ -4,7 +4,7 @@ import scala.annotation.tailrec
 
 import org.junit.Test
 
-import scevo.Preamble.seq2rndApply
+import scevo.Preamble.RndApply
 import scevo.tools.Random
 import scevo.tools.TRandom
 

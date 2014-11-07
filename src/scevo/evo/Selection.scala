@@ -1,7 +1,7 @@
 package scevo.evo
 
 import scevo.Distribution
-import scevo.Preamble.seq2rndApply
+import scevo.Preamble.RndApply
 import scevo.tools.Options
 import scevo.tools.Randomness
 

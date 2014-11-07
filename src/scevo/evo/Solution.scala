@@ -104,7 +104,7 @@ class TestOutcomes(override val v: Seq[ScalarEvaluationMax]) extends Multiobject
 }
 class BinaryTestOutcomes(override val v: Seq[ScalarEvaluationMax]) extends TestOutcomes(v) {
   require(v.forall(e => e.v == 0 || e.v == 1))
-  override def toString = s"Passed: ${v.map(_.v).sum} " + super.toString
+//  override def toString = s"Passed: ${v.map(_.v).sum} " + super.toString
 }
 
 final class TestEvaluation {

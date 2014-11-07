@@ -19,7 +19,8 @@ object Combinations {
 object CodeExecutor {
   def apply(code: String) = {
     try {
-      val toolBox = runtimeMirror(getClass.getClassLoader).mkToolBox()
+      val cl = getClass.getClassLoader
+      val toolBox = runtimeMirror(cl).mkToolBox()
       val ast = toolBox.parse(code)
       toolBox.compile(ast)()
     } catch {
