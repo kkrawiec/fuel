@@ -1,6 +1,5 @@
 package scevo.tools
 
-import scala.reflect.runtime.universe._
 import scala.tools.reflect.ToolBox
 
 object Combinations {
@@ -17,10 +16,15 @@ object Combinations {
 }
 
 object CodeExecutor {
+  import scala.reflect.runtime.{ currentMirror => cm }
   def apply(code: String) = {
     try {
+      /*
       val cl = getClass.getClassLoader
       val toolBox = runtimeMirror(cl).mkToolBox()
+      */
+      // TODO: Verify: This looks simpler, so maybe its faster: 
+      val toolBox = cm.mkToolBox()
       val ast = toolBox.parse(code)
       toolBox.compile(ast)()
     } catch {
