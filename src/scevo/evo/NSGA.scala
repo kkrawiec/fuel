@@ -159,5 +159,16 @@ final class TestNSGA {
     for (i <- 0 until 20)
       println(sel.next)
   }
-}  
+  @Test
+  def test2: Unit = {
+    val a = new NSGA.Eval(1, 3) 
+    val b = new NSGA.Eval(2, 3) 
+    val c = new NSGA.Eval(2, 1) 
+    println( a.comparePartial(b) )
+    println( a.comparePartial(c) )
+    println( b.comparePartial(c) )
+    println( c.comparePartial(b) )
+    println( c.comparePartial(c) )
+  }
+ }  
 

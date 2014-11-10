@@ -25,7 +25,7 @@ trait PostIterationAction[ES <: EvaluatedSolution[_ <: Evaluation]] {
 
 trait PostBestSoFar[ES <: EvaluatedSolution[_ <: Evaluation]] extends PostIterationAction[ES] {
   this: PopulationAlgorithm[ES] =>
-  private var best: Option[ES] = None
+  protected var best: Option[ES] = None
   def bestSoFar: Option[ES] = best
   override def postIteration: Unit = {
     val bestOfGen = BestSelector(currentState.solutions)
@@ -64,12 +64,10 @@ trait Evolution[S <: Solution, ES <: EvaluatedSolution[_ <: Evaluation]]
     current = initialState
     println("Search process started")
     do {
-      var nextStep = apply(Seq(current))
-      current = if (nextStep.isEmpty) {
+      current = apply(Seq(current)).getOrElse({
         log(s"Generation ${current.iteration}: None of candidate solutions passed the evaluation stage. Restarting. ")
         PopulationState(initialState.solutions, current.iteration + 1)
-      } else
-        nextStep.get
+      })
       postIteration
     } while (stoppingConditions.forall(sc => !sc(this)))
     println("Search process completed")
