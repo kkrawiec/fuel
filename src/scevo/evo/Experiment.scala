@@ -18,7 +18,10 @@ trait Experiment[S <: State] {
   // Prepare result database and fill it with technical parameters of the experiment
   val rdb = new ResultDatabase("./")
   println("Result file: " + rdb.fname)
+
+  allOptions.foreach(t => rdb.put(t._1, t._2))
   retrievedOptions.foreach(t => rdb.put(t._1, t._2))
+
   try {
     rdb.setResult("system.hostname", InetAddress.getLocalHost().getHostName());
   } catch {

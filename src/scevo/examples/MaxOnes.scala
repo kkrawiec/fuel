@@ -1,6 +1,7 @@
 package scevo.examples
 
 import scevo.evo.EA
+import scevo.evo.EpilogueBestOfRun
 import scevo.evo.EvaluatedSolution
 import scevo.evo.Evaluator
 import scevo.evo.Evolution
@@ -8,13 +9,14 @@ import scevo.evo.Experiment
 import scevo.evo.InitialState
 import scevo.evo.PopulationAlgorithm
 import scevo.evo.PopulationState
-import scevo.evo.PostIterationAction
+import scevo.evo.PostBestSoFar
 import scevo.evo.ScalarEvaluation
 import scevo.evo.ScalarEvaluationMax
 import scevo.evo.SearchStepStochastic
 import scevo.evo.Selector
 import scevo.evo.Solution
 import scevo.evo.StochasticSearchOperators
+import scevo.evo.StoppingCondition
 import scevo.evo.StoppingStd
 import scevo.evo.TournamentSelection
 import scevo.tools.Options
@@ -22,7 +24,6 @@ import scevo.tools.OptionsFromArgs
 import scevo.tools.Randomness
 import scevo.tools.Rng
 import scevo.tools.TRandom
-import scevo.evo.BestHasProperty
 
 class BitVector(val v: Seq[Boolean]) extends Solution {
   override val toString = v.map(if (_) "1" else "0").reduce(_ + _)
@@ -79,7 +80,9 @@ class ExperimentMaxOnes3(args: Array[String])
   with Experiment[PopulationState[BitVectorEvaluated]] {
 
   override def stoppingConditions = super.stoppingConditions :+
-    new BestHasProperty[BitVectorEvaluated](_.eval.v == numVars)
+    new StoppingCondition[PopulationAlgorithm[BitVectorEvaluated]] {
+      def apply(a: PopulationAlgorithm[BitVectorEvaluated]) = bestSoFar.get.eval.v == numVars
+    }
   def apply(p: Seq[BitVector]) = p.map(s => new BitVectorEvaluated(s.v))
 }
 
@@ -100,7 +103,8 @@ class ExperimentMaxOnes(args: Array[String])
   with GASearchOperators
   with SearchStepStochastic[BitVector, BitVectorEvaluated]
   with Eval
-  with PostIterationAction[BitVectorEvaluated]
+  with PostBestSoFar[BitVectorEvaluated]
+  with EpilogueBestOfRun[BitVectorEvaluated]
   with TournamentSelection[BitVectorEvaluated]
   with StoppingStd[PopulationAlgorithm[BitVectorEvaluated]]
   // Why is this not working:?

@@ -14,16 +14,6 @@ class MaxTime[A <: IterativeAlgorithm[_]](maxMillisec: Long) extends StoppingCon
   def timeElapsed = System.currentTimeMillis() - startTime
 }
 
-class BestHasProperty[ES <: EvaluatedSolution[_]](val prop: (ES => Boolean))
-  extends StoppingCondition[PopulationAlgorithm[ES]] {
-  var found: Option[ES] = None
-  override def apply(alg: PopulationAlgorithm[ES]) = {
-    val r = prop(alg.bestSoFar)
-    if (r) found = Some(alg.bestSoFar)
-    r
-  }
-}
-
 trait StoppingConditions[A <: IterativeAlgorithm[_]] {
   def stoppingConditions: List[StoppingCondition[A]]
   assert(stoppingConditions.nonEmpty, "At least one stopping condition has to be defined")

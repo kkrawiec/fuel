@@ -9,6 +9,8 @@ import scala.collection.immutable.TreeMap
 trait Options {
   protected def options: String => Option[String]
 
+  def allOptions : Map[String, String]
+
   // Stores the values of retrieved options, *including the default values*
   val retrievedOptions = scala.collection.mutable.Map[String, String]()
 
@@ -55,6 +57,7 @@ trait Options {
 abstract class OptionsFromArgs(args: Array[String]) extends Options {
   def this(params: String) = this(params.split("\\s+"))
   private val opt = OptionParser(args.toList)
+  override def allOptions = opt
   override protected def options = (id: String) => opt.get(id)
 }
 
