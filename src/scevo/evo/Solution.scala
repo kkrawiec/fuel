@@ -40,12 +40,13 @@ abstract class ScalarEvaluation(val v: Double) extends Evaluation with Ordered[S
   override def toString = v.toString
   override def equals(that: Any) = that match {
     case other: ScalarEvaluation => v == other.v
-    case _ => false
+    case _                       => false
   }
   override def hashCode = v.hashCode
 }
 
-class ScalarEvaluationMax(override val v: Double) extends ScalarEvaluation(v) {
+class ScalarEvaluationMax(override val v: Double)
+  extends ScalarEvaluation(if (v.isNaN) Double.MinValue else v) {
   override def compare(that: ScalarEvaluation) =
     math.signum(v - that.asInstanceOf[ScalarEvaluationMax].v).toInt
 }
@@ -53,7 +54,8 @@ object ScalarEvaluationMax {
   def apply(v: Double) = new ScalarEvaluationMax(v)
 }
 
-class ScalarEvaluationMin(override val v: Double) extends ScalarEvaluation(v) {
+class ScalarEvaluationMin(override val v: Double)
+  extends ScalarEvaluation(if (v.isNaN) Double.MaxValue else v) {
   override def compare(that: ScalarEvaluation) =
     math.signum(that.asInstanceOf[ScalarEvaluationMin].v - v).toInt
 }
@@ -81,15 +83,15 @@ class MultiobjectiveEvaluation(val v: Seq[ScalarEvaluation]) extends Evaluation 
         yBetter = true
     }
     (xBetter, yBetter) match {
-      case (true, true) => None
+      case (true, true)  => None
       case (true, false) => Some(1)
       case (false, true) => Some(-1)
-      case _ => Some(0)
+      case _             => Some(0)
     }
   }
   override def equals(that: Any) = that match {
     case other: MultiobjectiveEvaluation => v.size == other.v.size && (0 until v.size).forall(i => v(i) == other.v(i))
-    case _ => false
+    case _                               => false
   }
   override def hashCode = v.map(_.hashCode).reduce(_ ^ _)
 }
@@ -104,7 +106,7 @@ class TestOutcomes(override val v: Seq[ScalarEvaluationMax]) extends Multiobject
 }
 class BinaryTestOutcomes(override val v: Seq[ScalarEvaluationMax]) extends TestOutcomes(v) {
   require(v.forall(e => e.v == 0 || e.v == 1))
-//  override def toString = s"Passed: ${v.map(_.v).sum} " + super.toString
+  //  override def toString = s"Passed: ${v.map(_.v).sum} " + super.toString
 }
 
 final class TestEvaluation {

@@ -65,6 +65,9 @@ object NSGA {
       override val numSelected = numToGenerate
     }
 
+    // Builds the ranking bottom up. Only pointers to dominate solutions are necessary (no counters).  
+    // On the other hand, bottom-up requires building the *entire* ranking (while regular NSGA ranks
+    // roughly half of the solutions).
     private def paretoRanking(solutions: Seq[ES]): Seq[Seq[Sol[ES, F]]] = {
       @tailrec def pareto(dominating: Map[Int, Set[Int]], layers: List[Seq[Int]] = List()): List[Seq[Int]] = {
         val (lastLayer, rest) = dominating.partition(e => e._2.isEmpty)

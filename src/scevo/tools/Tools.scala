@@ -12,9 +12,8 @@ object Combinations {
       case _ => elems.flatMap(e => apply(elems, n - 1).map(g => List(e) ++ g))
     }
   }
-  def apply(m: Int, n: Int) : Seq[Seq[Int]] = apply( Seq.range(0, m), n )
+  def apply(m: Int, n: Int): Seq[Seq[Int]] = apply(Seq.range(0, m), n)
 }
-
 
 object CodeExecutor {
   import scala.reflect.runtime.{ currentMirror => cm }
@@ -29,10 +28,21 @@ object CodeExecutor {
       val ast = toolBox.parse(code)
       toolBox.compile(ast)()
     } catch {
-      case e: Exception => throw new Exception(
+      case e: Throwable => throw new Exception(
         "Error when parsing/compiling/executing Scala code: " + code, e)
     }
   }
 }
 
+object Stats {
 
+  def descriptive(l: Seq[Double]) = {
+    require(l.nonEmpty)
+    (l.min, l.sum / l.size, l.max)
+  }
+
+  def basic(l: Seq[Double]) = {
+    val (sMin, sMean, sMax) = descriptive(l)
+    f"Min: $sMin  Avg: $sMean%.2f  Max: $sMax"
+  }
+}
