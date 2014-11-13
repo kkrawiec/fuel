@@ -28,22 +28,23 @@ import scevo.tools.Options
  */
 
 object NSGA {
-
-  class Eval(val rank: Int, val crowding: Int) extends Evaluation {
-    def comparePartial(that: Evaluation): Option[Int] = {
-      val other = that.asInstanceOf[Eval]
-      val rankCmp = rank.compare(other.rank)
-      Some(if (rankCmp != 0) -rankCmp
-      else -crowding.compare(other.crowding))
-    }
-  }
   // Works as a wrapper around the original ES
-  class Sol[ES <: EvaluatedSolution[F], F <: MultiobjectiveEvaluation](val s: ES, val eval: Eval) extends EvaluatedSolution[Eval]
+  class Wrapper[ES <: EvaluatedSolution[F], F <: MultiobjectiveEvaluation](val s: ES, val rank: Int, val sparsity: Int)
 
+  trait Comparer[ES <: EvaluatedSolution[F], F <: MultiobjectiveEvaluation] {
+    def compare(a: Wrapper[ES, F], b: Wrapper[ES, F]): Boolean
+    def compareIntraLayer(a: Wrapper[ES, F], b: Wrapper[ES, F]): Boolean
+  }
+  trait DefaultComparer[ES <: EvaluatedSolution[F], F <: MultiobjectiveEvaluation]
+    extends Comparer[ES, F] {
+    def compare(a: Wrapper[ES, F], b: Wrapper[ES, F]) = if (a.rank < b.rank) true else a.sparsity < b.sparsity
+    def compareIntraLayer(a: Wrapper[ES, F], b: Wrapper[ES, F]) = a.sparsity < b.sparsity
+  }
   /* No-archive, memoryless variant of NSGA. Selection works on the current population only 
  */
   protected trait NoArchive[ES <: EvaluatedSolution[F], F <: MultiobjectiveEvaluation]
     extends Selection[ES] {
+    this: Comparer[ES, F] =>
 
     def rng: TRandom
     def numToGenerate: Int
@@ -59,16 +60,17 @@ object NSGA {
       var capacity = numToGenerate
       val fullLayers = ranking.takeWhile(
         r => if (capacity - r.size < 0) false else { capacity -= r.size; true })
-      val selected = if (capacity <= 0) fullLayers.flatten // flatten preserves ordering
-      else fullLayers.flatten ++ ranking(fullLayers.size).sortBy(_.eval.crowding).splitAt(capacity)._1
-      override def next = BestSelector(selected(rng, tournSize)).s
+      val selected = if (capacity <= 0) fullLayers.flatten // flatten preserves ordering 
+      else fullLayers.flatten ++ ranking(fullLayers.size).sortWith(compareIntraLayer).splitAt(capacity)._1
+      override def next = BestSelector(selected(rng, tournSize), compare).s
       override val numSelected = numToGenerate
     }
 
-    // Builds the ranking bottom up. Only pointers to dominate solutions are necessary (no counters).  
+    // Builds the ranking bottom up. Only pointers to dominated solutions are necessary (the counters 
+    // of dominating solutions, as used in Deb's paper, are not needed).  
     // On the other hand, bottom-up requires building the *entire* ranking (while regular NSGA ranks
     // roughly half of the solutions).
-    private def paretoRanking(solutions: Seq[ES]): Seq[Seq[Sol[ES, F]]] = {
+    private def paretoRanking(solutions: Seq[ES]): Seq[Seq[Wrapper[ES, F]]] = {
       @tailrec def pareto(dominating: Map[Int, Set[Int]], layers: List[Seq[Int]] = List()): List[Seq[Int]] = {
         val (lastLayer, rest) = dominating.partition(e => e._2.isEmpty)
         val ll = lastLayer.keys.toSeq
@@ -87,7 +89,7 @@ object NSGA {
       val identical = comparisons.map({ case (i, cmp) => cmp.count(_.getOrElse(1) == 0) })
       val layers = pareto(dominating).toSeq
       (0 until layers.size).map(i =>
-        layers(i).map(j => new Sol[ES, F](solutions(j), new Eval(i, identical(j)))))
+        layers(i).map(j => new Wrapper[ES, F](solutions(j), i, identical(j))))
     }
   }
 
@@ -96,6 +98,7 @@ object NSGA {
  */
   protected trait WithArchive[ES <: EvaluatedSolution[F], F <: MultiobjectiveEvaluation]
     extends NoArchive[ES, F] {
+    this: Comparer[ES, F] =>
     var arch = Seq[ES]()
     override def archive = arch
     // Note: calling selector() changes the state of archive
@@ -120,12 +123,12 @@ object NSGA {
       numToGen: Int, tournamentSize: Int, rn: TRandom) =
       new {
         val (rng, numToGenerate, tournSize) = (rn, numToGen, tournamentSize)
-      } with NoArchive[ES, F]
+      } with NoArchive[ES, F] with DefaultComparer[ES, F]
   }
 
   trait NoArchiveMixin[ES <: EvaluatedSolution[F], F <: MultiobjectiveEvaluation]
     extends NoArchive[ES, F] with ParamProvider {
-    this: Options with Randomness =>
+    this: Options with Randomness with Comparer[ES, F] =>
   }
 
   object WithArchive {
@@ -133,11 +136,11 @@ object NSGA {
       numToGen: Int, tournamentSize: Int, rn: TRandom) =
       new {
         val (rng, numToGenerate, tournSize) = (rn, numToGen, tournamentSize)
-      } with WithArchive[ES, F]
+      } with WithArchive[ES, F] with DefaultComparer[ES, F]
   }
   trait WithArchiveMixin[ES <: EvaluatedSolution[F], F <: MultiobjectiveEvaluation]
     extends WithArchive[ES, F] with ParamProvider {
-    this: Options with Randomness =>
+    this: Options with Randomness with Comparer[ES, F] =>
   }
 }
 
@@ -162,16 +165,35 @@ final class TestNSGA {
     for (i <- 0 until 20)
       println(sel.next)
   }
+  /*
   @Test
   def test2: Unit = {
-    val a = new NSGA.Eval(1, 3) 
-    val b = new NSGA.Eval(2, 3) 
-    val c = new NSGA.Eval(2, 1) 
-    println( a.comparePartial(b) )
-    println( a.comparePartial(c) )
-    println( b.comparePartial(c) )
-    println( c.comparePartial(b) )
-    println( c.comparePartial(c) )
+    val a = new NSGA.Eval(1, 3)
+    val b = new NSGA.Eval(2, 3)
+    val c = new NSGA.Eval(2, 1)
+    println(a.comparePartial(b))
+    println(a.comparePartial(c))
+    println(b.comparePartial(c))
+    println(c.comparePartial(b))
+    println(c.comparePartial(c))
   }
- }  
+  * 
+  */
+}  
 
+  /* 
+  trait WrapperFactory[ES <: EvaluatedSolution[F], F <: MultiobjectiveEvaluation] {
+    def buildWraper(s: ES, rank: Int, crowding: Int) =
+      new Wrapper[ES, F](s, rank.toDouble, crowding.toDouble)
+  }
+   class Eval(val rank: Int, val crowding: Int) extends Evaluation {
+    def comparePartial(that: Evaluation): Option[Int] = {
+      val other = that.asInstanceOf[Eval]
+      val rankCmp = rank.compare(other.rank)
+      Some(if (rankCmp != 0) -rankCmp
+      else -crowding.compare(other.crowding))
+    }
+  }
+  * 
+  */
+ 

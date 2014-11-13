@@ -31,6 +31,9 @@ trait Evaluation {
     comparePartial(that).getOrElse(0) > 0
 }
 
+
+// TODO: Introduce trait LinearOrder
+
 // Implements *complete* order
 abstract class ScalarEvaluation(val v: Double) extends Evaluation with Ordered[ScalarEvaluation] {
   override def betterThan(that: Evaluation): Boolean =
@@ -107,6 +110,19 @@ class TestOutcomes(override val v: Seq[ScalarEvaluationMax]) extends Multiobject
 class BinaryTestOutcomes(override val v: Seq[ScalarEvaluationMax]) extends TestOutcomes(v) {
   require(v.forall(e => e.v == 0 || e.v == 1))
   //  override def toString = s"Passed: ${v.map(_.v).sum} " + super.toString
+  def numTestsPassed = v.map(_.v).sum
+  def passesMoreTests(that: BinaryTestOutcomes) = numTestsPassed > that.numTestsPassed
+}
+
+// Lexicographic ascending order, e minimized
+class EvalLexMin(val e: Double*) extends Evaluation {
+  require(e.nonEmpty)
+  def comparePartial(that: Evaluation): Option[Int] = {
+    val other = that.asInstanceOf[EvalLexMin]
+    //require(e.size == other.e.size) 
+    val r = e.zip(other.e).find({ case (me, oth) => me != oth }).getOrElse((0.0, 0.0))
+    Some((r._2 - r._1).toInt)
+  }
 }
 
 final class TestEvaluation {

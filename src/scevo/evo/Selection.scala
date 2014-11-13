@@ -72,4 +72,18 @@ object BestSelector {
     set.tail.foreach(e => if (e.eval.betterThan(best.eval)) best = e)
     best
   }
+  // I'd be happy to call this 'select' as well, but type erasure does not permit.
+  def select[E <: Evaluation](set: Seq[E]) = {
+    require(set.nonEmpty)
+    var best = set.head
+    set.tail.foreach(e => if (e.betterThan(best)) best = e)
+    best
+  }
+  // Generic, for non-Evaluation classes
+  def apply[T](set: Seq[T], better: (T, T) => Boolean) = {
+    require(set.nonEmpty)
+    var best = set.head
+    set.tail.foreach(e => if (better(e, best)) best = e)
+    best
+  }
 }

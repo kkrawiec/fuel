@@ -11,6 +11,7 @@ object Preamble {
 }
 
 class Distribution(val d: Seq[Double]) {
+  require(d.nonEmpty, "Distribution should contain at least one element")
   require(d.sum == 1.0, "Distribution should sum up to 1.0")
   require(d.forall(_ >= 0), "Distribution elements should be non-negative")
   def apply(rng: TRandom): Int = {

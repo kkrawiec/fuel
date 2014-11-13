@@ -55,6 +55,7 @@ or any other (possibly better) random number generator.
 TODO
 ====
 
+* Steady state EA
 * Optimization: Pick the right collections
 * introduce scaps.evo.Defaults
 * Implement a straightforward island model
