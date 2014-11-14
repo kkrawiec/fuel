@@ -12,7 +12,7 @@ trait Options {
   def allOptions: Map[String, String]
 
   // Stores the values of retrieved options, *including the default values*
-  val retrievedOptions = scala.collection.mutable.Map[String, String]()
+  lazy val retrievedOptions = scala.collection.mutable.Map[String, String]()
 
   protected def getOption(id: String) = {
     val v = options(id)
@@ -28,6 +28,8 @@ trait Options {
 
   // TODO: not consequent: paramString returns Option, while paramInt a value
   def paramString(id: String) = getOption(id)
+  def paramString(id: String, default: String) = getOption(id, default)
+
   def paramInt(id: String) = getOption(id).getOrElse({ throw new Exception(s"Parameter $id not found"); "" }).toInt
   def paramInt(id: String, default: Int) = getOption(id, default).toInt
   def paramInt(id: String, validator: Int => Boolean): Int = {
@@ -55,13 +57,17 @@ trait Options {
 }
 
 abstract class OptionsFromArgs(args: Array[String]) extends Options {
-  def this(params: String) = 
+  def this(params: String) =
     this(if (params.trim == "") Array[String]() else params.trim.split("\\s+"))
   private val opt = OptionParser(args.toList)
   override def allOptions = opt
   override protected def options = (id: String) => opt.get(id)
 }
 
+trait NoOptions extends Options {
+  override def allOptions = Map[String, String]()
+  override protected def options = (id: String) => None
+}
 /*
  * TODO: Make the parsing more robust
  */

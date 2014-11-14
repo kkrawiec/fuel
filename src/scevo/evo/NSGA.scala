@@ -183,33 +183,3 @@ final class TestNSGA {
   * 
   */
 }  
-
-  /* 
-  trait WrapperFactory[ES <: EvaluatedSolution[F], F <: MultiobjectiveEvaluation] {
-    def buildWraper(s: ES, rank: Int, crowding: Int) =
-      new Wrapper[ES, F](s, rank.toDouble, crowding.toDouble)
-  }
-   class Eval(val rank: Int, val crowding: Int) extends Evaluation {
-    def comparePartial(that: Evaluation): Option[Int] = {
-      val other = that.asInstanceOf[Eval]
-      val rankCmp = rank.compare(other.rank)
-      Some(if (rankCmp != 0) -rankCmp
-      else -crowding.compare(other.crowding))
-    }
-  }
-   trait Comparer[ES <: EvaluatedSolution[F], F <: MultiobjectiveEvaluation] {
-    def compare(a: Wrapper[ES, F], b: Wrapper[ES, F]): Boolean
-    def compareIntraLayer(a: Wrapper[ES, F], b: Wrapper[ES, F]): Boolean
-  }
-  trait c[ES] extends Ordering[ES]
-  trait DefaultComparer[ES <: EvaluatedSolution[F], F <: MultiobjectiveEvaluation]
-    extends Comparer[ES, F] {
-    // error: Comparison method violates its general contract
-    // def compare(a: Wrapper[ES, F], b: Wrapper[ES, F]) = if (a.rank < b.rank) true else a.sparsity < b.sparsity
-    def compare(a: Wrapper[ES, F], b: Wrapper[ES, F]) = if (a.rank.compare( b.rank) true else a.sparsity <= b.sparsity
-    def compareIntraLayer(a: Wrapper[ES, F], b: Wrapper[ES, F]) = a.sparsity <= b.sparsity
-  }
-  
-  * 
-  */
- 

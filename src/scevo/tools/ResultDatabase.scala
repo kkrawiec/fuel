@@ -4,10 +4,11 @@ import java.io.File
 import java.io.IOException
 import java.io.PrintWriter
 
-/** A container for storing intermediate and final results. 
- * Intended to be created at the beginning of experiment, when it creates a new result file 
- * with a unique, consecutive name like res000001.txt 
- */
+/**
+  * A container for storing intermediate and final results.
+  * Intended to be created at the beginning of experiment, when it creates a new result file
+  * with a unique, consecutive name like res000001.txt
+  */
 class ResultDatabase(val directory: String) extends scala.collection.mutable.HashMap[String, Any] {
 
   val extension = ".txt"
@@ -34,19 +35,20 @@ class ResultDatabase(val directory: String) extends scala.collection.mutable.Has
 
   def setResult(key: String, v: Any) = put(resultPrefix + key, v)
 
-  def saveWorkingState( file : File = f): Unit = {
+  def saveWorkingState(file: File = f): Unit = {
     val s = new PrintWriter(f)
-    toSeq.sortBy( _._1 ).foreach(kv => s.println(kv._1 + " = " + kv._2))
+    toSeq.sortBy(_._1).foreach(kv => s.println(kv._1 + " = " + kv._2))
     s.close()
   }
 
-   def save: Unit = {
+  def save: Unit = {
     saveWorkingState()
-    if( f.canWrite() ) f.setReadOnly()
+    if (f.canWrite()) f.setReadOnly()
   }
-   def saveSnapshot(fnameSuffix: String): Unit = 
-    saveWorkingState(new File(f.getPath()+fnameSuffix))
 
-  override def finalize():Unit = save
+  def saveSnapshot(fnameSuffix: String): Unit =
+    saveWorkingState(new File(f.getPath() + fnameSuffix))
+
+  override def finalize(): Unit = save
 
 }
