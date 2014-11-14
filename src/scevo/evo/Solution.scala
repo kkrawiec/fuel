@@ -28,16 +28,16 @@ trait Evaluation {
   // Implements *partial* order: returns None in case of incomparability
   def comparePartial(that: Evaluation): Option[Int]
   def betterThan(that: Evaluation): Boolean =
-    comparePartial(that).getOrElse(0) > 0
+    comparePartial(that).getOrElse(0) < 0
 }
-
 
 // TODO: Introduce trait LinearOrder
 
 // Implements *complete* order
-abstract class ScalarEvaluation(val v: Double) extends Evaluation with Ordered[ScalarEvaluation] {
+abstract class ScalarEvaluation(val v: Double) 
+extends Evaluation with Ordered[ScalarEvaluation] {
   override def betterThan(that: Evaluation): Boolean =
-    compare(that.asInstanceOf[ScalarEvaluation]) > 0
+    compare(that.asInstanceOf[ScalarEvaluation]) < 0
   override def comparePartial(that: Evaluation): Option[Int] =
     Some(compare(that.asInstanceOf[ScalarEvaluation]))
   override def toString = v.toString
@@ -50,8 +50,7 @@ abstract class ScalarEvaluation(val v: Double) extends Evaluation with Ordered[S
 
 class ScalarEvaluationMax(override val v: Double)
   extends ScalarEvaluation(if (v.isNaN) Double.MinValue else v) {
-  override def compare(that: ScalarEvaluation) =
-    math.signum(v - that.asInstanceOf[ScalarEvaluationMax].v).toInt
+  override def compare(that: ScalarEvaluation) = that.asInstanceOf[ScalarEvaluationMax].v compare v
 }
 object ScalarEvaluationMax {
   def apply(v: Double) = new ScalarEvaluationMax(v)
@@ -59,8 +58,7 @@ object ScalarEvaluationMax {
 
 class ScalarEvaluationMin(override val v: Double)
   extends ScalarEvaluation(if (v.isNaN) Double.MaxValue else v) {
-  override def compare(that: ScalarEvaluation) =
-    math.signum(that.asInstanceOf[ScalarEvaluationMin].v - v).toInt
+  override def compare(that: ScalarEvaluation) = v compare that.asInstanceOf[ScalarEvaluationMin].v
 }
 object ScalarEvaluationMin {
   def apply(v: Double) = new ScalarEvaluationMin(v)
@@ -79,10 +77,10 @@ class MultiobjectiveEvaluation(val v: Seq[ScalarEvaluation]) extends Evaluation 
     var xBetter: Boolean = false
     var yBetter: Boolean = false
     for (i <- 0 until n) {
-      val c = v(i).compare(other.v(i))
-      if (c > 0)
+      val c = v(i) compare other.v(i)
+      if (c < 0)
         xBetter = true
-      else if (c < 0)
+      else if (c > 0)
         yBetter = true
     }
     (xBetter, yBetter) match {
@@ -130,6 +128,11 @@ final class TestEvaluation {
   def test: Unit = {
     val x = ScalarEvaluationMin(3.0)
     val y = ScalarEvaluationMin(3.0)
+    val z = ScalarEvaluationMin(2.0)
     println(x equals y)
-  }
+    println(x compare y)
+    println(y compare x)
+    println(x compare z)
+    println(z compare x)
+   }
 }

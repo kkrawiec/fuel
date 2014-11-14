@@ -55,6 +55,10 @@ or any other (possibly better) random number generator.
 TODO
 ====
 
+* Make EvaluatedSolution Ordered; get rid of betterThan?
+* Report BestSoFar in snapshots
+* Instruction set as parameter
+* Reporter trait
 * Steady state EA
 * Optimization: Pick the right collections
 * introduce scaps.evo.Defaults

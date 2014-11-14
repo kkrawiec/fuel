@@ -32,7 +32,7 @@ trait Experiment[S <: State] {
   rdb.setResult("system.startTime", Calendar.getInstance().getTime().toString)
   rdb.put("mainClass", getClass.getName)
   rdb.put("status", "initialized")
-  rdb.saveWorkingState
+  rdb.saveWorkingState()
 
   protected def runExperiment(rdb: ResultDatabase) = run(rdb)
 

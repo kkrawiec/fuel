@@ -34,16 +34,18 @@ class ResultDatabase(val directory: String) extends scala.collection.mutable.Has
 
   def setResult(key: String, v: Any) = put(resultPrefix + key, v)
 
-  def saveWorkingState: Unit = {
+  def saveWorkingState( file : File = f): Unit = {
     val s = new PrintWriter(f)
     toSeq.sortBy( _._1 ).foreach(kv => s.println(kv._1 + " = " + kv._2))
     s.close()
   }
 
    def save: Unit = {
-    saveWorkingState
+    saveWorkingState()
     if( f.canWrite() ) f.setReadOnly()
   }
+   def saveSnapshot(fnameSuffix: String): Unit = 
+    saveWorkingState(new File(f.getPath()+fnameSuffix))
 
   override def finalize():Unit = save
 

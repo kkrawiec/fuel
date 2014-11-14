@@ -31,20 +31,23 @@ object NSGA {
   // Works as a wrapper around the original ES
   class Wrapper[ES <: EvaluatedSolution[F], F <: MultiobjectiveEvaluation](val s: ES, val rank: Int, val sparsity: Int)
 
-  trait Comparer[ES <: EvaluatedSolution[F], F <: MultiobjectiveEvaluation] {
-    def compare(a: Wrapper[ES, F], b: Wrapper[ES, F]): Boolean
-    def compareIntraLayer(a: Wrapper[ES, F], b: Wrapper[ES, F]): Boolean
+  trait DefaultOrdering[ES <: EvaluatedSolution[F], F <: MultiobjectiveEvaluation] {
+    def globalOrdering = new Ordering[Wrapper[ES, F]] {
+      override def compare(a: Wrapper[ES, F], b: Wrapper[ES, F]) = {
+        val c = a.rank compare b.rank
+        if (c != 0) c else a.sparsity compare b.sparsity
+      }
+    }
+    def intraLayerOrdering = new Ordering[Wrapper[ES, F]] {
+      override def compare(a: Wrapper[ES, F], b: Wrapper[ES, F]) = a.sparsity compare b.sparsity
+    }
   }
-  trait DefaultComparer[ES <: EvaluatedSolution[F], F <: MultiobjectiveEvaluation]
-    extends Comparer[ES, F] {
-    def compare(a: Wrapper[ES, F], b: Wrapper[ES, F]) = if (a.rank < b.rank) true else a.sparsity < b.sparsity
-    def compareIntraLayer(a: Wrapper[ES, F], b: Wrapper[ES, F]) = a.sparsity < b.sparsity
-  }
+
   /* No-archive, memoryless variant of NSGA. Selection works on the current population only 
  */
   protected trait NoArchive[ES <: EvaluatedSolution[F], F <: MultiobjectiveEvaluation]
     extends Selection[ES] {
-    this: Comparer[ES, F] =>
+    this: DefaultOrdering[ES, F] =>
 
     def rng: TRandom
     def numToGenerate: Int
@@ -61,8 +64,8 @@ object NSGA {
       val fullLayers = ranking.takeWhile(
         r => if (capacity - r.size < 0) false else { capacity -= r.size; true })
       val selected = if (capacity <= 0) fullLayers.flatten // flatten preserves ordering 
-      else fullLayers.flatten ++ ranking(fullLayers.size).sortWith(compareIntraLayer).splitAt(capacity)._1
-      override def next = BestSelector(selected(rng, tournSize), compare).s
+      else fullLayers.flatten ++ ranking(fullLayers.size).sorted(intraLayerOrdering).splitAt(capacity)._1
+      override def next = BestSelector(selected(rng, tournSize), globalOrdering).s
       override val numSelected = numToGenerate
     }
 
@@ -98,7 +101,7 @@ object NSGA {
  */
   protected trait WithArchive[ES <: EvaluatedSolution[F], F <: MultiobjectiveEvaluation]
     extends NoArchive[ES, F] {
-    this: Comparer[ES, F] =>
+    this: DefaultOrdering[ES, F] =>
     var arch = Seq[ES]()
     override def archive = arch
     // Note: calling selector() changes the state of archive
@@ -123,12 +126,12 @@ object NSGA {
       numToGen: Int, tournamentSize: Int, rn: TRandom) =
       new {
         val (rng, numToGenerate, tournSize) = (rn, numToGen, tournamentSize)
-      } with NoArchive[ES, F] with DefaultComparer[ES, F]
+      } with NoArchive[ES, F] with DefaultOrdering[ES, F]
   }
 
   trait NoArchiveMixin[ES <: EvaluatedSolution[F], F <: MultiobjectiveEvaluation]
     extends NoArchive[ES, F] with ParamProvider {
-    this: Options with Randomness with Comparer[ES, F] =>
+    this: Options with Randomness with DefaultOrdering[ES, F] =>
   }
 
   object WithArchive {
@@ -136,11 +139,11 @@ object NSGA {
       numToGen: Int, tournamentSize: Int, rn: TRandom) =
       new {
         val (rng, numToGenerate, tournSize) = (rn, numToGen, tournamentSize)
-      } with WithArchive[ES, F] with DefaultComparer[ES, F]
+      } with WithArchive[ES, F] with DefaultOrdering[ES, F]
   }
   trait WithArchiveMixin[ES <: EvaluatedSolution[F], F <: MultiobjectiveEvaluation]
     extends WithArchive[ES, F] with ParamProvider {
-    this: Options with Randomness with Comparer[ES, F] =>
+    this: Options with Randomness with DefaultOrdering[ES, F] =>
   }
 }
 
@@ -194,6 +197,19 @@ final class TestNSGA {
       else -crowding.compare(other.crowding))
     }
   }
+   trait Comparer[ES <: EvaluatedSolution[F], F <: MultiobjectiveEvaluation] {
+    def compare(a: Wrapper[ES, F], b: Wrapper[ES, F]): Boolean
+    def compareIntraLayer(a: Wrapper[ES, F], b: Wrapper[ES, F]): Boolean
+  }
+  trait c[ES] extends Ordering[ES]
+  trait DefaultComparer[ES <: EvaluatedSolution[F], F <: MultiobjectiveEvaluation]
+    extends Comparer[ES, F] {
+    // error: Comparison method violates its general contract
+    // def compare(a: Wrapper[ES, F], b: Wrapper[ES, F]) = if (a.rank < b.rank) true else a.sparsity < b.sparsity
+    def compare(a: Wrapper[ES, F], b: Wrapper[ES, F]) = if (a.rank.compare( b.rank) true else a.sparsity <= b.sparsity
+    def compareIntraLayer(a: Wrapper[ES, F], b: Wrapper[ES, F]) = a.sparsity <= b.sparsity
+  }
+  
   * 
   */
  

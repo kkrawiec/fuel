@@ -51,10 +51,12 @@ trait EpilogueBestOfRun[ES <: EvaluatedSolution[_ <: Evaluation]] extends Epilog
  */
 trait Evolution[S <: Solution, ES <: EvaluatedSolution[_ <: Evaluation]]
   extends PopulationAlgorithm[ES] with Logging {
-  this: SearchStepStochastic[S, ES] with StoppingConditions[PopulationAlgorithm[ES]] with PostIterationAction[ES] with InitialState[PopulationState[ES]] with Epilogue[ES] =>
+  this: SearchStepStochastic[S, ES] with StoppingConditions[PopulationAlgorithm[ES]] with PostIterationAction[ES] with InitialState[PopulationState[ES]] with Epilogue[ES] 
+  with Options =>
 
   private var current: PopulationState[ES] = _
   override def currentState = current
+  val snapFreq = paramInt("shapshot-frequency",0)
 
   /* Performs evolutionary run. 
    * Returns the final state of evolutionary process, the best of run solution, and the ideal solution (if found). 
@@ -69,6 +71,8 @@ trait Evolution[S <: Solution, ES <: EvaluatedSolution[_ <: Evaluation]]
         PopulationState(initialState.solutions, current.iteration + 1)
       })
       postIteration
+      if( snapFreq > 0 && current.iteration % snapFreq == 0)
+        rdb.saveSnapshot(f"${current.iteration}%04d")
     } while (stoppingConditions.forall(sc => !sc(this)))
     println("Search process completed")
     rdb.setResult("lastGeneration", current.iteration)

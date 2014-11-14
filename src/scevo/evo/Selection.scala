@@ -31,7 +31,7 @@ trait TournamentSelection[ES <: EvaluatedSolution[_ <: Evaluation]]
   }
 }
 
-trait FitnessProportionateSelection[ES <: EvaluatedSolution[_ <: ScalarEvaluation]]
+trait FitnessProportionateSelection[ES <: EvaluatedSolution[_ <: ScalarEvaluationMax]]
   extends Selection[ES] {
   this: Randomness =>
   override def selector(history: Seq[PopulationState[ES]]) = new Selector[ES] {
@@ -42,12 +42,12 @@ trait FitnessProportionateSelection[ES <: EvaluatedSolution[_ <: ScalarEvaluatio
   }
 }
 
-trait MuLambdaSelection[ES <: EvaluatedSolution[_ <: Evaluation]]
+trait MuLambdaSelection[ES <: EvaluatedSolution[_ <: ScalarEvaluation]]
   extends Selection[ES] {
   override def selector(history: Seq[PopulationState[ES]]) = new Selector[ES] {
     val pool = history.head.solutions ++ (if (history.size > 1)
       history.tail.head.solutions else None)
-    private val selected = pool.sortWith((a, b) => a.eval.betterThan(b.eval))
+    private val selected = pool.sortBy(_.eval)
     override val numSelected = history.head.solutions.size
     private var i = -1
     override def next = {
@@ -85,5 +85,17 @@ object BestSelector {
     var best = set.head
     set.tail.foreach(e => if (better(e, best)) best = e)
     best
+  }
+  def apply[T](set: Seq[T], ord: Ordering[T]) = {
+    require(set.nonEmpty)
+    var best = set.head
+    set.tail.foreach(e => if (ord.compare(e, best) < 0) best = e)
+    best
+  }
+}
+
+object TestBestSelector {
+  def main(args: Array[String]) {
+    println(BestSelector(List(3, 1, 3, 6), Ordering[Int]))
   }
 }
