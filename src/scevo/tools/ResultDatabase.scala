@@ -19,14 +19,16 @@ class ResultDatabase(val directory: String) extends scala.collection.mutable.Has
   val f = {
     var i: Int = 0
     var f: File = null
+      var fname : String = ""
     try {
       do {
-        val fname = directory + "/" + filePrefix + fileNumFormat.format(i) + extension
+        fname = directory + "/" + filePrefix + fileNumFormat.format(i) + extension
         f = new File(fname)
         i += 1
       } while (!f.createNewFile())
     } catch {
-      case e: IOException => throw new IOException("Error while creating result database file:\n" + e.getLocalizedMessage());
+      case e: IOException => 
+        throw new IOException(s"Error while creating result database file: "+fname + " " + e.getLocalizedMessage());
     }
     f
   }

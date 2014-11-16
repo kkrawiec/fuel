@@ -10,13 +10,21 @@ trait Randomness {
 }
 
 /*
- * Randomness provider based on java.util.Random
+ * Randomness providers based on java.util.Random
  */
+trait DefaultRng extends Randomness {
+  override lazy val rng = new Random
+}
+trait DefaultRngDet extends Randomness {
+  override lazy val rng = new Random(1)
+}
 trait Rng extends Randomness {
   this: Options =>
   val seed = paramInt("seed", 1)
   override lazy val rng = new Random(seed)
 }
+class RngWrapper(override val rng : TRandom) extends Randomness
+
 
 /*
  * This trait is intended to enable elegant use of different random number generators

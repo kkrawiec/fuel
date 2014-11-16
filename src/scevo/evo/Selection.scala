@@ -4,6 +4,8 @@ import scevo.Distribution
 import scevo.Preamble.RndApply
 import scevo.tools.Options
 import scevo.tools.Randomness
+import scevo.tools.TRandom
+import scevo.tools.RngWrapper
 
 /* Selector is intended to operate in two phases: 
  * 1. When created, it can prepare helper data structures (or perform 'batch selection', as NSGAII does)
@@ -20,15 +22,26 @@ trait Selection[ES <: EvaluatedSolution[_]] {
   def selector(history: Seq[PopulationState[ES]]): Selector[ES]
 }
 
-trait TournamentSelection[ES <: EvaluatedSolution[_ <: Evaluation]]
+trait TournamentSel[ES <: EvaluatedSolution[_ <: Evaluation]]
   extends Selection[ES] {
-  this: Options with Randomness =>
-  val tournamentSize = paramInt("tournamentSize", 7, _ >= 2)
+  this: Randomness =>
+  def tournamentSize: Int
   override def selector(history: Seq[PopulationState[ES]]) = new Selector[ES] {
     protected val pool = history.head.solutions
     override val numSelected = pool.size
     override def next = BestSelector(pool(rng, tournamentSize))
   }
+}
+trait TournamentSelection[ES <: EvaluatedSolution[_ <: Evaluation]]
+  extends TournamentSel[ES] {
+  this: Options with Randomness =>
+  override val tournamentSize = paramInt("tournamentSize", 7, _ >= 2)
+}
+object TournamentSelection {
+  def apply[ES <: EvaluatedSolution[_ <: Evaluation]](rng: TRandom, tournamentSize_ : Int) =
+    new RngWrapper(rng) with TournamentSel[ES] {
+      override def tournamentSize = tournamentSize_
+    }
 }
 
 trait FitnessProportionateSelection[ES <: EvaluatedSolution[_ <: ScalarEvaluationMax]]

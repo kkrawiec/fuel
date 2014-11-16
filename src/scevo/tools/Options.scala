@@ -66,8 +66,15 @@ abstract class OptionsFromArgs(args: Array[String]) extends Options {
 
 trait NoOptions extends Options {
   override def allOptions = Map[String, String]()
-  override protected def options = (id: String) => None
+  override protected def options = (_: String) => None
 }
+/*
+class OptionsWrapper(val wrapped : Options) extends Options {
+  override def allOptions = wrapped.allOptions
+  override protected def options = wrapped.options
+}
+* 
+*/
 /*
  * TODO: Make the parsing more robust
  */
