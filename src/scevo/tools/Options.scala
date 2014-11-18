@@ -80,6 +80,7 @@ class OptionsWrapper(val wrapped : Options) extends Options {
  */
 
 object OptionParser {
+  def apply(list: Array[String]) = nextOption(list.toList)
   def apply(list: List[String]) = nextOption(list)
   private def nextOption(list: List[String]): Map[String, String] = {
     list match {
