@@ -1,9 +1,9 @@
 package scevo.evo
 
-import scevo.tools.Logging
 import scevo.tools.Options
 import scevo.tools.Randomness
 import scevo.tools.ResultDatabase
+import scevo.tools.Logger
 
 trait Algorithm[S <: State] {
   def run(rdb: ResultDatabase): S
@@ -50,7 +50,7 @@ trait EpilogueBestOfRun[ES <: EvaluatedSolution[_ <: Evaluation]] extends Epilog
  * Iterative search algorithm, with every iteration implemented as SearchStep
  */
 trait Evolution[S <: Solution, ES <: EvaluatedSolution[_ <: Evaluation]]
-  extends PopulationAlgorithm[ES] with Logging {
+  extends PopulationAlgorithm[ES] with Logger {
   this: SearchStepStochastic[S, ES] with StoppingConditions[PopulationAlgorithm[ES]] with PostIterationAction[ES] with InitialState[PopulationState[ES]] with Epilogue[ES] 
   with Options =>
 
@@ -67,7 +67,7 @@ trait Evolution[S <: Solution, ES <: EvaluatedSolution[_ <: Evaluation]]
     println("Search process started")
     do {
       current = apply(Seq(current)).getOrElse({
-        log(s"Generation ${current.iteration}: None of candidate solutions passed the evaluation stage. Restarting. ")
+        log("error", s"Generation ${current.iteration}: None of candidate solutions passed the evaluation stage. Restarting. ")
         PopulationState(initialState.solutions, current.iteration + 1)
       })
       postIteration

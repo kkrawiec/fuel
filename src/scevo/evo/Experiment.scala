@@ -4,15 +4,16 @@ import java.lang.management.ManagementFactory
 import java.net.InetAddress
 import java.net.UnknownHostException
 import java.util.Calendar
-
 import scevo.tools.Options
 import scevo.tools.ResultDatabase
+import scevo.tools.Closeable
 
 /*
  * Note that Experiment makes no reference to Solution types; only EvaluatedSolution
  */
 
-trait Experiment[S <: State] {
+
+trait Experiment[S <: State] extends Closeable {
   this: Algorithm[S] with Options =>
 
   // Prepare result database and fill it with technical parameters of the experiment
@@ -35,6 +36,8 @@ trait Experiment[S <: State] {
   rdb.saveWorkingState()
 
   protected def runExperiment(rdb: ResultDatabase) = run(rdb)
+  
+  override protected def close = {}
 
   def launch: Option[State] = {
     val startTime = System.currentTimeMillis()
@@ -48,6 +51,7 @@ trait Experiment[S <: State] {
         throw e
       }
     } finally {
+      close
       rdb.setResult("totalTimeSystem", System.currentTimeMillis() - startTime)
       rdb.setResult("system.endTime", Calendar.getInstance().getTime().toString)
       // Do this again, something may have changed during run:

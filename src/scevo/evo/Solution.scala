@@ -34,8 +34,11 @@ trait Evaluation {
 // TODO: Introduce trait LinearOrder
 
 // Implements *complete* order
-abstract class ScalarEvaluation(val v: Double) 
-extends Evaluation with Ordered[ScalarEvaluation] {
+abstract class ScalarEvaluation(val v: Double)
+  extends Evaluation with Ordered[ScalarEvaluation] {
+  require(!v.isNaN, "ScalarEvalution cannot be NaN")
+  if(v.isNaN)
+    println("!!!")
   override def betterThan(that: Evaluation): Boolean =
     compare(that.asInstanceOf[ScalarEvaluation]) < 0
   override def comparePartial(that: Evaluation): Option[Int] =
@@ -48,16 +51,16 @@ extends Evaluation with Ordered[ScalarEvaluation] {
   override def hashCode = v.hashCode
 }
 
-class ScalarEvaluationMax(override val v: Double)
-  extends ScalarEvaluation(if (v.isNaN) Double.MinValue else v) {
+class ScalarEvaluationMax(vv: Double)
+  extends ScalarEvaluation(if (vv.isNaN) Double.MinValue else vv) {
   override def compare(that: ScalarEvaluation) = that.asInstanceOf[ScalarEvaluationMax].v compare v
 }
 object ScalarEvaluationMax {
   def apply(v: Double) = new ScalarEvaluationMax(v)
 }
 
-class ScalarEvaluationMin(override val v: Double)
-  extends ScalarEvaluation(if (v.isNaN) Double.MaxValue else v) {
+class ScalarEvaluationMin(vv: Double)
+  extends ScalarEvaluation(if (vv.isNaN) Double.MaxValue else vv) {
   override def compare(that: ScalarEvaluation) = v compare that.asInstanceOf[ScalarEvaluationMin].v
 }
 object ScalarEvaluationMin {
@@ -134,5 +137,5 @@ final class TestEvaluation {
     println(y compare x)
     println(x compare z)
     println(z compare x)
-   }
+  }
 }

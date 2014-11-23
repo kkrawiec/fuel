@@ -2,7 +2,7 @@ package scevo.evo
 
 // Interaction outcomes are always Doubles
 trait InteractionFunction[A, B] extends Function2[A, B, Double] {
-  def interact(a: A, b: B) = apply(a, b)  // alias
+  def interact(a: A, b: B) = apply(a, b) // alias
 }
 
 trait AdditiveInteractionF[A, B] extends InteractionFunction[A, B] {
@@ -20,4 +20,10 @@ trait L1Interaction extends InteractionFunction[Double, Double] {
 trait L2Interaction extends InteractionFunction[Double, Double] {
   // Note the convention: equals => *zero*
   def apply(a: Double, b: Double) = (a - b) * (a - b)
+}
+trait SameSignInteraction extends InteractionFunction[Double, Double] {
+  // Note the convention: equals => *zero*
+  def apply(a: Double, b: Double) =
+    if (a >= 0 && b >= 0) 0
+    else if (a < 0 && b < 0) 0 else 1
 }
