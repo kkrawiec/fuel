@@ -19,15 +19,17 @@ trait Logging {
 trait Closeable {
   protected def close = {}
 }
+
+// Note: passing arguments by name, so that they get evaluated only when needed
 trait Logger {
-  def log(key: Any, value: Any) = {}
+  def log(key: => Any, value: => Any) = {}
 }
 
 trait LoggerIter extends Logger with Closeable {
   this: Experiment[_ <: State] with IterativeAlgorithm[_ <: State] =>
 
   val stats = scala.collection.mutable.HashMap[(Int, Any), Any]() // (iteration, key) => val
-  override def log(key: Any, value: Any) = {
+  override def log(key: => Any, value: => Any) = {
     stats += (((currentState.iteration, key), value))
   }
   override protected def close = {
