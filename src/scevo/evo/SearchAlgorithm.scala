@@ -30,7 +30,7 @@ trait PostBestSoFar[ES <: EvaluatedSolution[_ <: Evaluation]] extends PostIterat
   override def postIteration: Unit = {
     val bestOfGen = BestSelector(currentState.solutions)
     if (bestSoFar.isEmpty || bestOfGen.eval.betterThan(best.get.eval)) best = Some(bestOfGen)
-    println(f"Generation: ${currentState.iteration}  BestSoFar: ${bestSoFar.get.eval}")
+    println(f"Generation: ${currentState.iteration}  BestSoFar: ${bestSoFar.get.eval} ${bestSoFar.get}")
   }
 }
 
@@ -43,6 +43,7 @@ trait EpilogueBestOfRun[ES <: EvaluatedSolution[_ <: Evaluation]] extends Epilog
   def epilogue(rdb: ResultDatabase): Unit = {
     rdb.setResult("bestOfRun.fitness", bestSoFar.get.eval)
     rdb.setResult("bestOfRun.genotype", bestSoFar.toString)
+    rdb.write("bestOfRun", bestSoFar)
   }
 }
 
@@ -51,12 +52,11 @@ trait EpilogueBestOfRun[ES <: EvaluatedSolution[_ <: Evaluation]] extends Epilog
  */
 trait Evolution[S <: Solution, ES <: EvaluatedSolution[_ <: Evaluation]]
   extends PopulationAlgorithm[ES] with Logger {
-  this: SearchStepStochastic[S, ES] with StoppingConditions[PopulationAlgorithm[ES]] with PostIterationAction[ES] with InitialState[PopulationState[ES]] with Epilogue[ES] 
-  with Options =>
+  this: SearchStepStochastic[S, ES] with StoppingConditions[PopulationAlgorithm[ES]] with PostIterationAction[ES] with InitialState[PopulationState[ES]] with Epilogue[ES] with Options =>
 
   private var current: PopulationState[ES] = _
   override def currentState = current
-  val snapFreq = paramInt("shapshot-frequency",0)
+  val snapFreq = paramInt("snapshot-frequency", 0)
 
   /* Performs evolutionary run. 
    * Returns the final state of evolutionary process, the best of run solution, and the ideal solution (if found). 
@@ -71,7 +71,7 @@ trait Evolution[S <: Solution, ES <: EvaluatedSolution[_ <: Evaluation]]
         PopulationState(initialState.solutions, current.iteration + 1)
       })
       postIteration
-      if( snapFreq > 0 && current.iteration % snapFreq == 0)
+      if (snapFreq > 0 && current.iteration % snapFreq == 0)
         rdb.saveSnapshot(f"${current.iteration}%04d")
     } while (stoppingConditions.forall(sc => !sc(this)))
     println("Search process completed")

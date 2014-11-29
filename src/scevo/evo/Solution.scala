@@ -6,7 +6,7 @@ import org.junit.Test
  * Represents a non-evaluated solution
  */
 
-trait Solution
+trait Solution extends Serializable
 
 /*
  * Represents an evaluated solution. 
@@ -14,7 +14,7 @@ trait Solution
  * Search operators take evaluated solutions as arguments and produce non-evaluated solutions.
  */
 
-trait EvaluatedSolution[+E <: Evaluation] {
+trait EvaluatedSolution[+E <: Evaluation] extends Serializable {
   def eval: E
   //  final def betterThan(that: EvaluatedSolution[_ <: E]) = eval.betterThan(that.eval)
 }
@@ -24,7 +24,7 @@ trait EvaluatedSolution[+E <: Evaluation] {
  * of candidate solution with a task. 
  * Implements *partial* order, or no order at all
  */
-trait Evaluation {
+trait Evaluation extends Serializable {
   // Implements *partial* order: returns None in case of incomparability
   def comparePartial(that: Evaluation): Option[Int]
   def betterThan(that: Evaluation): Boolean =
@@ -37,8 +37,6 @@ trait Evaluation {
 abstract class ScalarEvaluation(val v: Double)
   extends Evaluation with Ordered[ScalarEvaluation] {
   require(!v.isNaN, "ScalarEvalution cannot be NaN")
-  if(v.isNaN)
-    println("!!!")
   override def betterThan(that: Evaluation): Boolean =
     compare(that.asInstanceOf[ScalarEvaluation]) < 0
   override def comparePartial(that: Evaluation): Option[Int] =
@@ -73,7 +71,7 @@ class MultiobjectiveEvaluation(val v: Seq[ScalarEvaluation]) extends Evaluation 
   /*
    * Not very elegant, but much faster:
    */
-  def comparePartial(that: Evaluation): Option[Int] = {
+  override def comparePartial(that: Evaluation): Option[Int] = {
     val other = that.asInstanceOf[MultiobjectiveEvaluation]
     val n = v.length
     require(n == other.v.length)
@@ -110,9 +108,12 @@ class TestOutcomes(override val v: Seq[ScalarEvaluationMax]) extends Multiobject
 }
 class BinaryTestOutcomes(override val v: Seq[ScalarEvaluationMax]) extends TestOutcomes(v) {
   require(v.forall(e => e.v == 0 || e.v == 1))
-  //  override def toString = s"Passed: ${v.map(_.v).sum} " + super.toString
+  override def toString = s"Passed: ${numTestsPassed} "// + super.toString
   def numTestsPassed = v.map(_.v).sum
-  def passesMoreTests(that: BinaryTestOutcomes) = numTestsPassed > that.numTestsPassed
+//  def passesMoreTests(that: BinaryTestOutcomes) = numTestsPassed > that.numTestsPassed
+  // WARNING: allows scalar comparison:
+  override def comparePartial(that: Evaluation): Option[Int] = 
+    Some(that.asInstanceOf[BinaryTestOutcomes].numTestsPassed compare numTestsPassed)
 }
 
 // Lexicographic ascending order, e minimized

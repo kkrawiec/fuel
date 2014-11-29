@@ -3,6 +3,10 @@ package scevo.tools
 import java.io.File
 import java.io.IOException
 import java.io.PrintWriter
+import java.io.FileOutputStream
+import java.io.ObjectOutputStream
+import java.io.FileInputStream
+import java.io.ObjectInputStream
 
 /**
   * A container for storing intermediate and final results.
@@ -16,29 +20,28 @@ class ResultDatabase(val directory: String) extends scala.collection.mutable.Has
   val filePrefix = "res"
   val fileNumFormat = "%06d"
 
-  val f = {
+  val (f, fname) = {
     var i: Int = 0
     var f: File = null
-      var fname : String = ""
+    var fname: String = ""
     try {
       do {
-        fname = directory + "/" + filePrefix + fileNumFormat.format(i) + extension
-        f = new File(fname)
+        fname = directory + "/" + filePrefix + fileNumFormat.format(i)
+        f = new File(fname + extension)
         i += 1
       } while (!f.createNewFile())
     } catch {
-      case e: IOException => 
-        throw new IOException(s"Error while creating result database file: "+fname + " " + e.getLocalizedMessage());
+      case e: IOException =>
+        throw new IOException(s"Error while creating result database file: " +
+          fname + extension + " " + e.getLocalizedMessage());
     }
-    f
+    (f, fname)
   }
-
-  def fname = f.getPath
 
   def setResult(key: String, v: Any) = put(resultPrefix + key, v)
 
   def saveWorkingState(file: File = f): Unit = {
-    val s = new PrintWriter(f)
+    val s = new PrintWriter(file)
     toSeq.sortBy(_._1).foreach(kv => s.println(kv._1 + " = " + kv._2))
     s.close()
   }
@@ -49,8 +52,22 @@ class ResultDatabase(val directory: String) extends scala.collection.mutable.Has
   }
 
   def saveSnapshot(fnameSuffix: String): Unit =
-    saveWorkingState(new File(f.getPath() + fnameSuffix))
+    saveWorkingState(new File(fname + "." + fnameSuffix))
 
   override def finalize(): Unit = save
+
+  def write(key: String, v: Any) = {
+    val os = new ObjectOutputStream(new FileOutputStream(fname + "." + key))
+    os.writeObject(v)
+    os.close()
+    v
+  }
+
+  def read(key: String) = {
+    val is = new ObjectInputStream(new FileInputStream(fname + "." + key))
+    val obj = is.readObject()
+    is.close()
+    obj
+  }
 
 }

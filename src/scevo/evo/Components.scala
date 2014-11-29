@@ -28,6 +28,7 @@ trait StochasticSearchOperators[ES <: EvaluatedSolution[_], S <: Solution] exten
   def operator(rng: TRandom) = operators(distribution(rng))
 }
 
+//TODO: trait Evaluator[S <: Solution, E <: Evaluation] extends Function1[Seq[S], Seq[E]]
 trait Evaluator[S <: Solution, ES <: EvaluatedSolution[_]] extends Function1[Seq[S], Seq[ES]]
 
 

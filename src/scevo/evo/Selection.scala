@@ -81,11 +81,12 @@ trait GreedyBestSelection[ES <: EvaluatedSolution[_ <: Evaluation]]
 object BestSelector {
   def apply[ES <: EvaluatedSolution[_ <: Evaluation]](set: Seq[ES]) = {
     require(set.nonEmpty)
+//    set.tail.foldLeft(set.head)((a, b) => if (a.eval.betterThan(b.eval)) a else b)
     var best = set.head
     set.tail.foreach(e => if (e.eval.betterThan(best.eval)) best = e)
     best
   }
-  // I'd be happy to call this 'select' as well, but type erasure does not permit.
+  // I'd be happy to call this 'apply' as well, but type erasure does not permit.
   def select[E <: Evaluation](set: Seq[E]) = {
     require(set.nonEmpty)
     var best = set.head

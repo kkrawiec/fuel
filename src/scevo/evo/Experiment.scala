@@ -44,6 +44,7 @@ trait Experiment[S <: State] extends Closeable {
     try {
       val state = runExperiment(rdb)
       rdb.put("status", "completed")
+      rdb.write("lastState",state)
       Some(state)
     } catch {
       case e: Exception => {

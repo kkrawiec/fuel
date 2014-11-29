@@ -21,6 +21,7 @@ trait SearchStepStochastic[S <: Solution, ES <: EvaluatedSolution[_]]
   /*
    * history is the list of previous search states, with the most recent one being head. 
    * In most cases, it is only the most recent state (keeping entire history may be too memory costly). 
+   * TODO: remove option and signal degeneration by empty population?
    */
   override def apply(history: Seq[PopulationState[ES]]): Option[PopulationState[ES]] = {
     require(history.nonEmpty)
@@ -30,8 +31,6 @@ trait SearchStepStochastic[S <: Solution, ES <: EvaluatedSolution[_]]
     while (offspring.size < source.numSelected) 
       offspring ++= operator(rng)(source)
     val evaluated = apply( offspring.toList )
-    // parallel version: val evaluated = current.solutions.par.map(evalFunction(_, current)).flatten.seq
-    // Evaluation of an individual may end with None, which signals infeasible solution
     if (evaluated.isEmpty)
       None // In case no individual passed the evaluation stage
     else

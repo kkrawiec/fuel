@@ -3,7 +3,7 @@ package scevo.evo
 /* Search state. Not to be confused with the state of the search *algorithm/process*, 
  */
 
-trait State {
+trait State extends Serializable {
   def iteration: Int
 }
 
@@ -23,7 +23,6 @@ object PopulationState {
 
   def apply[ES <: EvaluatedSolution[_]](popSize: Int, genSolution: () => ES): PopulationState[ES] = {
     require(popSize > 0, "Population cannot be empty")
-    new PopulationState(for (i <- 0 until popSize) yield genSolution(), 0)
+    PopulationState(for (i <- 0 until popSize) yield genSolution(), 0)
   }
-
 }
