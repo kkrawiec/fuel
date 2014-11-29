@@ -14,19 +14,19 @@ trait IterativeAlgorithm[S <: State] extends Algorithm[S] {
   def currentState: S
 }
 
-trait PopulationAlgorithm[ES <: EvaluatedSolution[_]] extends IterativeAlgorithm[PopulationState[ES]] {
-  this: InitialState[PopulationState[ES]] =>
-  override def currentState: PopulationState[ES]
+trait PopulationAlgorithm[S <: Solution, E <: Evaluation] extends IterativeAlgorithm[PopulationState[S, E]] {
+  this: InitialState[PopulationState[S, E]] =>
+  override def currentState: PopulationState[S, E]
 }
 
-trait PostIterationAction[ES <: EvaluatedSolution[_ <: Evaluation]] {
+trait PostIterationAction[S <: Solution, E <: Evaluation] {
   def postIteration: Unit
 }
 
-trait PostBestSoFar[ES <: EvaluatedSolution[_ <: Evaluation]] extends PostIterationAction[ES] {
-  this: PopulationAlgorithm[ES] =>
-  protected var best: Option[ES] = None
-  def bestSoFar: Option[ES] = best
+trait PostBestSoFar[S <: Solution, E <: Evaluation] extends PostIterationAction[S, E] {
+  this: PopulationAlgorithm[S, E] =>
+  protected var best: Option[EvaluatedSolution[S, E]] = None
+  def bestSoFar: Option[EvaluatedSolution[S, E]] = best
   override def postIteration: Unit = {
     val bestOfGen = BestSelector(currentState.solutions)
     if (bestSoFar.isEmpty || bestOfGen.eval.betterThan(best.get.eval)) best = Some(bestOfGen)
@@ -34,12 +34,12 @@ trait PostBestSoFar[ES <: EvaluatedSolution[_ <: Evaluation]] extends PostIterat
   }
 }
 
-trait Epilogue[ES <: EvaluatedSolution[_ <: Evaluation]] {
+trait Epilogue[S <: Solution, E <: Evaluation] {
   def epilogue(rdb: ResultDatabase): Unit
 }
 
-trait EpilogueBestOfRun[ES <: EvaluatedSolution[_ <: Evaluation]] extends Epilogue[ES] {
-  this: PostBestSoFar[ES] =>
+trait EpilogueBestOfRun[S <: Solution, E <: Evaluation] extends Epilogue[S, E] {
+  this: PostBestSoFar[S, E] =>
   def epilogue(rdb: ResultDatabase): Unit = {
     rdb.setResult("bestOfRun.fitness", bestSoFar.get.eval)
     rdb.setResult("bestOfRun.genotype", bestSoFar.toString)
@@ -50,11 +50,11 @@ trait EpilogueBestOfRun[ES <: EvaluatedSolution[_ <: Evaluation]] extends Epilog
 /* 
  * Iterative search algorithm, with every iteration implemented as SearchStep
  */
-trait Evolution[S <: Solution, ES <: EvaluatedSolution[_ <: Evaluation]]
-  extends PopulationAlgorithm[ES] with Logger {
-  this: SearchStepStochastic[S, ES] with StoppingConditions[PopulationAlgorithm[ES]] with PostIterationAction[ES] with InitialState[PopulationState[ES]] with Epilogue[ES] with Options =>
+trait Evolution[S <: Solution, E <: Evaluation]
+  extends PopulationAlgorithm[S, E] with Logger {
+  this: SearchStepStochastic[S, E] with StoppingConditions[PopulationAlgorithm[S, E]] with PostIterationAction[S, E] with InitialState[PopulationState[S, E]] with Epilogue[S, E] with Options =>
 
-  private var current: PopulationState[ES] = _
+  private var current: PopulationState[S, E] = _
   override def currentState = current
   val snapFreq = paramInt("snapshot-frequency", 0)
 
@@ -62,7 +62,7 @@ trait Evolution[S <: Solution, ES <: EvaluatedSolution[_ <: Evaluation]]
    * Returns the final state of evolutionary process, the best of run solution, and the ideal solution (if found). 
    * PROBABLY can be called multiple times on the same Evolution; that should continue search. 
    *   */
-  override def run(rdb: ResultDatabase): PopulationState[ES] = {
+  override def run(rdb: ResultDatabase): PopulationState[S, E] = {
     current = initialState
     println("Search process started")
     do {
@@ -81,14 +81,14 @@ trait Evolution[S <: Solution, ES <: EvaluatedSolution[_ <: Evaluation]]
   }
 }
 
-trait EA[S <: Solution, ES <: EvaluatedSolution[_ <: Evaluation]]
-  extends Evolution[S, ES]
+trait EA[S <: Solution, E <: Evaluation]
+  extends Evolution[S, E]
   with Options with Randomness
-  with InitialState[PopulationState[ES]]
-  with SearchStepStochastic[S, ES]
-  with Selection[ES]
-  with Evaluator[S, ES]
-  with StochasticSearchOperators[ES, S]
-  with StoppingConditions[PopulationAlgorithm[ES]]
-  with PostBestSoFar[ES]
-  with EpilogueBestOfRun[ES] 
+  with InitialState[PopulationState[S, E]]
+  with SearchStepStochastic[S, E]
+  with Selection[S, E]
+  with Evaluator[S, E]
+  with StochasticSearchOperators[S, E]
+  with StoppingConditions[PopulationAlgorithm[S, E]]
+  with PostBestSoFar[S, E]
+  with EpilogueBestOfRun[S, E]

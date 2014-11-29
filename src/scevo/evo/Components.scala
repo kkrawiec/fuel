@@ -8,12 +8,12 @@ import scevo.tools.TRandom
  * Search operators. 
  * 
  */
-trait SearchOperators[ES <: EvaluatedSolution[_], S <: Solution] {
-  def operators: Seq[Selector[ES] => Seq[S]]
+trait SearchOperators[S <: Solution, E <: Evaluation] {
+  def operators: Seq[Selector[S,E] => Seq[S]]
   assert(operators.nonEmpty, "At least one search operator should be declared")
 }
 
-trait StochasticSearchOperators[ES <: EvaluatedSolution[_], S <: Solution] extends SearchOperators[ES, S] {
+trait StochasticSearchOperators[S <: Solution, E <: Evaluation] extends SearchOperators[S, E] {
   this: Options =>
   val prob = paramString("operatorProbs")
   val distribution = Distribution(
@@ -28,8 +28,18 @@ trait StochasticSearchOperators[ES <: EvaluatedSolution[_], S <: Solution] exten
   def operator(rng: TRandom) = operators(distribution(rng))
 }
 
-//TODO: trait Evaluator[S <: Solution, E <: Evaluation] extends Function1[Seq[S], Seq[E]]
-trait Evaluator[S <: Solution, ES <: EvaluatedSolution[_]] extends Function1[Seq[S], Seq[ES]]
+
+
+trait Evaluator[S <: Solution, E <: Evaluation]
+  extends Function1[Seq[S], Seq[EvaluatedSolution[S, E]]] 
+
+/* Default evaluator evaluates every solution separately, but this can be overriden
+ */
+trait SeparableEvalutator[S <: Solution, E <: Evaluation]
+  extends Evaluator[S,E] {
+  def evaluate(s: S): E
+  def apply(ss: Seq[S]) = ss.map(s => ESol(s, evaluate(s)))
+}
 
 
 

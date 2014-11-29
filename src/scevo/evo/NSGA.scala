@@ -29,9 +29,10 @@ import scevo.tools.Options
 
 object NSGA {
   // Works as a wrapper around the original ES
-  class Wrapper[ES <: EvaluatedSolution[F], F <: MultiobjectiveEvaluation](val s: ES, val rank: Int, val sparsity: Int)
+  class Wrapper[ES <: EvaluatedSolution[_,F], F <: MultiobjectiveEvaluation](val s: ES, val rank: Int, val sparsity: Int)
 
-  trait DefaultOrdering[ES <: EvaluatedSolution[F], F <: MultiobjectiveEvaluation] {
+  trait DefaultOrdering[S <: Solution, F <: MultiobjectiveEvaluation] {
+    type ES = EvaluatedSolution[S,F]
     def globalOrdering = new Ordering[Wrapper[ES, F]] {
       override def compare(a: Wrapper[ES, F], b: Wrapper[ES, F]) = {
         val c = a.rank compare b.rank
@@ -45,18 +46,18 @@ object NSGA {
 
   /* No-archive, memoryless variant of NSGA. Selection works on the current population only 
  */
-  protected trait NoArchive[ES <: EvaluatedSolution[F], F <: MultiobjectiveEvaluation]
-    extends Selection[ES] {
-    this: DefaultOrdering[ES, F] =>
+  protected trait NoArchive[S <: Solution, F <: MultiobjectiveEvaluation]
+    extends Selection[S,F] {
+    this: DefaultOrdering[S, F] =>
 
     def rng: TRandom
     def numToGenerate: Int
     def tournSize: Int
 
     def archive = Seq[ES]() // fixed, won't change
-    override def selector(history: Seq[PopulationState[ES]]) = new NSGASelector(history)
+    override def selector(history: Seq[PopulationState[S,F]]) = new NSGASelector(history)
 
-    class NSGASelector(history: Seq[PopulationState[ES]]) extends Selector[ES] {
+    class NSGASelector(history: Seq[PopulationState[S,F]]) extends Selector[S,F] {
       require(numToGenerate <= archive.size + history.head.solutions.size)
       val l = archive ++ history.head.solutions
       val ranking = paretoRanking(archive ++ history.head.solutions)
@@ -99,13 +100,13 @@ object NSGA {
   /* The conventional NSGA: the archive stores the selected solutions and is merged
  * with the next population prior to selection. 
  */
-  protected trait WithArchive[ES <: EvaluatedSolution[F], F <: MultiobjectiveEvaluation]
-    extends NoArchive[ES, F] {
-    this: DefaultOrdering[ES, F] =>
+  protected trait WithArchive[S <: Solution, F <: MultiobjectiveEvaluation]
+    extends NoArchive[S, F] {
+    this: DefaultOrdering[S, F] =>
     var arch = Seq[ES]()
     override def archive = arch
     // Note: calling selector() changes the state of archive
-    override def selector(history: Seq[PopulationState[ES]]) = {
+    override def selector(history: Seq[PopulationState[S,F]]) = {
       val sel = super.selector(history)
       arch = sel.selected.map(_.s)
       sel
@@ -122,48 +123,48 @@ object NSGA {
   }
 
   object NoArchive {
-    def apply[ES <: EvaluatedSolution[F], F <: MultiobjectiveEvaluation](
+    def apply[S <: Solution, F <: MultiobjectiveEvaluation](
       numToGen: Int, tournamentSize: Int, rn: TRandom) =
       new {
         val (rng, numToGenerate, tournSize) = (rn, numToGen, tournamentSize)
-      } with NoArchive[ES, F] with DefaultOrdering[ES, F]
+      } with NoArchive[S, F] with DefaultOrdering[S, F]
   }
 
-  trait NoArchiveMixin[ES <: EvaluatedSolution[F], F <: MultiobjectiveEvaluation]
-    extends NoArchive[ES, F] with ParamProvider {
-    this: Options with Randomness with DefaultOrdering[ES, F] =>
+  trait NoArchiveMixin[S <: Solution, F <: MultiobjectiveEvaluation]
+    extends NoArchive[S, F] with ParamProvider {
+    this: Options with Randomness with DefaultOrdering[S, F] =>
   }
 
   object WithArchive {
-    def apply[ES <: EvaluatedSolution[F], F <: MultiobjectiveEvaluation](
+    def apply[S <: Solution, F <: MultiobjectiveEvaluation](
       numToGen: Int, tournamentSize: Int, rn: TRandom) =
       new {
         val (rng, numToGenerate, tournSize) = (rn, numToGen, tournamentSize)
-      } with WithArchive[ES, F] with DefaultOrdering[ES, F]
+      } with WithArchive[S, F] with DefaultOrdering[S, F]
   }
-  trait WithArchiveMixin[ES <: EvaluatedSolution[F], F <: MultiobjectiveEvaluation]
-    extends WithArchive[ES, F] with ParamProvider {
-    this: Options with Randomness with DefaultOrdering[ES, F] =>
+  trait WithArchiveMixin[S <: Solution, F <: MultiobjectiveEvaluation]
+    extends WithArchive[S, F] with ParamProvider {
+    this: Options with Randomness with DefaultOrdering[S, F] =>
   }
 }
 
 final class TestNSGA {
-  // maximized
-  class S(o: Seq[Int]) extends EvaluatedSolution[MultiobjectiveEvaluation] {
-    override def eval = MultiobjectiveEvaluation(o.map(v => ScalarEvaluationMax(v)))
+  class S(val o: Seq[Int]) extends Solution
+  class ES(o: Seq[Int]) extends ESol( new S(o),  
+     MultiobjectiveEvaluation(o.map(v => ScalarEvaluationMax(v)))) {
     override def toString = o.toString
   }
   @Test
   def test: Unit = {
     val nsga = NSGA.WithArchive[S, MultiobjectiveEvaluation](5, 3, new Random)
     val state = new PopulationState(List(
-      new S(Seq(2, 3, 3)),
-      new S(Seq(3, 3, 1)),
-      new S(Seq(2, 2, 1)),
-      new S(Seq(1, 2, 2)), // crowding
-      new S(Seq(1, 2, 2)),
-      new S(Seq(1, 2, 2)),
-      new S(Seq(1, 1, 1))), 0)
+      new ES(Seq(2, 3, 3)),
+      new ES(Seq(3, 3, 1)),
+      new ES(Seq(2, 2, 1)),
+      new ES(Seq(1, 2, 2)), // crowding
+      new ES(Seq(1, 2, 2)),
+      new ES(Seq(1, 2, 2)),
+      new ES(Seq(1, 1, 1))), 0)
     val sel = nsga.selector(Seq(state))
     for (i <- 0 until 20)
       println(sel.next)

@@ -55,6 +55,7 @@ or any other (possibly better) random number generator.
 TODO
 ====
 
+* In SearchStep: Note: This loop will iterate forever is none of the search operators manages to produce a solution. 
 * Make EvaluatedSolution Ordered; get rid of betterThan?
 * Report BestSoFar in snapshots
 * Instruction set as parameter

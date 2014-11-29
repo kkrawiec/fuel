@@ -13,41 +13,41 @@ import scevo.tools.RngWrapper
  * next() should never fail, because an algorithm may need to call it more than numSelected times
  */
 
-trait Selector[ES <: EvaluatedSolution[_]] {
-  def next: ES
+trait Selector[S <: Solution, E <: Evaluation] {
+  def next: EvaluatedSolution[S,E]
   def numSelected: Int
 }
 
-trait Selection[ES <: EvaluatedSolution[_]] {
-  def selector(history: Seq[PopulationState[ES]]): Selector[ES]
+trait Selection[S <: Solution, E <: Evaluation] {
+  def selector(history: Seq[PopulationState[S,E]]): Selector[S,E]
 }
 
-trait TournamentSel[ES <: EvaluatedSolution[_ <: Evaluation]]
-  extends Selection[ES] {
+trait TournamentSel[S <: Solution, E <: Evaluation] 
+  extends Selection[S,E] {
   this: Randomness =>
   def tournamentSize: Int
-  override def selector(history: Seq[PopulationState[ES]]) = new Selector[ES] {
+  override def selector(history: Seq[PopulationState[S,E]]) = new Selector[S,E] {
     protected val pool = history.head.solutions
     override val numSelected = pool.size
     override def next = BestSelector(pool(rng, tournamentSize))
   }
 }
-trait TournamentSelection[ES <: EvaluatedSolution[_ <: Evaluation]]
-  extends TournamentSel[ES] {
+trait TournamentSelection[S <: Solution, E <: Evaluation] 
+  extends TournamentSel[S,E] {
   this: Options with Randomness =>
   override val tournamentSize = paramInt("tournamentSize", 7, _ >= 2)
 }
 object TournamentSelection {
-  def apply[ES <: EvaluatedSolution[_ <: Evaluation]](rng: TRandom, tournamentSize_ : Int) =
-    new RngWrapper(rng) with TournamentSel[ES] {
+  def apply[S <: Solution, E<: Evaluation](rng: TRandom, tournamentSize_ : Int) =
+    new RngWrapper(rng) with TournamentSel[S,E] {
       override def tournamentSize = tournamentSize_
     }
 }
 
-trait FitnessProportionateSelection[ES <: EvaluatedSolution[_ <: ScalarEvaluationMax]]
-  extends Selection[ES] {
+trait FitnessProportionateSelection[S <: Solution, E <: ScalarEvaluationMax]
+  extends Selection[S,E] {
   this: Randomness =>
-  override def selector(history: Seq[PopulationState[ES]]) = new Selector[ES] {
+  override def selector(history: Seq[PopulationState[S,E]]) = new Selector[S,E] {
     protected val pool = history.head.solutions
     val distribution = Distribution.fromAnything(pool.map(_.eval.v))
     override val numSelected = pool.size
@@ -55,12 +55,13 @@ trait FitnessProportionateSelection[ES <: EvaluatedSolution[_ <: ScalarEvaluatio
   }
 }
 
-trait MuLambdaSelection[ES <: EvaluatedSolution[_ <: ScalarEvaluation]]
-  extends Selection[ES] {
-  override def selector(history: Seq[PopulationState[ES]]) = new Selector[ES] {
+/*
+trait MuLambdaSelection[S <: Solution, E <: ScalarEvaluation]
+  extends Selection[S,E] {
+  override def selector(history: Seq[PopulationState[S,E]]) = new Selector[S,E] {
     val pool = history.head.solutions ++ (if (history.size > 1)
       history.tail.head.solutions else None)
-    private val selected = pool.sortBy(_.eval)
+    private val selected = pool.sortBy( _.eval)
     override val numSelected = history.head.solutions.size
     private var i = -1
     override def next = {
@@ -69,47 +70,33 @@ trait MuLambdaSelection[ES <: EvaluatedSolution[_ <: ScalarEvaluation]]
     }
   }
 }
+*/
 
-trait GreedyBestSelection[ES <: EvaluatedSolution[_ <: Evaluation]]
-  extends Selection[ES] {
-  override def selector(history: Seq[PopulationState[ES]]) = new Selector[ES] {
+trait GreedyBestSelection[S <: Solution, E <: Evaluation]
+  extends Selection[S,E] {
+  override def selector(history: Seq[PopulationState[S,E]]) = new Selector[S,E] {
     override val numSelected = 1
     override val next = BestSelector(history.head.solutions)
   }
 }
 
 object BestSelector {
-  def apply[ES <: EvaluatedSolution[_ <: Evaluation]](set: Seq[ES]) = {
-    require(set.nonEmpty)
-//    set.tail.foldLeft(set.head)((a, b) => if (a.eval.betterThan(b.eval)) a else b)
-    var best = set.head
-    set.tail.foreach(e => if (e.eval.betterThan(best.eval)) best = e)
-    best
-  }
+  def apply[S <: Solution, E <: Evaluation](set: Seq[EvaluatedSolution[S,E]]) =
+    set.reduceLeft((a, b) => if (a.eval.betterThan(b.eval)) a else b)
+
   // I'd be happy to call this 'apply' as well, but type erasure does not permit.
-  def select[E <: Evaluation](set: Seq[E]) = {
-    require(set.nonEmpty)
-    var best = set.head
-    set.tail.foreach(e => if (e.betterThan(best)) best = e)
-    best
-  }
+  def select[E <: Evaluation](set: Seq[E]) =
+    set.reduceLeft((a, b) => if (a.betterThan(b)) a else b)
+
   // Generic, for non-Evaluation classes
-  def apply[T](set: Seq[T], better: (T, T) => Boolean) = {
-    require(set.nonEmpty)
-    var best = set.head
-    set.tail.foreach(e => if (better(e, best)) best = e)
-    best
-  }
-  def apply[T](set: Seq[T], ord: Ordering[T]) = {
-    require(set.nonEmpty)
-    var best = set.head
-    set.tail.foreach(e => if (ord.compare(e, best) < 0) best = e)
-    best
-  }
+  def apply[T](set: Seq[T], better: (T, T) => Boolean) =
+    set.reduceLeft((a, b) => if (better(a, b)) a else b)
+
+  def apply[T](set: Seq[T], ord: Ordering[T]) =
+    set.reduceLeft((a, b) => if (ord.compare(a, b) < 0) a else b)
 }
 
 object TestBestSelector {
-  def main(args: Array[String]) {
+  def main(args: Array[String]) = 
     println(BestSelector(List(3, 1, 3, 6), Ordering[Int]))
-  }
 }
