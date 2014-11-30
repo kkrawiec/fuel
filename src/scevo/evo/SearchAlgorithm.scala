@@ -52,7 +52,10 @@ trait EpilogueBestOfRun[S <: Solution, E <: Evaluation] extends Epilogue[S, E] {
  */
 trait Evolution[S <: Solution, E <: Evaluation]
   extends PopulationAlgorithm[S, E] with Logger {
-  this: SearchStepStochastic[S, E] with StoppingConditions[PopulationAlgorithm[S, E]] with PostIterationAction[S, E] with InitialState[PopulationState[S, E]] with Epilogue[S, E] with Options =>
+  this: SearchStepStochastic[S, E] with StoppingConditions[PopulationAlgorithm[S, E]] 
+  with PostIterationAction[S, E] 
+  with InitialState[PopulationState[S, E]] 
+  with Epilogue[S, E] with Options =>
 
   private var current: PopulationState[S, E] = _
   override def currentState = current
@@ -81,6 +84,9 @@ trait Evolution[S <: Solution, E <: Evaluation]
   }
 }
 
+/* This actually hardly provides any real functionality. It's here to show 
+ * the components;
+ */
 trait EA[S <: Solution, E <: Evaluation]
   extends Evolution[S, E]
   with Options with Randomness

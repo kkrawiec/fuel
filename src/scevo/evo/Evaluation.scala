@@ -2,8 +2,6 @@ package scevo.evo
 
 import org.junit.Test
 
-
-
 trait Evaluator[S <: Solution, E <: Evaluation]
   extends Function1[Seq[S], Seq[EvaluatedSolution[S, E]]] 
 
@@ -15,8 +13,7 @@ trait SeparableEvalutator[S <: Solution, E <: Evaluation]
   def apply(ss: Seq[S]) = ss.map(s => ESol(s, evaluate(s)))
 }
 
-/*
- * Evaluation is any piece of information that results from an interaction 
+/* Evaluation is any piece of information that results from an interaction 
  * of candidate solution with a task. 
  * Implements *partial* order, or no order at all
  */
