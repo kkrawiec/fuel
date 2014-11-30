@@ -28,15 +28,24 @@ import scevo.evo.ESol
 import scevo.evo.SeparableEvalutator
 import scevo.evo.InitialPopulationState
 
+/* Genetic Algorithm */
+
 object GA {
 
-  class B(val v: Seq[Boolean]) extends Solution {
+  class B(val v: Vector[Boolean]) extends Solution {
     override val toString = v.map(if (_) "1" else "0").reduce(_ + _)
   }
   type E = ScalarEvaluationMax
 
-  trait GASearchOperators extends StochasticSearchOperators[B, E] {
+  trait GA extends InitialPopulationState[B, E]
+    with SeparableEvalutator[B, E] with StochasticSearchOperators[B, E] {
     this: Options with Randomness =>
+    val numVars = paramInt("numVars", _ > 0)
+
+    override def randomSolution = new B(Vector.fill(numVars)(rng.nextBoolean))
+
+    override def evaluate(p: B) = ScalarEvaluationMax(p.v.count(b => b))
+
     override def operators: Seq[Selector[B, E] => Seq[B]] =
       List(
         (source => List({
@@ -52,69 +61,28 @@ object GA {
           List(new B(myHead ++ hisTail), new B(hisHead ++ myTail))
         }))
   }
-  trait Eval extends SeparableEvalutator[B, E] {
-    def evaluate(p: B) = ScalarEvaluationMax(p.v.count(b => b))
-  }
-  trait Init extends InitialPopulationState[B, E] {
-    this: Options with Randomness with Eval =>
-    val numVars = paramInt("numVars", _ > 0)
-    override def randomSolution = new B(List.fill(numVars)(rng.nextBoolean))
-  }
 
-  /* Use cases:
- */
-  class MyConfig(args: Array[String])
-    extends OptionsFromArgs(args) with Init with GASearchOperators with Eval with Rng
-
-  class ExperimentMaxOnes3(args: Array[String])
-    extends OptionsFromArgs(args) with Rng
-    with EA[B, E]
-    with Init
-    with Eval
-    with GASearchOperators
-    with TournamentSelection[B,E]
-    with StoppingStd[PopulationAlgorithm[B,E]]
-    with Experiment[PopulationState[B,E]] {
-
-    override def stoppingConditions = super.stoppingConditions :+
-      new StoppingCondition[PopulationAlgorithm[B,E]] {
-        def apply(a: PopulationAlgorithm[B,E]) = bestSoFar.get.eval.v == numVars
-      }
-  }
-
-  class ExperimentMaxOnes2(args: Array[String])
-    extends OptionsFromArgs(args) with Rng
-    with EA[B,E]
-    with Init
-    with GASearchOperators
-    with Eval
-    with TournamentSelection[B,E]
-    with StoppingStd[PopulationAlgorithm[B,E]]
-    with Experiment[PopulationState[B,E]]
+  /* Use cases: */
 
   class ExperimentMaxOnes(args: Array[String])
     extends OptionsFromArgs(args) with Rng
-    with Init
-    with Evolution[B,E]
-    with GASearchOperators
-    with SearchStepStochastic[B,E]
-    with Eval
-    with PostBestSoFar[B,E]
-    with EpilogueBestOfRun[B,E]
-    with TournamentSelection[B,E]
-    with StoppingStd[PopulationAlgorithm[B,E]]
-    // Why is this not working:?
-    //  with StoppingStd[Evolution[BitVector, BitVectorEvaluated, ScalarEvaluation]]
-    with Experiment[PopulationState[B,E]]
+    with EA[B, E]
+    with GA
+    with TournamentSelection[B, E]
+    with StoppingStd[PopulationAlgorithm[B, E]]
+    with Experiment[PopulationState[B, E]] {
 
-  /* Genetic Algorithm
- */
-  object ExperimentMaxOnesGA {
-    def main(args: Array[String]): Unit = new ExperimentMaxOnes3(args) {
-    }.launch
+    override def stoppingConditions = super.stoppingConditions :+
+      new StoppingCondition[PopulationAlgorithm[B, E]] {
+        def apply(a: PopulationAlgorithm[B, E]) = bestSoFar.get.eval.v == numVars
+      }
+  }
+}
+
+  object MaxOnes {
+    def main(args: Array[String]): Unit = new GA.ExperimentMaxOnes(args) {}.launch
   }
 
-}
 /* Stochastic local search: 
 object ExperimentMaxOnesSLS {
   def main(args: Array[String]): Unit = new ExperimentMaxOnes(args) {

@@ -1,11 +1,13 @@
 package scevo.evo
 
+import scala.Ordering
+
 import scevo.Distribution
 import scevo.Preamble.RndApply
 import scevo.tools.Options
 import scevo.tools.Randomness
-import scevo.tools.TRandom
 import scevo.tools.RngWrapper
+import scevo.tools.TRandom
 
 /* Selector is intended to operate in two phases: 
  * 1. When created, it can prepare helper data structures (or perform 'batch selection', as NSGAII does)
@@ -19,17 +21,18 @@ trait Selector[S <: Solution, E <: Evaluation] {
 }
 
 trait Selection[S <: Solution, E <: Evaluation] {
-  def selector(history: Seq[PopulationState[S,E]]): Selector[S,E]
+  def selectorSol(solutions: Seq[EvaluatedSolution[S,E]]): Selector[S,E]
+  def selector(history: Seq[PopulationState[S,E]]): Selector[S,E] =
+    selectorSol(history.head.solutions)
 }
 
 trait TournamentSel[S <: Solution, E <: Evaluation] 
   extends Selection[S,E] {
   this: Randomness =>
   def tournamentSize: Int
-  override def selector(history: Seq[PopulationState[S,E]]) = new Selector[S,E] {
-    protected val pool = history.head.solutions
-    override val numSelected = pool.size
-    override def next = BestSelector(pool(rng, tournamentSize))
+  override def selectorSol(solutions: Seq[EvaluatedSolution[S,E]]) = new Selector[S,E] {
+    override val numSelected = solutions.size
+    override def next = BestSelector(solutions(rng, tournamentSize))
   }
 }
 trait TournamentSelection[S <: Solution, E <: Evaluation] 
@@ -47,11 +50,10 @@ object TournamentSelection {
 trait FitnessProportionateSelection[S <: Solution, E <: ScalarEvaluationMax]
   extends Selection[S,E] {
   this: Randomness =>
-  override def selector(history: Seq[PopulationState[S,E]]) = new Selector[S,E] {
-    protected val pool = history.head.solutions
-    val distribution = Distribution.fromAnything(pool.map(_.eval.v))
-    override val numSelected = pool.size
-    override def next = pool(distribution(rng))
+  override def selectorSol(solutions: Seq[EvaluatedSolution[S,E]]) = new Selector[S,E] {
+    val distribution = Distribution.fromAnything(solutions.map(_.eval.v))
+    override val numSelected = solutions.size
+    override def next = solutions(distribution(rng))
   }
 }
 
@@ -74,9 +76,9 @@ trait MuLambdaSelection[S <: Solution, E <: ScalarEvaluation]
 
 trait GreedyBestSelection[S <: Solution, E <: Evaluation]
   extends Selection[S,E] {
-  override def selector(history: Seq[PopulationState[S,E]]) = new Selector[S,E] {
+  override def selectorSol(solutions: Seq[EvaluatedSolution[S,E]]) = new Selector[S,E] {
     override val numSelected = 1
-    override val next = BestSelector(history.head.solutions)
+    override val next = BestSelector(solutions)
   }
 }
 

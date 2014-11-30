@@ -55,12 +55,12 @@ object NSGA {
     def tournSize: Int
 
     def archive = Seq[ES]() // fixed, won't change
-    override def selector(history: Seq[PopulationState[S,F]]) = new NSGASelector(history)
+    override def selectorSol(solutions: Seq[EvaluatedSolution[S,F]]) = new NSGASelector(solutions)
 
-    class NSGASelector(history: Seq[PopulationState[S,F]]) extends Selector[S,F] {
-      require(numToGenerate <= archive.size + history.head.solutions.size)
-      val l = archive ++ history.head.solutions
-      val ranking = paretoRanking(archive ++ history.head.solutions)
+    class NSGASelector(solutions: Seq[EvaluatedSolution[S,F]]) extends Selector[S,F] {
+      require(numToGenerate <= archive.size + solutions.size)
+      val l = archive ++ solutions
+      val ranking = paretoRanking(archive ++ solutions)
       var capacity = numToGenerate
       val fullLayers = ranking.takeWhile(
         r => if (capacity - r.size < 0) false else { capacity -= r.size; true })
@@ -106,8 +106,8 @@ object NSGA {
     var arch = Seq[ES]()
     override def archive = arch
     // Note: calling selector() changes the state of archive
-    override def selector(history: Seq[PopulationState[S,F]]) = {
-      val sel = super.selector(history)
+    override def selectorSol(solutions: Seq[EvaluatedSolution[S,F]]) = {
+      val sel = super.selectorSol(solutions)
       arch = sel.selected.map(_.s)
       sel
     }

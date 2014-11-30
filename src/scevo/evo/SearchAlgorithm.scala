@@ -30,7 +30,7 @@ trait PostBestSoFar[S <: Solution, E <: Evaluation] extends PostIterationAction[
   override def postIteration: Unit = {
     val bestOfGen = BestSelector(currentState.solutions)
     if (bestSoFar.isEmpty || bestOfGen.eval.betterThan(best.get.eval)) best = Some(bestOfGen)
-    println(f"Generation: ${currentState.iteration}  BestSoFar: ${bestSoFar.get.eval} ${bestSoFar.get}")
+    println(f"Generation: ${currentState.iteration}  BestSoFar: ${bestSoFar.get}")
   }
 }
 

@@ -15,6 +15,7 @@ trait Solution extends Serializable
 trait EvaluatedSolution[S <: Solution, +E <: Evaluation] extends Serializable {
   def s: S
   def eval: E
+  override def toString = s.toString + " " + eval.toString
 }
 
 /* Default implementation of EvaluatedSolution
