@@ -15,7 +15,12 @@ trait SeparableEvalutator[S <: Solution, E <: Evaluation]
 
 /* Evaluation is any piece of information that results from an interaction 
  * of candidate solution with a task. 
- * Implements *partial* order, or no order at all
+ * In general, implements *partial* order, or no order at all. 
+ * Important: That order (whether complete or partial) is meant to represent the *objective*
+ * relationships between the solutions. 
+ * The subjective ones can be expressed using search drivers. 
+ * Of course, most often the search driver used to guide the search will be simply 
+ * the objective ordering/function. 
  */
 
 trait Evaluation extends Serializable {
@@ -62,23 +67,22 @@ object ScalarEvaluationMin {
 class MultiobjectiveEvaluation(val v: Seq[ScalarEvaluation]) extends Evaluation {
   require(v.nonEmpty)
   override def toString = v.toString
-  /*
-   * Not very elegant, but much faster:
+  /* Not very elegant, but much faster than other method I've considered:
    */
   override def comparePartial(that: Evaluation): Option[Int] = {
     val other = that.asInstanceOf[MultiobjectiveEvaluation]
     val n = v.length
     require(n == other.v.length)
-    var xBetter: Boolean = false
-    var yBetter: Boolean = false
+    var meBetter: Boolean = false
+    var thatBetter: Boolean = false
     for (i <- 0 until n) {
       val c = v(i) compare other.v(i)
       if (c < 0)
-        xBetter = true
+        meBetter = true
       else if (c > 0)
-        yBetter = true
+        thatBetter = true
     }
-    (xBetter, yBetter) match {
+    (meBetter, thatBetter) match {
       case (true, true)  => None
       case (true, false) => Some(1)
       case (false, true) => Some(-1)
@@ -100,12 +104,12 @@ class TestOutcomes(override val v: Seq[ScalarEvaluationMax]) extends Multiobject
   require(v.forall(e => e.v >= 0 && e.v <= 1))
   def allPassed = v.forall(_.v == 1)
 }
+/* Important: Overrides comparePartial(), comparing w.r.t. the number of tests passed.
+ */
 class BinaryTestOutcomes(override val v: Seq[ScalarEvaluationMax]) extends TestOutcomes(v) {
   require(v.forall(e => e.v == 0 || e.v == 1))
-  override def toString = s"Passed: ${numTestsPassed} " // + super.toString
+  override def toString = numTestsPassed.toString // + super.toString
   def numTestsPassed = v.map(_.v).sum
-  //  def passesMoreTests(that: BinaryTestOutcomes) = numTestsPassed > that.numTestsPassed
-  // WARNING: allows scalar comparison:
   override def comparePartial(that: Evaluation): Option[Int] =
     Some(that.asInstanceOf[BinaryTestOutcomes].numTestsPassed compare numTestsPassed)
 }

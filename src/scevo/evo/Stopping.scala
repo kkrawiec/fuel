@@ -2,26 +2,24 @@ package scevo.evo
 
 import scevo.tools.Options
 
-trait StoppingCondition[A <: IterativeAlgorithm[_]] extends (A => Boolean)
-
-class MaxGenerations[A <: IterativeAlgorithm[_ <: State]](maxGenerations: Int) extends StoppingCondition[A] {
-  override def apply(alg: A) = alg.currentState.iteration >= maxGenerations
+trait StoppingCondition[S <: State] {
+  def stop(s: S) = false
 }
 
-class MaxTime[A <: IterativeAlgorithm[_]](maxMillisec: Long) extends StoppingCondition[A] {
-  val startTime = System.currentTimeMillis()
-  override def apply(alg: A) = timeElapsed > maxMillisec
-  def timeElapsed = System.currentTimeMillis() - startTime
-}
-
-trait StoppingConditions[A <: IterativeAlgorithm[_]] {
-  def stoppingConditions: List[StoppingCondition[A]]
-  assert(stoppingConditions.nonEmpty, "At least one stopping condition has to be defined")
-}
-
-trait StoppingStd[A <: IterativeAlgorithm[_ <: State]] extends StoppingConditions[A] {
+trait MaxGenerations[S <: State] extends StoppingCondition[S] {
   this: Options =>
-  def stoppingConditions = List(
-    new MaxTime[A](paramInt("maxTime", 86400000, _ > 0)),
-    new MaxGenerations[A](paramInt("maxGenerations", 50, _ > 0)))
+  val maxGenerations = paramInt("maxGenerations", 50, _ > 0)
+  override def stop(s: S) = s.iteration >= maxGenerations || super.stop(s)
+}
+
+trait MaxTime[S <: State] extends StoppingCondition[S] {
+  this: Options =>
+  val maxMillisec = paramInt("maxTime", 86400000, _ > 0)
+  val startTime = System.currentTimeMillis()
+  def timeElapsed = System.currentTimeMillis() - startTime
+  override def stop(s: S) = timeElapsed > maxMillisec || super.stop(s)
+}
+
+trait StoppingDefault[S <: State] extends MaxGenerations[S] with MaxTime[S] {
+  this: Options =>
 }

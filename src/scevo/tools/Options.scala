@@ -12,7 +12,7 @@ trait Options {
   def allOptions: Map[String, String]
 
   // Stores the values of retrieved options, *including the default values*
-  lazy val retrievedOptions = scala.collection.mutable.Map[String, String]()
+  protected lazy val retrievedOptions = scala.collection.mutable.Map[String, String]()
 
   protected def getOption(id: String) = {
     val v = options(id)
@@ -56,25 +56,24 @@ trait Options {
   }
 }
 
-abstract class OptionsFromArgs(args: Array[String]) extends Options {
-  def this(params: String) =
-    this(if (params.trim == "") Array[String]() else params.trim.split("\\s+"))
-  private val opt = OptionParser(args.toList)
+abstract class OptionsC(opt: Map[String, String])
+  extends Options {
+  //  private val opt = OptionParser(args.toList)
   override def allOptions = opt
   override protected def options = (id: String) => opt.get(id)
+
+}
+
+abstract class OptionsFromArgs(args: Array[String])
+  extends OptionsC(OptionParser(args)) with CollectorFile {
+  def this(params: String) =
+    this(if (params.trim == "") Array[String]() else params.trim.split("\\s+"))
 }
 
 trait NoOptions extends Options {
   override def allOptions = Map[String, String]()
   override protected def options = (_: String) => None
 }
-/*
-class OptionsWrapper(val wrapped : Options) extends Options {
-  override def allOptions = wrapped.allOptions
-  override protected def options = wrapped.options
-}
-* 
-*/
 /*
  * TODO: Make the parsing more robust
  */

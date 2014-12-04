@@ -1,44 +1,36 @@
 package scevo.tools
 
-import scevo.evo.IterativeAlgorithm
-import scevo.evo.Experiment
-import scevo.evo.State
+import scala.reflect.io.Path.string2path
 
-/*
-trait Logging {
-
-  var log = List[String]()
-  def log(s: String) {
-    println(s)
-    log = log :+ s
-  }
-}
-* 
-*/
-
+/* To be implemented by the components that need to be closed before program termination
+ * 
+ */
 trait Closeable {
   protected def close = {}
 }
 
 // Note: passing arguments by name, so that they get evaluated only when needed
-trait Logger {
-  def log(key: => Any, value: => Any) = {}
+trait Logger[K] {
+  def log(key: => K, value: => Any): Logger[K]
 }
 
-trait LoggerIter extends Logger with Closeable {
-  this: Experiment[_ <: State] with IterativeAlgorithm[_ <: State] =>
+trait LoggerIter extends Logger[(Int, Any)] with Closeable {
+  this: Collector =>
 
-  val stats = scala.collection.mutable.HashMap[(Int, Any), Any]() // (iteration, key) => val
-  override def log(key: => Any, value: => Any) = {
-    stats += (((currentState.iteration, key), value))
+  val stats = scala.collection.mutable.HashMap[(Int, Any), Any]() 
+
+  override def log(key: => (Int, Any), value: => Any) = {
+    stats += ((key, value))
+    this
   }
+
   override protected def close = {
-    super.close
     val keys = stats.keys.map(_._2).toSet
     keys.foreach(key => {
       val v = stats.filter(e => e._1._2 == key).map(e => (e._1._1, e._2))
       val m = scala.tools.nsc.io.File(rdb.fname + f".$key").writeAll(
         v.toList.sortBy(_._1).map(e => f"${e._1}\t${e._2}").mkString("\n"))
     })
+    super.close
   }
 }

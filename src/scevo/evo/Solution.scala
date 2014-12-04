@@ -15,13 +15,14 @@ trait Solution extends Serializable
 trait EvaluatedSolution[S <: Solution, +E <: Evaluation] extends Serializable {
   def s: S
   def eval: E
-  override def toString = s.toString + " " + eval.toString
+  override def toString = eval + " " + s
 }
 
 /* Default implementation of EvaluatedSolution
  */
 class ESol[S <: Solution, +E <: Evaluation](override val s: S, override val eval: E)
   extends EvaluatedSolution[S, E]
+
 object ESol {
-  def apply[S <: Solution, E <: Evaluation](s: S, eval: E) = new ESol(s,eval)
+  def apply[S <: Solution, E <: Evaluation](s: S, eval: E) = new ESol(s, eval)
 }

@@ -1,32 +1,21 @@
 package scevo.examples
 
 import scevo.evo.EA
-import scevo.evo.EpilogueBestOfRun
-import scevo.evo.EvaluatedSolution
-import scevo.evo.Evaluator
-import scevo.evo.Evolution
 import scevo.evo.Experiment
-import scevo.evo.InitialState
-import scevo.evo.PopulationAlgorithm
+import scevo.evo.InitialPopulationState
 import scevo.evo.PopulationState
-import scevo.evo.PostBestSoFar
-import scevo.evo.ScalarEvaluation
 import scevo.evo.ScalarEvaluationMax
-import scevo.evo.SearchStepStochastic
 import scevo.evo.Selector
+import scevo.evo.SeparableEvalutator
 import scevo.evo.Solution
 import scevo.evo.StochasticSearchOperators
 import scevo.evo.StoppingCondition
-import scevo.evo.StoppingStd
 import scevo.evo.TournamentSelection
 import scevo.tools.Options
 import scevo.tools.OptionsFromArgs
 import scevo.tools.Randomness
 import scevo.tools.Rng
-import scevo.tools.TRandom
-import scevo.evo.ESol
-import scevo.evo.SeparableEvalutator
-import scevo.evo.InitialPopulationState
+import scevo.evo.StoppingDefault
 
 /* Genetic Algorithm */
 
@@ -69,19 +58,16 @@ object GA {
     with EA[B, E]
     with GA
     with TournamentSelection[B, E]
-    with StoppingStd[PopulationAlgorithm[B, E]]
+    with StoppingDefault[PopulationState[B, E]]
     with Experiment[PopulationState[B, E]] {
 
-    override def stoppingConditions = super.stoppingConditions :+
-      new StoppingCondition[PopulationAlgorithm[B, E]] {
-        def apply(a: PopulationAlgorithm[B, E]) = bestSoFar.get.eval.v == numVars
-      }
+    override def stop(s: PopulationState[B, E]) = super.stop(s) || bestSoFar.fold(false)(_.eval.v == numVars) 
   }
 }
 
-  object MaxOnes {
-    def main(args: Array[String]): Unit = new GA.ExperimentMaxOnes(args) {}.launch
-  }
+object MaxOnes {
+  def main(args: Array[String]): Unit = new GA.ExperimentMaxOnes(args) {}.launch
+}
 
 /* Stochastic local search: 
 object ExperimentMaxOnesSLS {

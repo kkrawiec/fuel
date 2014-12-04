@@ -2,15 +2,15 @@ package scevo.evo
 
 import scevo.tools.Options
 
-
-/* Search state. Not to be confused with the state of the search *algorithm/process*, 
+/* Search state. 
  */
 
 trait State extends Serializable {
   def iteration: Int
 }
 
-class PopulationState[S <: Solution, E <: Evaluation](val solutions: Seq[EvaluatedSolution[S, E]], override val iteration: Int)
+class PopulationState[S <: Solution, E <: Evaluation](val solutions: Seq[EvaluatedSolution[S, E]], 
+    override val iteration: Int)
   extends State {
   require(solutions.size > 0, "The set of working solutions in a state cannot be empty")
 }
@@ -18,9 +18,7 @@ class PopulationState[S <: Solution, E <: Evaluation](val solutions: Seq[Evaluat
 object PopulationState {
 
   def apply[S <: Solution, E <: Evaluation](solutions: Seq[EvaluatedSolution[S, E]], iteration: Int = 0) =
-    new PopulationState[S,E](solutions, iteration)
-//  def apply[ES <: EvaluatedSolution[_,_]](solutions:  Seq[ES], iteration: Int = 0) =
-//    new PopulationState[S,](solutions, iteration)
+    new PopulationState[S, E](solutions, iteration)
 
   def init[S <: Solution, E <: Evaluation](popSize: Int,
     genSolution: () => EvaluatedSolution[S, E]): PopulationState[S, E] = {
@@ -29,9 +27,6 @@ object PopulationState {
   }
 }
 
-trait InitialState[S <: State] {
-  def initialState: S
-}
 trait InitialPopulationState[S <: Solution, E <: Evaluation]
   extends InitialState[PopulationState[S, E]] {
   this: Options with SeparableEvalutator[S, E] =>
