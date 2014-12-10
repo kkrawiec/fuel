@@ -54,12 +54,16 @@ class ResultDatabase(val directory: String) extends scala.collection.mutable.Has
   def saveSnapshot(fnameSuffix: String): Unit =
     saveWorkingState(new File(fname + "." + fnameSuffix))
 
-  override def finalize(): Unit = save
-
   def write(key: String, v: Any) = {
     val os = new ObjectOutputStream(new FileOutputStream(fname + "." + key))
     os.writeObject(v)
     os.close()
+    v
+  }
+  def writeString(key: String, v: String) = {
+    val s = new PrintWriter(new File(fname + "." + key))
+    s.print(v)
+    s.close()
     v
   }
 

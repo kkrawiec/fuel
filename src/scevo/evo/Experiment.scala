@@ -7,13 +7,14 @@ import scevo.tools.Collector
 import scevo.tools.Options
 
 trait Experiment[S <: State] extends Closeable {
-  this: Algorithm[S] with Collector =>
+  this: Algorithm[S] with Collector with Options =>
 
   protected def runExperiment = run
 
   def launch: Option[State] = {
     val startTime = System.currentTimeMillis()
     try {
+      warnNonRetrieved
       val state = runExperiment
       rdb.put("status", "completed")
       rdb.write("lastState", state)

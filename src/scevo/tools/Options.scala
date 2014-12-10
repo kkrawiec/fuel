@@ -13,6 +13,13 @@ trait Options {
 
   // Stores the values of retrieved options, *including the default values*
   protected lazy val retrievedOptions = scala.collection.mutable.Map[String, String]()
+  
+  def warnNonRetrieved = {
+    val nonRetrieved = allOptions.toList.diff(retrievedOptions.toList)
+    if( nonRetrieved.nonEmpty )
+      println("WARNING: The following options have been set but not retrievied:\n" + 
+          nonRetrieved.mkString("\n"))
+  }
 
   protected def getOption(id: String) = {
     val v = options(id)
@@ -56,12 +63,9 @@ trait Options {
   }
 }
 
-abstract class OptionsC(opt: Map[String, String])
-  extends Options {
-  //  private val opt = OptionParser(args.toList)
+abstract class OptionsC(opt: Map[String, String]) extends Options {
   override def allOptions = opt
   override protected def options = (id: String) => opt.get(id)
-
 }
 
 abstract class OptionsFromArgs(args: Array[String])

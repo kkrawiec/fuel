@@ -42,7 +42,7 @@ trait EA[S <: Solution, E <: Evaluation]
   with Selection[S, E]
   with Evaluator[S, E]
   with StochasticSearchOperators[S, E]
-  with StoppingCondition[PopulationState[S, E]]
+  with StoppingDefault[PopulationState[S, E]]
   with PostBestSoFar[S, E]
   with EpilogueBestOfRun[S, E]
 
