@@ -20,10 +20,22 @@ trait Selector[S <: Solution, E <: Evaluation] {
   def numSelected: Int
 }
 
-trait Selection[S <: Solution, E <: Evaluation] {
-  def selectorSol(solutions: Seq[EvaluatedSolution[S, E]]): Selector[S, E]
+trait SelectionHistory[S <: Solution, E <: Evaluation] {
+  def selector(history: Seq[PopulationState[S, E]]): Selector[S, E]
+}
+
+trait SelectionLastState[S <: Solution, E <: Evaluation] 
+extends SelectionHistory[S,E]{
+  def selector(state: PopulationState[S, E]): Selector[S, E]
   def selector(history: Seq[PopulationState[S, E]]): Selector[S, E] =
-    selectorSol(history.head.solutions)
+    selector(history.head)
+}
+
+trait Selection[S <: Solution, E <: Evaluation] 
+extends SelectionLastState[S,E]{
+  def selectorSol(solutions: Seq[EvaluatedSolution[S, E]]): Selector[S, E]
+  def selector(state: PopulationState[S, E]): Selector[S, E] =
+    selectorSol(state.solutions)
 }
 
 trait TournamentSel[S <: Solution, E <: Evaluation]

@@ -11,7 +11,7 @@ trait Experiment[S <: State] extends Closeable {
 
   protected def runExperiment = run
 
-  def launch: Option[State] = {
+  def launch: Option[S] = {
     val startTime = System.currentTimeMillis()
     try {
       warnNonRetrieved

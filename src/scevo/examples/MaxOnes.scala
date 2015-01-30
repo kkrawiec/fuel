@@ -6,7 +6,7 @@ import scevo.evo.InitialPopulationState
 import scevo.evo.PopulationState
 import scevo.evo.ScalarEvaluationMax
 import scevo.evo.Selector
-import scevo.evo.SeparableEvalutator
+import scevo.evo.SeparableEvaluator
 import scevo.evo.Solution
 import scevo.evo.StochasticSearchOperators
 import scevo.evo.StoppingCondition
@@ -27,7 +27,7 @@ object GA {
   type E = ScalarEvaluationMax
 
   trait GA extends InitialPopulationState[B, E]
-    with SeparableEvalutator[B, E] with StochasticSearchOperators[B, E] {
+    with SeparableEvaluator[B, E] with StochasticSearchOperators[B, E] {
     this: Options with Randomness =>
     val numVars = paramInt("numVars", _ > 0)
 

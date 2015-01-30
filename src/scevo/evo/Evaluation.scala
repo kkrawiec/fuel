@@ -7,7 +7,7 @@ trait Evaluator[S <: Solution, E <: Evaluation]
 
 /* Default evaluator evaluates every solution separately, but this can be overriden
  */
-trait SeparableEvalutator[S <: Solution, E <: Evaluation]
+trait SeparableEvaluator[S <: Solution, E <: Evaluation]
   extends Evaluator[S,E] {
   def evaluate(s: S): E
   def apply(ss: Seq[S]) = ss.map(s => ESol(s, evaluate(s)))
@@ -76,7 +76,7 @@ class MultiobjectiveEvaluation(val v: Seq[ScalarEvaluation]) extends Evaluation 
     var meBetter: Boolean = false
     var thatBetter: Boolean = false
     for (i <- 0 until n) {
-      val c = v(i) compare other.v(i)
+      val c = v(i) compare other(i)
       if (c < 0)
         meBetter = true
       else if (c > 0)
@@ -89,6 +89,8 @@ class MultiobjectiveEvaluation(val v: Seq[ScalarEvaluation]) extends Evaluation 
       case _             => Some(0)
     }
   }
+  def apply(i:Int) = v(i)
+  def size = v.size
   override def equals(that: Any) = that match {
     case other: MultiobjectiveEvaluation => v.size == other.v.size && (0 until v.size).forall(i => v(i) == other.v(i))
     case _                               => false

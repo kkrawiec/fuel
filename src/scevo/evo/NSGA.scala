@@ -157,7 +157,7 @@ final class TestNSGA {
   @Test
   def test: Unit = {
     val nsga = NSGA.WithArchive[S, MultiobjectiveEvaluation](5, 3, new Random)
-    val state = new PopulationState(List(
+    val state = PopulationState(List(
       new ES(Seq(2, 3, 3)),
       new ES(Seq(3, 3, 1)),
       new ES(Seq(2, 2, 1)),

@@ -7,7 +7,12 @@ import scevo.tools.Collector
 /*
  * A single step of an iterative search algorithm. step() is supposed to carry out one iteration. 
  * A search operator returns a list of of candidate solutions; possibly empty (if, e.g., feasibility conditions are not met).
- * Search steps can be combined via mixins; Also post-iteration reporting is realized ast Step
+ * 
+ * Search steps can be combined (chained) via mixins, by calling super.step() 
+ * In such a case, the state is being passed from one Step trait to another, 
+ * and this happens *within each iteration of search*.
+ * 
+ * Also post-iteration reporting is realized as a Step
  */
 trait Step[S <: State] {
   def step(s: S) = s
