@@ -17,7 +17,8 @@ trait Experiment[S <: State] extends Closeable {
       warnNonRetrieved
       val state = runExperiment
       rdb.put("status", "completed")
-      rdb.write("lastState", state)
+      if (getOption("saveLastState", "false") == "true")
+        rdb.write("lastState", state)
       Some(state)
     } catch {
       case e: Exception => {

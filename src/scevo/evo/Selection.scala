@@ -24,15 +24,15 @@ trait SelectionHistory[S <: Solution, E <: Evaluation] {
   def selector(history: Seq[PopulationState[S, E]]): Selector[S, E]
 }
 
-trait SelectionLastState[S <: Solution, E <: Evaluation] 
-extends SelectionHistory[S,E]{
+trait SelectionLastState[S <: Solution, E <: Evaluation]
+  extends SelectionHistory[S, E] {
   def selector(state: PopulationState[S, E]): Selector[S, E]
   def selector(history: Seq[PopulationState[S, E]]): Selector[S, E] =
     selector(history.head)
 }
 
-trait Selection[S <: Solution, E <: Evaluation] 
-extends SelectionLastState[S,E]{
+trait Selection[S <: Solution, E <: Evaluation]
+  extends SelectionLastState[S, E] {
   def selectorSol(solutions: Seq[EvaluatedSolution[S, E]]): Selector[S, E]
   def selector(state: PopulationState[S, E]): Selector[S, E] =
     selectorSol(state.solutions)
@@ -69,6 +69,50 @@ trait FitnessProportionateSelection[S <: Solution, E <: ScalarEvaluationMax]
   }
 }
 
+trait LexicaseSelection[S <: Solution, E <: BinaryTestOutcomes]
+  extends Selection[S, E] {
+  this: Randomness =>
+  override def selectorSol(solutions: Seq[EvaluatedSolution[S, E]]) = new Selector[S, E] {
+    override val numSelected = solutions.size
+    override def next = {
+      def sel(sols: Seq[EvaluatedSolution[S, E]], cases: List[Int]): EvaluatedSolution[S, E] =
+        if (sols.size == 1)
+          sols(0)
+        else if( cases.size == 1)
+          sols(rng)
+          else {
+            val theCase = cases(rng)
+            val maxEval = sols.map(_.eval(theCase).v).max
+            //println("Sols:" + sols.size + " Cases: " + cases.size)
+            sel(sols.filter(s => s.eval(theCase).v == maxEval), cases.diff(List(theCase)))
+          }
+      sel(solutions, 0.until(numSelected).toList )
+    }
+  }
+}
+/* innefective, memory hog
+trait LexicaseSelection[S <: Solution, E <: BinaryTestOutcomes]
+  extends Selection[S, E] {
+  this: Randomness =>
+  override def selectorSol(solutions: Seq[EvaluatedSolution[S, E]]) = new Selector[S, E] {
+    override val numSelected = solutions.size
+    val permutations = 0.until(numSelected).permutations.toStream
+    override def next = {
+      def sel(sols: Seq[EvaluatedSolution[S, E]], cases: List[Int]): EvaluatedSolution[S, E] =
+        if (sols.size == 1)
+          sols(0)
+        else cases match {
+          case Nil => sols(rng)
+          case c :: tail => {
+            val maxEval = sols.map(_.eval(c).v).max
+            sel(sols.filter(s => s.eval(c).v == maxEval), tail)
+          }
+        }
+      sel(solutions, permutations(rng).toList)
+    }
+  }
+}
+*/
 trait MuLambdaSelection[S <: Solution, E <: ScalarEvaluation]
   extends Selection[S, E] {
   override def selector(history: Seq[PopulationState[S, E]]) = new Selector[S, E] {
