@@ -138,6 +138,9 @@ trait GreedyBestSelection[S <: Solution, E <: Evaluation]
 }
 
 object BestSelector {
+  def apply[S <: Solution, E <: Evaluation](set: Seq[Tuple2[S, E]]) =
+    set.reduceLeft((a, b) => if (a._2.betterThan(b._2)) a else b)
+
   def apply[S <: Solution, E <: Evaluation](set: Seq[EvaluatedSolution[S, E]]) =
     set.reduceLeft((a, b) => if (a.eval.betterThan(b.eval)) a else b)
 

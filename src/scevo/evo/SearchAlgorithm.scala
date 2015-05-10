@@ -14,7 +14,7 @@ trait InitialState[S <: State] {
   def initialState: S
 }
 
-trait Epilogue[S] {
+trait Epilogue[S <: State] {
   def epilogue(s: S) = s
 }
 

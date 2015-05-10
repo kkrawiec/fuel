@@ -7,6 +7,7 @@ object Preamble {
     require(s.nonEmpty)
     def apply(rnd: TRandom) = s(rnd.nextInt(s.size))
     def apply(rnd: TRandom, n: Int) = for (i <- 0 until n) yield s(rnd.nextInt(s.size))
+    def fapply(rnd: TRandom) = (() => s(rnd.nextInt(s.size)))
   }
 }
 

@@ -33,6 +33,7 @@ object EmptyState {
   def apply() = new State { override def iteration = 0 }
 }
 
+// RandomStateGenerator?
 trait InitialPopulationState[S <: Solution, E <: Evaluation]
   extends InitialState[PopulationState[S, E]] {
   this: Options with SeparableEvaluator[S, E] =>

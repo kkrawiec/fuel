@@ -2,10 +2,12 @@ ScEvo = Evolutionary Computation framework in Scala
 ===================================================
 Krzysztof Krawiec
 krawiec@cs.put.poznan.pl
-June-Dec 2014
+June 2014 - May 2015
 
 General philosophy
 ===================
+
+The library is organized as a collection of components, which in general are allowed to be stateful. A particular configuration is obtained by mixing multiple traits that implement the particular components. 
 
 This is a one-page description of the basic components and the relations between them. The names of components are capitalized. Most of them are in the scevo.evo package. 
 
