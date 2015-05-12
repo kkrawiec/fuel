@@ -17,11 +17,14 @@ import scevo.tools.TRandom
 import scevo.tools.ResultDatabase
 
 
-// Scevo-like functionality in functional programming style
-// May 9th, 2015
-// Other differences w.r.t. original scevo:
-// - evaluated solution is now simply Tuple2[S,E] 
-// TODO: still undecided if I need PopulationState or just Seq[Tuple2[S,E]]
+/* Scevo-like functionality in functional programming style
+
+ May 9th, 2015
+ Other differences w.r.t. original scevo:
+ - evaluated solution is now simply Tuple2[S,E] 
+ - PopulationState or just Seq[Tuple2[S,E]]
+ * 
+ */
 
 trait PopulationState[S <: Solution, E <: Evaluation] extends State {
   def solutions: Seq[Tuple2[S, E]]
