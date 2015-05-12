@@ -68,7 +68,7 @@ abstract class OptionsC(opt: Map[String, String]) extends Options {
   override protected def options = (id: String) => opt.get(id)
 }
 
-abstract class OptionsFromArgs(args: Array[String])
+class OptionsFromArgs(args: Array[String])
   extends OptionsC(OptionParser(args)) with CollectorFile {
   def this(params: String) =
     this(if (params.trim == "") Array[String]() else params.trim.split("\\s+"))

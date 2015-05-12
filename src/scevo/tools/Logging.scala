@@ -6,7 +6,7 @@ import scala.reflect.io.Path.string2path
  * 
  */
 trait Closeable {
-  protected def close = {}
+  def close = {}
 }
 
 // Note: passing arguments by name, so that they get evaluated only when needed
@@ -24,7 +24,7 @@ trait LoggerIter extends Logger[(Int, Any)] with Closeable {
     this
   }
 
-  override protected def close = {
+  override def close = {
     val keys = stats.keys.map(_._2).toSet
     keys.foreach(key => {
       val v = stats.filter(e => e._1._2 == key).map(e => (e._1._1, e._2))

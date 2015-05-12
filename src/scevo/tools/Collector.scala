@@ -9,11 +9,11 @@ import java.net.UnknownHostException
  * 
  */
 
-trait Collector {
+trait Collector extends Closeable {
   def rdb: ResultDatabase
 }
 
-trait CollectorFile extends Collector with Closeable {
+trait CollectorFile extends Collector {
   this: Options =>
   // Prepare result database and fill it with the technical parameters 
   override val rdb = new ResultDatabase(paramString("outputDir", "./"))
@@ -32,7 +32,7 @@ trait CollectorFile extends Collector with Closeable {
   rdb.put("status", "initialized")
   rdb.saveWorkingState()
 
-  override protected def close = {
+  override def close = {
     // Do this again, something may have changed during run:
     retrievedOptions.foreach(t => rdb.put(t._1, t._2))
     rdb.save

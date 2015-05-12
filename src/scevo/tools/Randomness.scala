@@ -25,6 +25,9 @@ trait Rng extends Randomness {
 }
 class RngWrapper(override val rng : TRandom) extends Randomness
 
+object Rng {
+  def apply( conf: Options ) = new Random(conf.paramInt("seed", 1))
+}
 
 /*
  * This trait is intended to enable elegant use of different random number generators
