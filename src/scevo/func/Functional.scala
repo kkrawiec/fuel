@@ -49,20 +49,44 @@ object StatePop {
 
 // Function factories (component factories)
 
+// Does this make sense? To reduce the number of parameters?
+trait Environment extends Options with Collector
+class EnvFromArgs(args: Array[String]) extends OptionsFromArgs(args) with CollectorFile with Environment
+
 object IterativeAlgorithm {
-  def apply[S <: State](init: Unit => S)(step: S => S)(stop: S => Boolean*)(epilogue: S => S) = {
+  /*
+  def apply[S <: State](init: Unit => S)(step: S => S)(stop: Seq[S => Boolean])(epilogue: S => S) : Unit => S = 
+  def apply[S <: State](init: Unit => S)(step: S => S)(stop: S => Boolean*)(epilogue: S => S) : Unit => S = {
+    apply(init)(step)(stop)(epilogue)
+    */
+  /*
+  def apply[S <: State](init: Unit => S)(step: S => S)(stop: Seq[S => Boolean])(epilogue: S => S): Unit => S = {
     @tailrec def iterate(s: S): S = stop.forall((sc: S => Boolean) => !sc(s)) match {
       case false => s
       case true  => iterate(step(s))
     }
     init andThen iterate andThen epilogue
   }
+  * 
+  */
+  def apply[S <: State](step: S => S)(stop: Seq[S => Boolean]): S => S = {
+    @tailrec def iterate(s: S): S = stop.forall((sc: S => Boolean) => !sc(s)) match {
+      case false => s
+      case true  => iterate(step(s))
+    }
+    iterate
+  }
+  def apply[S <: Solution, E <: Evaluation](env: Environment)(step: StatePop[Tuple2[S, E]] => StatePop[Tuple2[S, E]])(stop: Seq[StatePop[Tuple2[S, E]] => Boolean]): StatePop[Tuple2[S, E]] => StatePop[Tuple2[S, E]] = {
+    val bsf = new BestSoFar[S, E]
+    def reporting = bsf(env, env)
+    apply(step andThen reporting)(stop) andThen EpilogueBestOfRun[S, E](bsf, env)
+  }
 }
 
 // Evaluates population solution by solution (other modes of evaluation possible, e.g., in IFS)
-object IndependentEvaluation {
-  def apply[S <: Solution, E <: Evaluation](f: S => Tuple2[S, E]) =
-    (s: StatePop[S]) => StatePop(s.solutions map f, s.iteration)
+object IndependentEval{
+  def apply[S <: Solution, E <: Evaluation](f: S => E) =
+    (s: StatePop[S]) => StatePop(s.solutions.map(x => (x, f(x))), s.iteration)
 }
 
 object Breeder {
@@ -108,7 +132,7 @@ object RandomStatePop {
   }
 }
 
-object Condition {
+object Termination {
   object MaxIter {
     def apply[S <: State](opt: Options) = {
       val maxGenerations = opt.paramInt("maxGenerations", 50, _ > 0)
@@ -123,6 +147,9 @@ object Condition {
       s: Any => timeElapsed > maxMillisec
     }
   }
+  def apply[S <: Solution, E <: Evaluation](config: Options) = Seq(
+    MaxIter[StatePop[Tuple2[S, E]]](config),
+    MaxTime(config))
 }
 
 // Reporting
@@ -147,7 +174,7 @@ object EpilogueBestOfRun {
   def apply[S <: Solution, E <: Evaluation](bsf: BestSoFar[S, E], coll: Collector) =
     (state: StatePop[Tuple2[S, E]]) => {
       coll.rdb.setResult("lastGeneration", state.iteration)
-      coll.rdb.setResult("bestOfRun.fitness", if( bsf.bestSoFar.isDefined) bsf.bestSoFar.get._2 else "NaN")
+      coll.rdb.setResult("bestOfRun.fitness", if (bsf.bestSoFar.isDefined) bsf.bestSoFar.get._2 else "NaN")
       coll.rdb.setResult("bestOfRun.genotype", bsf.bestSoFar.toString)
       coll.rdb.write("bestOfRun", bsf.bestSoFar)
       state
@@ -155,26 +182,26 @@ object EpilogueBestOfRun {
 }
 
 object Experiment {
-  def launch[S <: State](alg: Unit => S, opt: Options, coll: Collector) = {
+  def launch[S <: State](alg: Unit => S, env: Environment) = {
     _: Unit =>
       {
         val startTime = System.currentTimeMillis()
         try {
-          opt.warnNonRetrieved
+          env.warnNonRetrieved
           val state = alg()
-          coll.rdb.put("status", "completed")
-          if (opt.paramString("saveLastState", "false") == "true")
-            coll.rdb.write("lastState", state)
+          env.rdb.put("status", "completed")
+          if (env.paramString("saveLastState", "false") == "true")
+            env.rdb.write("lastState", state)
           Some(state)
         } catch {
           case e: Exception => {
-            coll.rdb.put("status", "error: " + e.getLocalizedMessage + e.getStackTrace().mkString(" ")) // .toString.replace('\n', ' '))
+            env.rdb.put("status", "error: " + e.getLocalizedMessage + e.getStackTrace().mkString(" ")) // .toString.replace('\n', ' '))
             throw e
           }
         } finally {
-          coll.close
-          coll.rdb.setResult("totalTimeSystem", System.currentTimeMillis() - startTime)
-          coll.rdb.setResult("system.endTime", Calendar.getInstance().getTime().toString)
+          env.close
+          env.rdb.setResult("totalTimeSystem", System.currentTimeMillis() - startTime)
+          env.rdb.setResult("system.endTime", Calendar.getInstance().getTime().toString)
           None
         }
       }
@@ -184,25 +211,21 @@ object Experiment {
 // Use case: MaxOnes with GA
 
 object Test {
-
-  // Solution and evaluation
   class S(val v: Vector[Boolean]) extends Solution {
     override val toString = v.map(if (_) "1" else "0").reduce(_ + _)
   }
-  object S
   type E = ScalarEvaluationMax
-  type ES = Tuple2[S, E]
-  def evaluate(p: S) = (p, ScalarEvaluationMax(p.v.count(b => b)))
+  type ES = Tuple2[S, E] // Evaluated solution
+  def evaluate(p: S) = ScalarEvaluationMax(p.v.count(b => b))
 
   def main(args: Array[String]): Unit = {
-    val config = new OptionsFromArgs(args)  // TODO: Detach options from collector
-    val coll = config // TODO
-    val rng = Rng(config)
-    val numVars = config.paramInt("numVars", _ > 0)
-    def initializer = RandomStatePop[S](config, () => new S(Vector.fill(numVars)(rng.nextBoolean)))
+    val env = new EnvFromArgs(args)
+    val rng = Rng(env)
+    val numVars = env.paramInt("numVars", _ > 0)
+    def initializer = RandomStatePop[S](env, () => new S(Vector.fill(numVars)(rng.nextBoolean)))
 
     // Prepare the functional components 
-    def sel = TournamentSelection[S, E](config)(rng)
+    def sel = TournamentSelection[S, E](env)(rng)
     // Calling selection function needs to be delegated to search operators, because only 
     // they know how many calls they need (mutation - one, crossover - two).
     // Thus, the function list created by operators() comprises both selection and search moves
@@ -220,21 +243,17 @@ object Test {
         List(new S(myHead ++ hisTail), new S(hisHead ++ myTail))
       })
 
-    def rmp = RandomMultiBreeder(rng, config)(operators(rng))
-    val bsf = new BestSoFar[S, E]
-    def reporting = bsf(config, coll)
-    def eval = IndependentEvaluation(evaluate)
-
-    def iteration = Breeder(rmp) andThen eval andThen reporting
-    def stopMaxGen = (Condition.MaxIter[StatePop[ES]](config))
-    def stopMaxTime = (Condition.MaxTime(config))
-    def stopMaxFit = (s: StatePop[ES]) => s.solutions.exists(_._2.v == numVars)
+    def eval = IndependentEval(evaluate)
+    def rmp = RandomMultiBreeder(rng, env)(operators(rng))
+    def iteration = Breeder(rmp) andThen eval
+    def stopBestFit = (s: StatePop[ES]) => s.solutions.exists(_._2.v == numVars)
 
     // Compose the components into search algorithm
-    def alg = IterativeAlgorithm[StatePop[ES]](initializer andThen eval)(iteration)(stopMaxGen, stopMaxFit)(EpilogueBestOfRun[S, E](bsf, config))
+    def alg = initializer andThen eval andThen
+      IterativeAlgorithm[S, E](env)(iteration)(Termination[S, E](env) :+ stopBestFit)
 
     // Run the algorithm
-    Experiment.launch[StatePop[Tuple2[S, E]]](alg, config, coll)()
+    Experiment.launch[StatePop[Tuple2[S, E]]](alg, env)()
   }
 }
 
@@ -246,6 +265,10 @@ object T {
 
 
 /*
+    val config = new OptionsFromArgs(args) // TODO: Detach options from collector
+    //    def alg = IterativeAlgorithm[S,E](env)(initializer andThen IndependentEvaluation(evaluate))(iteration)(Termination[S, E](config) :+ stopMaxFit)
+    //    def alg = IterativeAlgorithm[StatePop[ES]](initializer andThen eval)(iteration)(Termination[S, E](config) :+ stopMaxFit)(EpilogueBestOfRun[S, E](bsf, config))
+
 object SolProducer {
   def apply[S <: Solution, E <: Evaluation](rand: TRandom)(sel: Seq[Tuple2[S, E]] => Tuple2[S, E])(search: Seq[(Seq[Tuple2[S, E]] => Tuple2[S, E]) => S]) {
     current: Seq[Tuple2[S, E]] =>
