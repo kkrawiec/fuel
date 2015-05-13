@@ -210,7 +210,7 @@ object Experiment {
 
 // Use case: MaxOnes with GA
 
-object Test {
+object TestGA {
   class S(val v: Vector[Boolean]) extends Solution {
     override val toString = v.map(if (_) "1" else "0").reduce(_ + _)
   }
@@ -259,40 +259,14 @@ object Test {
 
 object T {
   def main(args: Array[String]) {
-    Test.main(Array("--numVars", "50", "--maxGenerations", "100"))
+    TestGA.main(Array("--numVars", "50", "--maxGenerations", "100"))
   }
 }
-
 
 /*
     val config = new OptionsFromArgs(args) // TODO: Detach options from collector
     //    def alg = IterativeAlgorithm[S,E](env)(initializer andThen IndependentEvaluation(evaluate))(iteration)(Termination[S, E](config) :+ stopMaxFit)
     //    def alg = IterativeAlgorithm[StatePop[ES]](initializer andThen eval)(iteration)(Termination[S, E](config) :+ stopMaxFit)(EpilogueBestOfRun[S, E](bsf, config))
-
-object SolProducer {
-  def apply[S <: Solution, E <: Evaluation](rand: TRandom)(sel: Seq[Tuple2[S, E]] => Tuple2[S, E])(search: Seq[(Seq[Tuple2[S, E]] => Tuple2[S, E]) => S]) {
-    current: Seq[Tuple2[S, E]] =>
-      {
-
-      }
-
-  }
-}
-
 trait Solver[Sol <: Solution] extends (() => Sol)
-
-    def operators(rng: TRandom) = List(
-      (source: Unit => Tuple2[B, E]) => {
-        val s = source()._1
-        val bitToMutate = rng.nextInt(s.v.size)
-        List(new B(s.v.updated(bitToMutate, !s.v(bitToMutate))))
-      },
-      (source: Unit => Tuple2[B, E]) => {
-        val me = source()._1
-        val cuttingPoint = rng.nextInt(me.v.size)
-        val (myHead, myTail) = me.v.splitAt(cuttingPoint)
-        val (hisHead, hisTail) = source()._1.v.splitAt(cuttingPoint)
-        List(new B(myHead ++ hisTail), new B(hisHead ++ myTail))
-      })
 
 */
