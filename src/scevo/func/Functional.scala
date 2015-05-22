@@ -45,7 +45,11 @@ object StatePop {
     override val solutions = sols
     override val iteration = iter
   }
-}
+  def apply[T](s1: StatePop[T], s2: StatePop[T]) = new StatePop[T] {
+    override val solutions = s1.solutions ++ s2.solutions
+    override val iteration = math.max(s1.iteration, s2.iteration)
+  }
+ }
 
 // Function factories (component factories)
 
@@ -99,6 +103,16 @@ object Breeder {
           breed(solutionBuilder()(current.solutions) ++ next)
       StatePop[S](breed(List[S]()), current.iteration + 1)
   }
+  def apply[S <: Solution, E <: Evaluation](solutionBuilder: () => (Seq[Tuple2[S, E]] => List[S]), 
+      targetSize : Int) = {
+    current: StatePop[Tuple2[S, E]] =>
+      @tailrec def breed(next: List[S]): Seq[S] =
+        if (next.size >= targetSize)
+          next.take(targetSize)
+        else
+          breed(solutionBuilder()(current.solutions) ++ next)
+      StatePop[S](breed(List[S]()), current.iteration + 1)
+  }
 }
 
 // Picks one of the functions (pipes) at random to 
@@ -125,6 +139,11 @@ object TournamentSelection {
   }
 }
 
+object RandomSelection {
+  def apply[S <: Solution, E <: Evaluation](rand: TRandom) = {
+    pop: Seq[Tuple2[S, E]] => pop(rand)
+  }
+}
 object RandomStatePop {
   def apply[S <: Solution](opt: Options, solutionGenerator: () => S) = {
     val populationSize = opt.paramInt("populationSize", 1000, _ > 0)

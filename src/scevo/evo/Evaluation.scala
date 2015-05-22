@@ -84,8 +84,8 @@ class MultiobjectiveEvaluation(val v: Seq[ScalarEvaluation]) extends Evaluation 
     }
     (meBetter, thatBetter) match {
       case (true, true)  => None
-      case (true, false) => Some(1)
-      case (false, true) => Some(-1)
+      case (true, false) => Some(-1) // BUG!!! Was: 1
+      case (false, true) => Some(1)
       case _             => Some(0)
     }
   }
@@ -130,13 +130,29 @@ class EvalLexMin(val e: Double*) extends Evaluation {
 final class TestEvaluation {
   @Test
   def test: Unit = {
-    val x = ScalarEvaluationMin(3.0)
-    val y = ScalarEvaluationMin(3.0)
-    val z = ScalarEvaluationMin(2.0)
+    val x = ScalarEvaluationMax(3.0)
+    val y = ScalarEvaluationMax(3.0)
+    val z = ScalarEvaluationMax(2.0)
     println(x equals y)
     println(x compare y)
     println(y compare x)
     println(x compare z)
     println(z compare x)
+    
+    val m0 = MultiobjectiveEvaluation(Seq(x,x))
+    val m1 = MultiobjectiveEvaluation(Seq(x,z))
+    val m2 = MultiobjectiveEvaluation(Seq(z,x))
+    val m3 = MultiobjectiveEvaluation(Seq(z,z))
+    println(m1 comparePartial m1)
+    println(m1 comparePartial m2)
+    println(m1 comparePartial m3)
+    println(m3 comparePartial m1)
+
+    println(m1 betterThan m1)
+    println(m1 betterThan m2)
+    println(m1 betterThan m3)
+    println(m3 betterThan m1)
+
+    println(m0 betterThan m3)
   }
 }

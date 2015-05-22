@@ -6,9 +6,21 @@ object Preamble {
   implicit class RndApply[T](s: Seq[T]) {
     require(s.nonEmpty)
     def apply(rnd: TRandom) = s(rnd.nextInt(s.size))
+    // Note: with replacement!
     def apply(rnd: TRandom, n: Int) = for (i <- 0 until n) yield s(rnd.nextInt(s.size))
     def fapply(rnd: TRandom) = (() => s(rnd.nextInt(s.size)))
   }
+  implicit class RndApplyS[T](s: Set[T]) {
+    require(s.nonEmpty)
+    val it = s.iterator
+    def apply(rnd: TRandom) = it.drop( rnd.nextInt(s.size) ).next
+  }
+  /*
+  implicit class RndApplyI[T](i: Iterable[T]) {
+    def apply(rnd: TRandom) = i.drop( rnd.nextInt(i.size) ).next
+  }
+  * 
+  */
 }
 
 class Distribution(val d: Seq[Double]) {
