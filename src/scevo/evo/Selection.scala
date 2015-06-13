@@ -78,15 +78,17 @@ trait LexicaseSelection[S <: Solution, E <: BinaryTestOutcomes]
       def sel(sols: Seq[EvaluatedSolution[S, E]], cases: List[Int]): EvaluatedSolution[S, E] =
         if (sols.size == 1)
           sols(0)
-        else if( cases.size == 1)
+        else if (cases.size == 1)
           sols(rng)
-          else {
-            val theCase = cases(rng)
-            val maxEval = sols.map(_.eval(theCase).v).max
-            //println("Sols:" + sols.size + " Cases: " + cases.size)
-            sel(sols.filter(s => s.eval(theCase).v == maxEval), cases.diff(List(theCase)))
-          }
-      sel(solutions, 0.until(numSelected).toList )
+        else {
+          val theCase = cases(rng)
+          val maxEval = sols.map(_.eval(theCase).v).max
+          //println("Sols:" + sols.size + " Cases: " + cases.size)
+          sel(sols.filter(s => s.eval(theCase).v == maxEval), cases.diff(List(theCase)))
+        }
+      // assumes nonempty pop
+      // was BUG: sel(solutions, 0.until(numSelected).toList )
+      sel(solutions, 0.until(solutions(0).eval.size).toList)
     }
   }
 }
