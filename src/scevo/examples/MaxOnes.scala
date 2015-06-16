@@ -21,11 +21,15 @@ import scevo.evo.StoppingDefault
 
 object GA {
 
+  // Candidate solution (bitstring)
   class B(val v: Vector[Boolean]) extends Solution {
     override val toString = v.map(if (_) "1" else "0").reduce(_ + _)
   }
+
+  // Shorthands: 
   type E = ScalarEvaluationMax
 
+  // Fitness function = the number of ones:
   trait GA extends InitialPopulationState[B, E]
     with SeparableEvaluator[B, E] with StochasticSearchOperators[B, E] {
     this: Options with Randomness =>
@@ -35,13 +39,16 @@ object GA {
 
     override def evaluate(p: B) = ScalarEvaluationMax(p.v.count(b => b))
 
+    // Search operators:  
     override def operators: Seq[Selector[B, E] => Seq[B]] =
       List(
+        // One-bit mutation:
         (source => List({
           val s = source.next.s
           val bitToMutate = rng.nextInt(s.v.size)
           new B(s.v.updated(bitToMutate, !s.v(bitToMutate)))
         })),
+        // One-point crossover: 
         (source => {
           val me = source.next.s
           val cuttingPoint = rng.nextInt(me.v.size)
@@ -51,8 +58,7 @@ object GA {
         }))
   }
 
-  /* Use cases: */
-
+  // Compose the components into search algorithm:
   class ExperimentMaxOnes(args: Array[String])
     extends OptionsFromArgs(args) with Rng
     with EA[B, E]
@@ -61,10 +67,11 @@ object GA {
     with StoppingDefault[PopulationState[B, E]]
     with Experiment[PopulationState[B, E]] {
 
-    override def stop(s: PopulationState[B, E]) = super.stop(s) || bestSoFar.fold(false)(_.eval.v == numVars) 
+    override def stop(s: PopulationState[B, E]) = super.stop(s) || bestSoFar.fold(false)(_.eval.v == numVars)
   }
 }
 
+// Run the algorithm:
 object MaxOnes {
   def main(args: Array[String]): Unit = new GA.ExperimentMaxOnes(args) {}.launch
 }

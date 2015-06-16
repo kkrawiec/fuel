@@ -7,6 +7,7 @@ import scevo.tools.Random
 import scevo.tools.TRandom
 import scevo.tools.Randomness
 import scevo.tools.Options
+import scevo.tools.OptionsFromArgs
 
 /* Implements (with modifications) the NSGAII selection algorithm by Deb et al. 
  * Solutions are Pareto-ranked, and are selected by running tournament selection 
@@ -29,10 +30,10 @@ import scevo.tools.Options
 
 object NSGA {
   // Works as a wrapper around the original ES
-  class Wrapper[ES <: EvaluatedSolution[_,F], F <: MultiobjectiveEvaluation](val s: ES, val rank: Int, val sparsity: Int)
+  class Wrapper[ES <: EvaluatedSolution[_, F], F <: MultiobjectiveEvaluation](val s: ES, val rank: Int, val sparsity: Int)
 
   trait DefaultOrdering[S <: Solution, F <: MultiobjectiveEvaluation] {
-    type ES = EvaluatedSolution[S,F]
+    type ES = EvaluatedSolution[S, F]
     def globalOrdering = new Ordering[Wrapper[ES, F]] {
       override def compare(a: Wrapper[ES, F], b: Wrapper[ES, F]) = {
         val c = a.rank compare b.rank
@@ -47,41 +48,42 @@ object NSGA {
   /* No-archive, memoryless variant of NSGA. Selection works on the current population only 
  */
   protected trait NoArchive[S <: Solution, F <: MultiobjectiveEvaluation]
-    extends Selection[S,F] {
-    this: DefaultOrdering[S, F] =>
-
+    extends Selection[S, F] {
+    this: Options with DefaultOrdering[S, F] =>
+    val removeEvalDuplicates = paramString("removeEvalDuplicates").getOrElse("false") == "true"
+ 
     def rng: TRandom
     def numToGenerate: Int
     def tournSize: Int
 
-    def archive = Seq[ES]() // fixed, won't change
-    override def selectorSol(solutions: Seq[EvaluatedSolution[S,F]]) = new NSGASelector(solutions)
+    override def selectorSol(solutions: Seq[EvaluatedSolution[S, F]]) = new NSGASelector(solutions)
 
-    class NSGASelector(solutions: Seq[EvaluatedSolution[S,F]]) extends Selector[S,F] {
-      require(numToGenerate <= archive.size + solutions.size)
-      val l = archive ++ solutions
-      val ranking = paretoRanking(archive ++ solutions)
-      var capacity = numToGenerate
+    class NSGASelector(solutions: Seq[EvaluatedSolution[S, F]]) extends Selector[S, F] {
+      //require(numToGenerate <= archive.size + solutions.size)
+      // eliminate evaluation duplicates
+      val toRank = if(removeEvalDuplicates) solutions.groupBy(_.eval).map(kv => kv._2(rng)).toSeq else solutions
+      val ranking = paretoRanking(toRank)
+      var capacity = math.min(toRank.size,numToGenerate)
       val fullLayers = ranking.takeWhile(
         r => if (capacity - r.size < 0) false else { capacity -= r.size; true })
       val selected = if (capacity <= 0) fullLayers.flatten // flatten preserves ordering 
       else fullLayers.flatten ++ ranking(fullLayers.size).sorted(intraLayerOrdering).splitAt(capacity)._1
+      val top = ranking(0).map(_.s.eval).toSet
+      println(f"NSGA ranks: ${ranking.size} Top(${top.size}): ${top}")
+      println(f"NSGA rsizes: ${ranking map (_.size)} }")
       override def next = BestSelector(selected(rng, tournSize), globalOrdering).s
       override val numSelected = numToGenerate
     }
 
-    // Builds the ranking bottom up. Only pointers to dominated solutions are necessary (the counters 
-    // of dominating solutions, as used in Deb's paper, are not needed).  
-    // On the other hand, bottom-up requires building the *entire* ranking (while regular NSGA ranks
-    // roughly half of the solutions).
+    // Builds the ranking top-down. 
     private def paretoRanking(solutions: Seq[ES]): Seq[Seq[Wrapper[ES, F]]] = {
       @tailrec def pareto(dominating: Map[Int, Set[Int]], layers: List[Seq[Int]] = List()): List[Seq[Int]] = {
-        val (lastLayer, rest) = dominating.partition(e => e._2.isEmpty)
+        val (lastLayer, rest) = dominating.partition(_._2.isEmpty)
         val ll = lastLayer.keys.toSeq
         if (rest.isEmpty)
-          ll :: layers
+          layers :+ ll
         else
-          pareto(rest.map(s => (s._1, s._2.diff(ll.toSet))), ll :: layers)
+          pareto(rest.map(s => (s._1, s._2.diff(ll.toSet))), layers :+ ll)
       }
       val sols = 0 until solutions.length
       val comparisons = sols.map(i => // i -> outcomesOfComparisonsWith(i)
@@ -101,14 +103,25 @@ object NSGA {
  * with the next population prior to selection. 
  */
   protected trait WithArchive[S <: Solution, F <: MultiobjectiveEvaluation]
-    extends NoArchive[S, F] {
+    extends Options with NoArchive[S, F] {
     this: DefaultOrdering[S, F] =>
     var arch = Seq[ES]()
-    override def archive = arch
     // Note: calling selector() changes the state of archive
-    override def selectorSol(solutions: Seq[EvaluatedSolution[S,F]]) = {
-      val sel = super.selectorSol(solutions)
+    override def selectorSol(solutions: Seq[EvaluatedSolution[S, F]]) = {
+      val sel = super.selectorSol(arch ++ solutions)
       arch = sel.selected.map(_.s)
+      println(f"Archive size: ${arch.size}  Pop size: ${solutions.size}")
+
+      //for debugging
+      val evals = arch.map(_.eval)
+      val n = arch.size
+      val avgs = evals.map(_.v.map(_.v)).transpose.map(_.sum / n)
+      val mins = evals.map(_.v.map(_.v)).transpose.map(_.min)
+      val maxs = evals.map(_.v.map(_.v)).transpose.map(_.max)
+      def form(v: Seq[Double]) = v.map(d => f"$d%6.2f").mkString(" ")
+      if (evals(0).isInstanceOf[MultiEvalNamed])
+        println(f"       ${evals(0).asInstanceOf[MultiEvalNamed].m.keys}")
+      println(f"Avgs: ${form(avgs)}\nMins: ${form(mins)}\nMaxs: ${form(maxs)}")
       sel
     }
   }
@@ -125,9 +138,9 @@ object NSGA {
   object NoArchive {
     def apply[S <: Solution, F <: MultiobjectiveEvaluation](
       numToGen: Int, tournamentSize: Int, rn: TRandom) =
-      new {
+      new OptionsFromArgs(Array[String]()) with NoArchive[S, F] with DefaultOrdering[S, F] {
         val (rng, numToGenerate, tournSize) = (rn, numToGen, tournamentSize)
-      } with NoArchive[S, F] with DefaultOrdering[S, F]
+      } 
   }
 
   trait NoArchiveMixin[S <: Solution, F <: MultiobjectiveEvaluation]
@@ -138,9 +151,9 @@ object NSGA {
   object WithArchive {
     def apply[S <: Solution, F <: MultiobjectiveEvaluation](
       numToGen: Int, tournamentSize: Int, rn: TRandom) =
-      new {
+      new OptionsFromArgs(Array[String]()) with WithArchive[S, F] with DefaultOrdering[S, F]{
         val (rng, numToGenerate, tournSize) = (rn, numToGen, tournamentSize)
-      } with WithArchive[S, F] with DefaultOrdering[S, F]
+      } 
   }
   trait WithArchiveMixin[S <: Solution, F <: MultiobjectiveEvaluation]
     extends WithArchive[S, F] with ParamProvider {
@@ -150,8 +163,8 @@ object NSGA {
 
 final class TestNSGA {
   class S(val o: Seq[Int]) extends Solution
-  class ES(o: Seq[Int]) extends ESol( new S(o),  
-     MultiobjectiveEvaluation(o.map(v => ScalarEvaluationMax(v)))) {
+  class ES(o: Seq[Int]) extends ESol(new S(o),
+    MultiobjectiveEvaluation(o.map(v => ScalarEvaluationMax(v)))) {
     override def toString = o.toString
   }
   @Test

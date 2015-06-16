@@ -3,12 +3,12 @@ package scevo.evo
 import org.junit.Test
 
 trait Evaluator[S <: Solution, E <: Evaluation]
-  extends Function1[Seq[S], Seq[EvaluatedSolution[S, E]]] 
+  extends Function1[Seq[S], Seq[EvaluatedSolution[S, E]]]
 
 /* Default evaluator evaluates every solution separately, but this can be overriden
  */
 trait SeparableEvaluator[S <: Solution, E <: Evaluation]
-  extends Evaluator[S,E] {
+  extends Evaluator[S, E] {
   def evaluate(s: S): E
   def apply(ss: Seq[S]) = ss.map(s => ESol(s, evaluate(s)))
 }
@@ -89,7 +89,7 @@ class MultiobjectiveEvaluation(val v: Seq[ScalarEvaluation]) extends Evaluation 
       case _             => Some(0)
     }
   }
-  def apply(i:Int) = v(i)
+  def apply(i: Int) = v(i)
   def size = v.size
   override def equals(that: Any) = that match {
     case other: MultiobjectiveEvaluation => v.size == other.v.size && (0 until v.size).forall(i => v(i) == other.v(i))
@@ -100,6 +100,16 @@ class MultiobjectiveEvaluation(val v: Seq[ScalarEvaluation]) extends Evaluation 
 
 object MultiobjectiveEvaluation {
   def apply(v: Seq[ScalarEvaluation]) = new MultiobjectiveEvaluation(v)
+}
+
+class MultiEvalNamed(val m: Map[Any, ScalarEvaluation])
+  extends MultiobjectiveEvaluation(m.values.toVector) {
+  override def toString = m.toString
+  def apply(k: Any) = m(k)
+}
+
+object MultiEvalNamed {
+  def apply(m: Map[Any, ScalarEvaluation]) = new MultiEvalNamed(m)
 }
 
 class TestOutcomes(override val v: Seq[ScalarEvaluationMax]) extends MultiobjectiveEvaluation(v) {
@@ -138,11 +148,11 @@ final class TestEvaluation {
     println(y compare x)
     println(x compare z)
     println(z compare x)
-    
-    val m0 = MultiobjectiveEvaluation(Seq(x,x))
-    val m1 = MultiobjectiveEvaluation(Seq(x,z))
-    val m2 = MultiobjectiveEvaluation(Seq(z,x))
-    val m3 = MultiobjectiveEvaluation(Seq(z,z))
+
+    val m0 = MultiobjectiveEvaluation(Seq(x, x))
+    val m1 = MultiobjectiveEvaluation(Seq(x, z))
+    val m2 = MultiobjectiveEvaluation(Seq(z, x))
+    val m3 = MultiobjectiveEvaluation(Seq(z, z))
     println(m1 comparePartial m1)
     println(m1 comparePartial m2)
     println(m1 comparePartial m3)
