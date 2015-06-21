@@ -26,9 +26,9 @@ trait Experiment[S <: State] extends Closeable {
         throw e
       }
     } finally {
-      close
       rdb.setResult("totalTimeSystem", System.currentTimeMillis() - startTime)
       rdb.setResult("system.endTime", Calendar.getInstance().getTime().toString)
+      close
       None
     }
   }

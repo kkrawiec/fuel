@@ -231,9 +231,9 @@ object Experiment {
             throw e
           }
         } finally {
-          env.close
           env.rdb.setResult("totalTimeSystem", System.currentTimeMillis() - startTime)
           env.rdb.setResult("system.endTime", Calendar.getInstance().getTime().toString)
+          env.close
           None
         }
       }

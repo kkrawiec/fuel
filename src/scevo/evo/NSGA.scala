@@ -51,7 +51,7 @@ object NSGA {
     extends Selection[S, F] {
     this: Options with DefaultOrdering[S, F] =>
     val removeEvalDuplicates = paramString("removeEvalDuplicates").getOrElse("false") == "true"
- 
+
     def rng: TRandom
     def numToGenerate: Int
     def tournSize: Int
@@ -61,9 +61,9 @@ object NSGA {
     class NSGASelector(solutions: Seq[EvaluatedSolution[S, F]]) extends Selector[S, F] {
       //require(numToGenerate <= archive.size + solutions.size)
       // eliminate evaluation duplicates
-      val toRank = if(removeEvalDuplicates) solutions.groupBy(_.eval).map(kv => kv._2(rng)).toSeq else solutions
+      val toRank = if (removeEvalDuplicates) solutions.groupBy(_.eval).map(kv => kv._2(rng)).toSeq else solutions
       val ranking = paretoRanking(toRank)
-      var capacity = math.min(toRank.size,numToGenerate)
+      var capacity = math.min(toRank.size, numToGenerate)
       val fullLayers = ranking.takeWhile(
         r => if (capacity - r.size < 0) false else { capacity -= r.size; true })
       val selected = if (capacity <= 0) fullLayers.flatten // flatten preserves ordering 
@@ -108,13 +108,11 @@ object NSGA {
     var arch = Seq[ES]()
     // Note: calling selector() changes the state of archive
     override def selectorSol(solutions: Seq[EvaluatedSolution[S, F]]) = {
-      val sel = super.selectorSol(arch ++ solutions)
-      arch = sel.selected.map(_.s)
-      println(f"Archive size: ${arch.size}  Pop size: ${solutions.size}")
+      val combined = arch ++ solutions
 
       //for debugging
-      val evals = arch.map(_.eval)
-      val n = arch.size
+      val evals = combined.map(_.eval)
+      val n = combined.size
       val avgs = evals.map(_.v.map(_.v)).transpose.map(_.sum / n)
       val mins = evals.map(_.v.map(_.v)).transpose.map(_.min)
       val maxs = evals.map(_.v.map(_.v)).transpose.map(_.max)
@@ -122,6 +120,11 @@ object NSGA {
       if (evals(0).isInstanceOf[MultiEvalNamed])
         println(f"       ${evals(0).asInstanceOf[MultiEvalNamed].m.keys}")
       println(f"Avgs: ${form(avgs)}\nMins: ${form(mins)}\nMaxs: ${form(maxs)}")
+      println(f"Archive size: ${arch.size}  Pop size: ${solutions.size}")
+
+      val sel = super.selectorSol(combined)
+      arch = sel.selected.map(_.s)
+
       sel
     }
   }
@@ -140,7 +143,7 @@ object NSGA {
       numToGen: Int, tournamentSize: Int, rn: TRandom) =
       new OptionsFromArgs(Array[String]()) with NoArchive[S, F] with DefaultOrdering[S, F] {
         val (rng, numToGenerate, tournSize) = (rn, numToGen, tournamentSize)
-      } 
+      }
   }
 
   trait NoArchiveMixin[S <: Solution, F <: MultiobjectiveEvaluation]
@@ -151,9 +154,9 @@ object NSGA {
   object WithArchive {
     def apply[S <: Solution, F <: MultiobjectiveEvaluation](
       numToGen: Int, tournamentSize: Int, rn: TRandom) =
-      new OptionsFromArgs(Array[String]()) with WithArchive[S, F] with DefaultOrdering[S, F]{
+      new OptionsFromArgs(Array[String]()) with WithArchive[S, F] with DefaultOrdering[S, F] {
         val (rng, numToGenerate, tournSize) = (rn, numToGen, tournamentSize)
-      } 
+      }
   }
   trait WithArchiveMixin[S <: Solution, F <: MultiobjectiveEvaluation]
     extends WithArchive[S, F] with ParamProvider {
