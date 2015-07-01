@@ -20,6 +20,7 @@ class ResultDatabase(val directory: String) extends scala.collection.mutable.Has
   val filePrefix = "res"
   val fileNumFormat = "%06d"
 
+  /* Sequential creation of result files; downside: must check for existenc eof all the previous files 
   val (f, fname) = {
     var i: Int = 0
     var f: File = null
@@ -36,6 +37,20 @@ class ResultDatabase(val directory: String) extends scala.collection.mutable.Has
           fname + extension + " " + e.getLocalizedMessage());
     }
     (f, fname)
+  }
+  * 
+  */
+
+  val (f, fname) = {
+    var f: File = null
+    try {
+        f = File.createTempFile(filePrefix, extension, new File(directory))
+    } catch {
+      case e: Exception =>
+        throw new Exception(s"Error while creating result database file. " 
+           + e.getLocalizedMessage());
+    }
+    (f, f.getCanonicalFile())
   }
 
   def setResult(key: String, v: Any) = put(resultPrefix + key, v)

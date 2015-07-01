@@ -14,6 +14,7 @@ import scevo.tools.OptionsFromArgs
  * on ranks. 
  * 
  * Modification w.r.t. Deb et al.:
+ * TODO: swap the sparsity and crowding terms
  * To resolve the ties between ranks, Deb et al. use 'sparsity', a measure based on 
  * the hypervolume between the neighboring solutions in the same Pareto layer. 
  * This implementation replaces sparsity with crowding, which is calculated in a 
@@ -94,8 +95,25 @@ object NSGA {
       }).toMap
       val identical = comparisons.map({ case (i, cmp) => cmp.count(_.getOrElse(1) == 0) })
       val layers = pareto(dominating).toSeq
-      (0 until layers.size).map(i =>
-        layers(i).map(j => new Wrapper[ES, F](solutions(j), i, identical(j))))
+      // 27.06 added extra code to promote the extremes of pareto front
+      (0 until layers.size).map(i => {
+        val lay = layers(i)
+        /*
+        val evals = lay.map(j => solutions(j).eval.v.map(_.v)).transpose
+        val mins = evals.map(_.min)
+        val maxs = evals.map(_.max)
+        */
+        lay.map(j => new Wrapper[ES, F](solutions(j), i, {
+          /*
+          val ev = solutions(j).eval.v.map(_.v)
+          val detExtreme = (0 until ev.size).map(k => (ev(k) - mins(k)) * (ev(k) - maxs(k)))
+          if( detExtreme.contains(0)) 0
+          else identical(j)
+          */
+          identical(j)
+        }))
+
+      })
     }
   }
 

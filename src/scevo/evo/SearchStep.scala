@@ -58,7 +58,7 @@ trait EpilogueBestOfRun[S <: Solution, E <: Evaluation] extends Epilogue[Populat
     rdb.setResult("lastGeneration", s.iteration)
     rdb.setResult("bestOfRun.fitness", bestSoFar.get.eval)
     rdb.setResult("bestOfRun.genotype", bestSoFar.toString)
-    rdb.write("bestOfRun", bestSoFar)
+    //rdb.write("bestOfRun", bestSoFar)
     s
   }
 }

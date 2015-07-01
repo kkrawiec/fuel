@@ -102,6 +102,7 @@ object MultiobjectiveEvaluation {
   def apply(v: Seq[ScalarEvaluation]) = new MultiobjectiveEvaluation(v)
 }
 
+// TODO: equals
 class MultiEvalNamed(val m: Map[Any, ScalarEvaluation])
   extends MultiobjectiveEvaluation(m.values.toVector) {
   override def toString = m.toString
