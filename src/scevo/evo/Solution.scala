@@ -23,9 +23,4 @@ trait EvaluatedSolution[S <: Solution, +E <: Evaluation] extends Serializable {
  */
 case class ESol[S <: Solution, +E <: Evaluation](override val s: S, override val eval: E)
   extends EvaluatedSolution[S, E]
-/*
-object ESol {
-  def apply[S <: Solution, E <: Evaluation](s: S, eval: E) = new ESol(s, eval)
-}
-* 
-*/
+

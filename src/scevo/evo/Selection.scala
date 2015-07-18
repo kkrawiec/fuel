@@ -1,18 +1,21 @@
 package scevo.evo
 
 import scala.Ordering
-
 import scevo.Distribution
 import scevo.Preamble.RndApply
 import scevo.tools.Options
 import scevo.tools.Randomness
 import scevo.tools.RngWrapper
 import scevo.tools.TRandom
+import scala.annotation.tailrec
 
-/* Selector is intended to operate in two phases: 
- * 1. When created, it can prepare helper data structures (or perform 'batch selection', as NSGAII does)
- * 2. Then, single applications of next() should return selected individuals. 
- * next() should never fail, because an algorithm may need to call it more than numSelected times
+/* A selector is intended to operate in two phases: 
+ * 1. Creation (based on the previous population). 
+ *    When created, a selector can prepare helper data structures 
+ *    (or perform 'batch selection', as NSGAII does)
+ * 2. Usage. A single applications of next() should return selected individuals. 
+ *    next() should never fail, because an algorithm may need to call it more 
+ *    than numSelected times
  */
 
 trait Selector[S <: Solution, E <: Evaluation] {
@@ -73,48 +76,22 @@ trait LexicaseSelection[S <: Solution, E <: BinaryTestOutcomes]
   extends Selection[S, E] {
   this: Randomness =>
   override def selectorSol(solutions: Seq[EvaluatedSolution[S, E]]) = new Selector[S, E] {
+    require(solutions.nonEmpty)
     override val numSelected = solutions.size
     override def next = {
-      def sel(sols: Seq[EvaluatedSolution[S, E]], cases: List[Int]): EvaluatedSolution[S, E] =
-        if (sols.size == 1)
-          sols(0)
-        else if (cases.size == 1)
-          sols(rng)
+      @tailrec def sel(sols: Seq[EvaluatedSolution[S, E]], tests: List[Int]): EvaluatedSolution[S, E] =
+        if (sols.size == 1) sols(0)
+        else if (tests.size == 1) sols(rng)
         else {
-          val theCase = cases(rng)
-          val maxEval = sols.map(_.eval(theCase).v).max
-          //println("Sols:" + sols.size + " Cases: " + cases.size)
-          sel(sols.filter(s => s.eval(theCase).v == maxEval), cases.diff(List(theCase)))
+          val theTest = tests(rng)
+          val bestEval = BestSelector.select(sols.map(_.eval(theTest)))
+          sel(sols.filter(s => s.eval(theTest) == bestEval), tests.diff(List(theTest)))
         }
-      // assumes nonempty pop
-      // was BUG: sel(solutions, 0.until(numSelected).toList )
       sel(solutions, 0.until(solutions(0).eval.size).toList)
     }
   }
 }
-/* innefective, memory hog
-trait LexicaseSelection[S <: Solution, E <: BinaryTestOutcomes]
-  extends Selection[S, E] {
-  this: Randomness =>
-  override def selectorSol(solutions: Seq[EvaluatedSolution[S, E]]) = new Selector[S, E] {
-    override val numSelected = solutions.size
-    val permutations = 0.until(numSelected).permutations.toStream
-    override def next = {
-      def sel(sols: Seq[EvaluatedSolution[S, E]], cases: List[Int]): EvaluatedSolution[S, E] =
-        if (sols.size == 1)
-          sols(0)
-        else cases match {
-          case Nil => sols(rng)
-          case c :: tail => {
-            val maxEval = sols.map(_.eval(c).v).max
-            sel(sols.filter(s => s.eval(c).v == maxEval), tail)
-          }
-        }
-      sel(solutions, permutations(rng).toList)
-    }
-  }
-}
-*/
+
 trait MuLambdaSelection[S <: Solution, E <: ScalarEvaluation]
   extends Selection[S, E] {
   override def selector(history: Seq[PopulationState[S, E]]) = new Selector[S, E] {
@@ -147,8 +124,8 @@ object BestSelector {
     set.reduceLeft((a, b) => if (a.eval.betterThan(b.eval)) a else b)
 
   // I'd be happy to call this 'apply' as well, but type erasure does not permit.
-  def select[E <: Evaluation](set: Seq[E]) =
-    set.reduceLeft((a, b) => if (a.betterThan(b)) a else b)
+  def select[E <: Evaluation](s: Seq[E]) =
+    s.reduceLeft((a, b) => if (a.betterThan(b)) a else b)
 
   // Generic, for non-Evaluation classes
   def apply[T](set: Seq[T], better: (T, T) => Boolean) =
@@ -162,3 +139,5 @@ object TestBestSelector {
   def main(args: Array[String]) =
     println(BestSelector(List(3, 1, 3, 6), Ordering[Int]))
 }
+
+

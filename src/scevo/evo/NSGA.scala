@@ -14,10 +14,9 @@ import scevo.tools.OptionsFromArgs
  * on ranks. 
  * 
  * Modification w.r.t. Deb et al.:
- * TODO: swap the sparsity and crowding terms
- * To resolve the ties between ranks, Deb et al. use 'sparsity', a measure based on 
+ * To resolve the ties between ranks, Deb et al. use 'crowding', a measure based on 
  * the hypervolume between the neighboring solutions in the same Pareto layer. 
- * This implementation replaces sparsity with crowding, which is calculated in a 
+ * In this implementation crowding is calculated in a 
  * discrete way: solution's crowding is the number of solutions with this very genotype. 
  * So what matters for crowding is only how many identical solutions are there, not
  * how far they are spaced in the Pareto layer. 
@@ -31,18 +30,18 @@ import scevo.tools.OptionsFromArgs
 
 object NSGA {
   // Works as a wrapper around the original ES
-  class Wrapper[ES <: EvaluatedSolution[_, F], F <: MultiobjectiveEvaluation](val s: ES, val rank: Int, val sparsity: Int)
+  class Wrapper[ES <: EvaluatedSolution[_, F], F <: MultiobjectiveEvaluation](val s: ES, val rank: Int, val crowding: Int)
 
   trait DefaultOrdering[S <: Solution, F <: MultiobjectiveEvaluation] {
     type ES = EvaluatedSolution[S, F]
     def globalOrdering = new Ordering[Wrapper[ES, F]] {
       override def compare(a: Wrapper[ES, F], b: Wrapper[ES, F]) = {
         val c = a.rank compare b.rank
-        if (c != 0) c else a.sparsity compare b.sparsity
+        if (c != 0) c else a.crowding compare b.crowding
       }
     }
     def intraLayerOrdering = new Ordering[Wrapper[ES, F]] {
-      override def compare(a: Wrapper[ES, F], b: Wrapper[ES, F]) = a.sparsity compare b.sparsity
+      override def compare(a: Wrapper[ES, F], b: Wrapper[ES, F]) = a.crowding compare b.crowding
     }
   }
 
@@ -52,6 +51,7 @@ object NSGA {
     extends Selection[S, F] {
     this: Options with DefaultOrdering[S, F] =>
     val removeEvalDuplicates = paramString("removeEvalDuplicates").getOrElse("false") == "true"
+    val promoteFrontExtremes = paramString("promoteFrontExtremes").getOrElse("false") == "true"
 
     def rng: TRandom
     def numToGenerate: Int
@@ -95,24 +95,20 @@ object NSGA {
       }).toMap
       val identical = comparisons.map({ case (i, cmp) => cmp.count(_.getOrElse(1) == 0) })
       val layers = pareto(dominating).toSeq
-      // 27.06 added extra code to promote the extremes of pareto front
       (0 until layers.size).map(i => {
         val lay = layers(i)
-        /*
-        val evals = lay.map(j => solutions(j).eval.v.map(_.v)).transpose
-        val mins = evals.map(_.min)
-        val maxs = evals.map(_.max)
-        */
-        lay.map(j => new Wrapper[ES, F](solutions(j), i, {
-          /*
-          val ev = solutions(j).eval.v.map(_.v)
-          val detExtreme = (0 until ev.size).map(k => (ev(k) - mins(k)) * (ev(k) - maxs(k)))
-          if( detExtreme.contains(0)) 0
-          else identical(j)
-          */
-          identical(j)
-        }))
-
+        if (promoteFrontExtremes) {
+          val evals = lay.map(j => solutions(j).eval.v.map(_.v)).transpose
+          val mins = evals.map(_.min)
+          val maxs = evals.map(_.max)
+          lay.map(j => new Wrapper[ES, F](solutions(j), i, {
+            val ev = solutions(j).eval.v.map(_.v)
+            val detExtreme = (0 until ev.size).map(k => (ev(k) - mins(k)) * (ev(k) - maxs(k)))
+            if (detExtreme.contains(0)) 0
+            else identical(j)
+          }))
+        } else
+          lay.map(j => new Wrapper[ES, F](solutions(j), i, identical(j)))
       })
     }
   }
