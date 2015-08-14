@@ -1,7 +1,5 @@
 package scevo.evo
 
-import scevo.tools.Options
-
 /* Search state. 
  */
 
@@ -33,23 +31,3 @@ object EmptyState {
   def apply() = new State { override def iteration = 0 }
 }
 
-// RandomStateGenerator?
-trait InitialPopulationState[S <: Solution, E <: Evaluation]
-  extends InitialState[PopulationState[S, E]] {
-  this: Options with SeparableEvaluator[S, E] =>
-  val populationSize = paramInt("populationSize", 1000, _ > 0)
-  def randomSolution: S
-  override def initialState = PopulationState.init(populationSize,
-    () => { val r = randomSolution; ESol(r, evaluate(r)) })
-}
-
-/* Archive is a set, so no duplicates allowed
- */
-trait Archive[S <: Solution, E <: Evaluation] extends Serializable {
-  def archive: Set[EvaluatedSolution[S, E]]
-}
-
-trait PopStateWithArchive[S <: Solution, E <: Evaluation]
-  extends PopulationState[S, E]
-  with Archive[S, E]
-  with Serializable 

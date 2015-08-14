@@ -1,6 +1,7 @@
-package scevo.evo
+package scevo.mixin
 
 import scevo.tools.Options
+import scevo.evo.State
 
 trait StoppingCondition[S <: State] {
   def stop(s: S) = false

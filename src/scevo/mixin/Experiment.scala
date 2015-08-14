@@ -1,10 +1,11 @@
-package scevo.evo
+package scevo.mixin
 
 import java.util.Calendar
-
 import scevo.tools.Closeable
 import scevo.tools.Collector
 import scevo.tools.Options
+import scevo.mixin.Algorithm
+import scevo.evo.State
 
 trait Experiment[S <: State] extends Closeable {
   this: Algorithm[S] with Collector with Options =>

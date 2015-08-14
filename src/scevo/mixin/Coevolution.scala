@@ -1,5 +1,10 @@
-package scevo.evo
+package scevo.mixin
 
+import scevo.evo.Evaluation
+import scevo.evo.PopulationState
+import scevo.evo.Selection
+import scevo.evo.Solution
+import scevo.evo.State
 import scevo.tools.Collector
 import scevo.tools.Options
 import scevo.tools.Randomness

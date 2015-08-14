@@ -1,21 +1,20 @@
-package scevo.examples
+package scevo.mixin.example
 
-import scevo.evo.EA
-import scevo.evo.Experiment
-import scevo.evo.InitialPopulationState
 import scevo.evo.PopulationState
 import scevo.evo.ScalarEvaluationMax
 import scevo.evo.Selector
-import scevo.evo.SeparableEvaluator
 import scevo.evo.Solution
-import scevo.evo.StochasticSearchOperators
-import scevo.evo.StoppingCondition
 import scevo.evo.TournamentSelection
+import scevo.mixin.EA
+import scevo.mixin.Experiment
+import scevo.mixin.InitialPopulationState
+import scevo.mixin.SeparableEvaluator
+import scevo.mixin.StochasticSearchOperators
+import scevo.mixin.StoppingDefault
 import scevo.tools.Options
 import scevo.tools.OptionsFromArgs
 import scevo.tools.Randomness
 import scevo.tools.Rng
-import scevo.evo.StoppingDefault
 
 /* Genetic Algorithm */
 

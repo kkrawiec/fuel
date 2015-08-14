@@ -1,9 +1,18 @@
-package scevo.func
+package scevo.func.example
 
-import scevo.evo.ScalarEvaluationMax
 import scevo.evo.Solution
-import scevo.tools.Rng
+import scevo.func.RandomMultiBreeder
+import scevo.evo.ScalarEvaluationMax
+import scevo.func.EnvAndRng
 import scevo.tools.TRandom
+import scevo.func.RandomStatePop
+import scevo.func.Breeder
+import scevo.func.IndependentEval
+import scevo.func.Experiment
+import scevo.func.TournamentSelection
+import scevo.func.StatePop
+import scevo.func.Termination
+import scevo.func.IterativeAlgorithm
 
 // Use case: MaxOnes with GA
 

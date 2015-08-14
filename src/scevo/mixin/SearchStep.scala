@@ -1,8 +1,15 @@
-package scevo.evo
+package scevo.mixin
 
-import scevo.tools.Randomness
-import scevo.tools.Options
+import scevo.evo.BestSelector
+import scevo.evo.EvaluatedSolution
+import scevo.evo.Evaluation
+import scevo.evo.PopulationState
+import scevo.evo.Solution
+import scevo.evo.State
 import scevo.tools.Collector
+import scevo.tools.Options
+import scevo.tools.Randomness
+import scevo.evo.Selection
 
 /*
  * A single step of an iterative search algorithm. step() is supposed to carry out one iteration. 

@@ -2,17 +2,6 @@ package scevo.evo
 
 import org.junit.Test
 
-trait Evaluator[S <: Solution, E <: Evaluation]
-  extends Function1[Seq[S], Seq[EvaluatedSolution[S, E]]]
-
-/* Default evaluator evaluates every solution separately, but this can be overriden
- */
-trait SeparableEvaluator[S <: Solution, E <: Evaluation]
-  extends Evaluator[S, E] {
-  def evaluate(s: S): E
-  def apply(ss: Seq[S]) = ss.map(s => ESol(s, evaluate(s)))
-}
-
 /* Evaluation is any piece of information that results from an interaction 
  * of candidate solution with a task. 
  * In general, implements *partial* order, or no order at all. 
