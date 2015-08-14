@@ -1,20 +1,18 @@
 package scevo.func
 
 import java.util.Calendar
+
 import scala.annotation.tailrec
+import scala.collection.immutable.Stream.consWrapper
+
 import scevo.Distribution
-import scevo.Preamble.RndApply
 import scevo.evo.BestSelector
 import scevo.evo.Evaluation
 import scevo.evo.Solution
 import scevo.evo.State
 import scevo.tools.Collector
-import scevo.tools.CollectorFile
 import scevo.tools.Options
-import scevo.tools.OptionsFromArgs
 import scevo.tools.TRandom
-import scevo.tools.Rng
-import scevo.evo.MultiobjectiveEvaluation
 
 /* Scevo-like functionality in functional programming style
 
@@ -29,41 +27,8 @@ import scevo.evo.MultiobjectiveEvaluation
   - flatten Collector
  */
 
-trait StatePop[T] extends State {
-  def solutions: Seq[T]
-}
-
-object StatePop {
-  def apply[T](sols: Seq[T], iter: Int = 0) = new StatePop[T] {
-    require(sols.size > 0, "The set of working solutions in a state cannot be empty")
-    override val solutions = sols
-    override val iteration = iter
-  }
-  def apply[T](s1: StatePop[T], s2: StatePop[T]) = new StatePop[T] {
-    override val solutions = s1.solutions ++ s2.solutions
-    override val iteration = math.max(s1.iteration, s2.iteration)
-  }
-}
-
 // Function factories (component factories)
 
-// Does this make sense? To reduce the number of parameters?
-trait Environment extends Options with Collector
-class EnvFromArgs(args: Array[String]) extends OptionsFromArgs(args) with CollectorFile with Environment
-object EnvAndRng {
-  def apply(args: Array[String]): (EnvFromArgs, TRandom) = {
-    val env = new EnvFromArgs(args)
-    (env, Rng(env))
-  }
-  def apply(args: String): (EnvFromArgs, TRandom) = apply(args.split("\\s+"))
-}
-object EnvWithRng {
-  def apply(args: Array[String]) = {
-    val env = new EnvFromArgs(args) {
-      val rng = Rng(this)
-    }
-  }
-}
 
 object IterativeAlgorithm {
   def apply[S <: State](step: S => S)(stop: Seq[S => Boolean]): S => S = {
@@ -126,62 +91,11 @@ object RandomMultiBreeder {
   }
 }
 
-object TournamentSelection {
-  def apply[S <: Solution, E <: Evaluation](opt: Options)(rand: TRandom) = {
-    val tournamentSize = opt.paramInt("tournamentSize", 7, _ >= 2)
-    pop: Seq[(S, E)] => BestSelector(pop(rand, tournamentSize))
-  }
-}
-
-object LexicaseSelection {
-  def apply[S <: Solution, E <: MultiobjectiveEvaluation](opt: Options)(rand: TRandom) = {
-    def sel(sols: Seq[(S, E)], cases: List[Int]): (S, E) =
-      if (sols.size == 1)
-        sols(0)
-      else if (cases.size == 1)
-        sols(rand)
-      else {
-        val theCase = cases(rand)
-        val bestEval = BestSelector.select(sols.map(_._2.v(theCase)))
-        //println("Sols:" + sols.size + " Cases: " + cases.size)
-        sel(sols.filter(s => !bestEval.betterThan(s._2.v(theCase))), cases.diff(List(theCase)))
-      }
-    // assumes nonempty pop
-    pop: Seq[(S, E)] => sel(pop, 0.until(pop(0)._2.size).toList)
-  }
-}
-
-object RandomSelection {
-  def apply[S <: Solution, E <: Evaluation](rand: TRandom) = {
-    pop: Seq[(S, E)] => pop(rand)
-  }
-}
 object RandomStatePop {
   def apply[S <: Solution](opt: Options, solutionGenerator: () => S) = {
     val populationSize = opt.paramInt("populationSize", 1000, _ > 0)
     _: Unit => StatePop(for (i <- 0 until populationSize) yield solutionGenerator())
   }
-}
-
-object Termination {
-  object MaxIter {
-    def apply[S <: State](opt: Options) = {
-      val maxGenerations = opt.paramInt("maxGenerations", 50, _ > 0)
-      s: S => s.iteration >= maxGenerations
-    }
-  }
-  object MaxTime {
-    def apply(opt: Options) = {
-      val maxMillisec = opt.paramInt("maxTime", 86400000, _ > 0)
-      val startTime = System.currentTimeMillis()
-      def timeElapsed = System.currentTimeMillis() - startTime
-      s: Any => timeElapsed > maxMillisec
-    }
-  }
-  def apply[S <: Solution, E <: Evaluation](config: Options, otherCond: (S, E) => Boolean = (_: S, _: E) => false) = Seq(
-    MaxIter[StatePop[(S, E)]](config),
-    MaxTime(config),
-    (s: StatePop[(S, E)]) => s.solutions.exists(es => otherCond(es._1, es._2)))
 }
 
 // Reporting
