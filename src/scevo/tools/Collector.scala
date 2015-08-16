@@ -11,6 +11,12 @@ import java.net.UnknownHostException
 
 trait Collector extends Closeable {
   def rdb: ResultDatabase
+  def set(key: String, v: Any):Unit
+  def setResult(key: String, v: Any):Unit
+  def write(key: String, v: Any):Unit
+  def writeString(key: String, v: String):Unit
+  def read(key: String):Object
+  def saveSnapshot(fnameSuffix: String): Unit
 }
 
 trait CollectorFile extends Collector {
@@ -31,6 +37,13 @@ trait CollectorFile extends Collector {
   rdb.put("mainClass", getClass.getName)
   rdb.put("status", "initialized")
   rdb.saveWorkingState()
+
+  override def set(key: String, v: Any) = rdb.put(key, v)
+  override def setResult(key: String, v: Any) = rdb.setResult(key, v)
+  override def write(key: String, v: Any) = rdb.write(key, v)
+  override def writeString(key: String, v: String) = rdb.writeString(key, v)
+  override def read(key: String) = rdb.read(key)
+  def saveSnapshot(fnameSuffix: String): Unit = rdb.saveSnapshot(fnameSuffix)
 
   override def close = {
     // Do this again, something may have changed during run:

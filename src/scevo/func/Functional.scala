@@ -112,25 +112,22 @@ class BestSoFar[S <: Solution, E <: Evaluation] {
       if (bestSoFar.isEmpty || bestOfGen._2.betterThan(best.get._2)) best = Some(bestOfGen)
       println(f"Gen: ${s.iteration}  BestSoFar: ${bestSoFar.get}")
       if (snapFreq > 0 && s.iteration % snapFreq == 0)
-        coll.rdb.saveSnapshot(f"${s.iteration}%04d")
+        coll.saveSnapshot(f"${s.iteration}%04d")
       s
     }
   }
 }
 
-/*
 object EpilogueBestOfRun {
   def apply[S <: Solution, E <: Evaluation](bsf: BestSoFar[S, E], coll: Collector) =
     (state: StatePop[(S, E)]) => {
-      coll.rdb.setResult("lastGeneration", state.iteration)
-      coll.rdb.setResult("bestOfRun.fitness", if (bsf.bestSoFar.isDefined) bsf.bestSoFar.get._2 else "NaN")
-      coll.rdb.setResult("bestOfRun.genotype", bsf.bestSoFar.toString)
-      coll.rdb.write("bestOfRun", bsf.bestSoFar)
+      coll.setResult("lastGeneration", state.iteration)
+      coll.setResult("bestOfRun.fitness", if (bsf.bestSoFar.isDefined) bsf.bestSoFar.get._2 else "NaN")
+      coll.setResult("bestOfRun.genotype", bsf.bestSoFar.toString)
+      coll.write("bestOfRun", bsf.bestSoFar)
       state
     }
 }
-* 
-*/
 
 object Experiment {
   def apply[S <: State](env: Environment)(alg: Unit => S) = {
@@ -140,18 +137,18 @@ object Experiment {
         try {
           env.warnNonRetrieved
           val state = alg()
-          env.rdb.put("status", "completed")
+          env.set("status", "completed")
           if (env.paramString("saveLastState", "false") == "true")
-            env.rdb.write("lastState", state)
+            env.write("lastState", state)
           Some(state)
         } catch {
           case e: Exception => {
-            env.rdb.put("status", "error: " + e.getLocalizedMessage + e.getStackTrace().mkString(" ")) // .toString.replace('\n', ' '))
+            env.set("status", "error: " + e.getLocalizedMessage + e.getStackTrace().mkString(" ")) // .toString.replace('\n', ' '))
             throw e
           }
         } finally {
-          env.rdb.setResult("totalTimeSystem", System.currentTimeMillis() - startTime)
-          env.rdb.setResult("system.endTime", Calendar.getInstance().getTime().toString)
+          env.setResult("totalTimeSystem", System.currentTimeMillis() - startTime)
+          env.setResult("system.endTime", Calendar.getInstance().getTime().toString)
           env.close
           None
         }
