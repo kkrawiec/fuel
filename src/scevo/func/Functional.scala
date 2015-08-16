@@ -1,10 +1,8 @@
 package scevo.func
 
 import java.util.Calendar
-
 import scala.annotation.tailrec
 import scala.collection.immutable.Stream.consWrapper
-
 import scevo.Distribution
 import scevo.evo.BestSelector
 import scevo.evo.Evaluation
@@ -13,22 +11,12 @@ import scevo.evo.State
 import scevo.tools.Collector
 import scevo.tools.Options
 import scevo.tools.TRandom
+import scala.collection.parallel.ForkJoinTaskSupport
 
 /* Scevo-like functionality in functional programming style
-
- May 9th, 2015
- Other differences w.r.t. original scevo:
- - evaluated solution is now simply Tuple2[S,E] 
- - StatePop or just Seq[Tuple2[S,E]]
- 
- TODO: 
-  - NSGA
-  - rename Options to Config?
-  - flatten Collector
  */
 
-// Function factories (component factories)
-
+// Component factories
 
 object IterativeAlgorithm {
   def apply[S <: State](step: S => S)(stop: Seq[S => Boolean]): S => S = {
@@ -49,6 +37,20 @@ object IterativeAlgorithm {
 object IndependentEval {
   def apply[S <: Solution, E <: Evaluation](f: S => E) =
     (s: StatePop[S]) => StatePop(s.solutions.map(x => (x, f(x))), s.iteration)
+}
+
+object ParallelEval {
+  def apply[S <: Solution, E <: Evaluation](f: S => E) = {
+    (s: StatePop[S]) => StatePop(s.solutions.par.map(x => (x, f(x))).to, s.iteration)
+  }
+  def apply[S <: Solution, E <: Evaluation](f: S => E, parLevel: Int) = {
+    val ts = new ForkJoinTaskSupport(new scala.concurrent.forkjoin.ForkJoinPool(parLevel))
+    (s: StatePop[S]) => StatePop({
+      val c = s.solutions.par
+      c.tasksupport = ts
+      c.map(x => (x, f(x))).to
+    }, s.iteration)
+  }
 }
 
 // Pulling parents implemented as stream; could be via iterator, but iterators are mutable
@@ -116,6 +118,7 @@ class BestSoFar[S <: Solution, E <: Evaluation] {
   }
 }
 
+/*
 object EpilogueBestOfRun {
   def apply[S <: Solution, E <: Evaluation](bsf: BestSoFar[S, E], coll: Collector) =
     (state: StatePop[(S, E)]) => {
@@ -126,6 +129,8 @@ object EpilogueBestOfRun {
       state
     }
 }
+* 
+*/
 
 object Experiment {
   def apply[S <: State](env: Environment)(alg: Unit => S) = {

@@ -13,6 +13,8 @@ trait Environment extends Options with Collector
 object EnvFromArgs {
   def apply(args: Array[String]) =
     new OptionsFromArgs(args) with CollectorFile with Environment
+  def apply(args: String) =
+    new OptionsFromArgs(args) with CollectorFile with Environment
 }
 object EnvAndRng {
   def apply(args: Array[String]) = {
