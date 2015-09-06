@@ -18,6 +18,9 @@ import scala.collection.parallel.ForkJoinTaskSupport
 
 // Component factories
 
+/* 
+ * Note that IterativeAlgorithm is in general agnostic about evaluation.
+ */
 object IterativeAlgorithm {
   def apply[S <: State](step: S => S)(stop: Seq[S => Boolean]): S => S = {
     @tailrec def iterate(s: S): S = stop.forall((sc: S => Boolean) => !sc(s)) match {
@@ -26,7 +29,12 @@ object IterativeAlgorithm {
     }
     iterate
   }
-  def apply[S <: Solution, E <: Evaluation](env: Environment)(step: StatePop[(S, E)] => StatePop[(S, E)])(stop: Seq[StatePop[(S, E)] => Boolean]): StatePop[(S, E)] => StatePop[(S, E)] = {
+  // Version for populatin-based algorithms, 
+  // with default best-so-far and best-of-run reporting
+  def apply[S <: Solution, E <: Evaluation](
+    env: Environment)(
+      step: StatePop[(S, E)] => StatePop[(S, E)])(
+        stop: Seq[StatePop[(S, E)] => Boolean]): StatePop[(S, E)] => StatePop[(S, E)] = {
     val bsf = new BestSoFar[S, E]
     def reporting = bsf(env, env)
     apply(step andThen reporting)(stop) andThen EpilogueBestOfRun(bsf, env)
@@ -53,7 +61,9 @@ object ParallelEval {
   }
 }
 
-// Pulling parents implemented as stream; could be via iterator, but iterators are mutable
+/* Pulling parents implemented as stream. 
+ * Could be alternatively done via iterator, but iterators are mutable
+*/
 object Breeder {
   def apply[S <: Solution, E <: Evaluation](
     sel: Seq[(S, E)] => (S, E),

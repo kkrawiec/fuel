@@ -17,7 +17,7 @@ object TournamentSelection {
 }
 
 object LexicaseSelection {
-  def apply[S <: Solution, E <: MultiobjectiveEvaluation](opt: Options)(rand: TRandom) = {
+  def apply[S <: Solution, E <: MultiobjectiveEvaluation](rand: TRandom) = {
     def sel(sols: Seq[(S, E)], cases: List[Int]): (S, E) =
       if (sols.size == 1)
         sols(0)
