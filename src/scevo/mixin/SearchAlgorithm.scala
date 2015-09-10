@@ -3,8 +3,8 @@ package scevo.mixin
 import scala.annotation.tailrec
 
 import scevo.evo.Evaluation
-import scevo.evo.PopulationState
-import scevo.evo.Selection
+import scevo.mixin.PopulationState
+import scevo.mixin.Selection
 import scevo.evo.State
 import scevo.tools.Collector
 import scevo.tools.Options

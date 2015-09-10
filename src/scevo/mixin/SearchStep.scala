@@ -1,14 +1,11 @@
 package scevo.mixin
 
-import scevo.evo.BestSelector
-import scevo.evo.EvaluatedSolution
 import scevo.evo.Evaluation
-import scevo.evo.PopulationState
-import scevo.evo.State
 import scevo.tools.Collector
 import scevo.tools.Options
 import scevo.tools.Randomness
-import scevo.evo.Selection
+import scevo.evo.BestSelector
+import scevo.evo.State
 
 /*
  * A single step of an iterative search algorithm. step() is supposed to carry out one iteration. 
@@ -48,7 +45,7 @@ trait PostBestSoFar[S, E <: Evaluation] extends Step[PopulationState[S, E]] {
 
   override def step(state: PopulationState[S, E]) = {
     val s = super.step(state)
-    val bestOfGen = BestSelector(s.solutions)
+    val bestOfGen = BestSelectorES(s.solutions)
     if (bestSoFar.isEmpty || bestOfGen.eval.betterThan(best.get.eval)) best = Some(bestOfGen)
     println(f"Gen: ${s.iteration}  BestSoFar: ${bestSoFar.get}")
     if (snapFreq > 0 && s.iteration % snapFreq == 0)

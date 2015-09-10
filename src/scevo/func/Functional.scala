@@ -1,8 +1,11 @@
 package scevo.func
 
 import java.util.Calendar
+
 import scala.annotation.tailrec
 import scala.collection.immutable.Stream.consWrapper
+import scala.collection.parallel.ForkJoinTaskSupport
+
 import scevo.Distribution
 import scevo.evo.BestSelector
 import scevo.evo.Evaluation
@@ -10,7 +13,6 @@ import scevo.evo.State
 import scevo.tools.Collector
 import scevo.tools.Options
 import scevo.tools.TRandom
-import scala.collection.parallel.ForkJoinTaskSupport
 
 /* Scevo-like functionality in functional programming style
  */

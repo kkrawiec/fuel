@@ -1,10 +1,7 @@
 package scevo.mixin
 
-import scevo.evo.ESol
-import scevo.evo.EvaluatedSolution
-import scevo.evo.Evaluation
-import scevo.evo.PopulationState
 import scevo.tools.Options
+import scevo.evo.Evaluation
 
 trait InitialPopulationState[S, E <: Evaluation]
   extends InitialState[PopulationState[S, E]] {

@@ -1,9 +1,9 @@
 package scevo.mixin.example
 
-import scevo.evo.PopulationState
+import scevo.mixin.PopulationState
 import scevo.evo.ScalarEvaluationMax
-import scevo.evo.Selector
-import scevo.evo.TournamentSelection
+import scevo.mixin.Selector
+import scevo.mixin.TournamentSelection
 import scevo.mixin.EA
 import scevo.mixin.Experiment
 import scevo.mixin.InitialPopulationState

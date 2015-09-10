@@ -2,9 +2,9 @@ package scevo.mixin.example
 
 import scevo.mixin.CoEA
 import scevo.mixin.Pipeline
-import scevo.evo.PopulationState
+import scevo.mixin.PopulationState
 import scevo.evo.ScalarEvaluationMax
-import scevo.evo.TournamentSelection
+import scevo.mixin.TournamentSelection
 import scevo.mixin.TwoPopState
 import scevo.tools.OptionsFromArgs
 import scevo.tools.Rng

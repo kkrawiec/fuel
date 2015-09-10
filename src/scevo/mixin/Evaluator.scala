@@ -1,7 +1,7 @@
 package scevo.mixin
 
-import scevo.evo.ESol
-import scevo.evo.EvaluatedSolution
+import scevo.mixin.ESol
+import scevo.mixin.EvaluatedSolution
 import scevo.evo.Evaluation
 
 trait Evaluator[S, E <: Evaluation]

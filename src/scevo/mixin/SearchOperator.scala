@@ -4,7 +4,7 @@ import scevo.tools.Options
 import scevo.Distribution
 import scevo.tools.TRandom
 import scevo.evo.Evaluation
-import scevo.evo.Selector
+import scevo.mixin.Selector
 
 /*
  * Search operators. 

@@ -1,4 +1,6 @@
-package scevo.evo
+package scevo.mixin
+
+import scevo.evo.Evaluation
 
 /*
  * Represents an evaluated solution. 

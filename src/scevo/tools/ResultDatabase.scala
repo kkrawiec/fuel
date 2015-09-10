@@ -7,6 +7,7 @@ import java.io.FileOutputStream
 import java.io.ObjectOutputStream
 import java.io.FileInputStream
 import java.io.ObjectInputStream
+import java.io.NotSerializableException
 
 /**
   * A container for storing intermediate and final results.
@@ -44,11 +45,11 @@ class ResultDatabase(val directory: String) extends scala.collection.mutable.Has
   val (f, fname) = {
     var f: File = null
     try {
-        f = File.createTempFile(filePrefix, extension, new File(directory))
+      f = File.createTempFile(filePrefix, extension, new File(directory))
     } catch {
       case e: Exception =>
-        throw new Exception(s"Error while creating result database file. " 
-           + e.getLocalizedMessage());
+        throw new Exception(s"Error while creating result database file. "
+          + e.getLocalizedMessage());
     }
     (f, f.getCanonicalFile())
   }
@@ -70,10 +71,22 @@ class ResultDatabase(val directory: String) extends scala.collection.mutable.Has
     saveWorkingState(new File(fname + "." + fnameSuffix))
 
   def write(key: String, v: Any) = {
-    val os = new ObjectOutputStream(new FileOutputStream(fname + "." + key))
-    os.writeObject(v)
-    os.close()
-    v
+    val fn = fname + "." + key
+    val os = new ObjectOutputStream(new FileOutputStream(fn))
+    try {
+      os.writeObject(v)
+      os.close()
+    } catch {
+      case e: NotSerializableException => {
+        // TODO: Warning about non-serializable object?
+        // TODO: Opens the same file, but still works - os is probably already closed here?
+        val s = new PrintWriter(new File(fn))
+        s.println(v.toString)
+        s.close
+      }
+    } finally {
+      os.close
+    }
   }
   def writeString(key: String, v: String) = {
     val s = new PrintWriter(new File(fname + "." + key))

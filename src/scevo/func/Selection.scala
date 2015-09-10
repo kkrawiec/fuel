@@ -1,15 +1,27 @@
 package scevo.func
 
+import scevo.Distribution
 import scevo.Preamble.RndApply
 import scevo.evo.BestSelector
 import scevo.evo.Evaluation
 import scevo.evo.MultiobjectiveEvaluation
+import scevo.evo.ScalarEvaluationMax
 import scevo.tools.Options
 import scevo.tools.TRandom
-import scevo.Distribution
-import scevo.evo.ScalarEvaluationMax
 
-object TournamentSelection {
+object RandomSelection {
+  def apply[S, E <: Evaluation](rand: TRandom) = {
+    pop: Seq[(S, E)] => pop(rand)
+  }
+}
+
+object GreedyBestSelection {
+  def apply[S, E <: Evaluation] = {
+    pop: Seq[(S, E)] => BestSelector(pop)
+  }
+}
+
+ object TournamentSelection {
   def apply[S, E <: Evaluation](opt: Options)(rand: TRandom) = {
     val tournamentSize = opt.paramInt("tournamentSize", 7, _ >= 2)
     pop: Seq[(S, E)] => BestSelector(pop(rand, tournamentSize))
@@ -17,7 +29,7 @@ object TournamentSelection {
 }
 
 object FitnessProportionateSelection {
-  def apply[S, E <: ScalarEvaluationMax](opt: Options)(rand: TRandom) = 
+  def apply[S, E <: ScalarEvaluationMax](opt: Options)(rand: TRandom) =
     (pop: Seq[(S, E)]) =>
       {
         val distribution = Distribution.fromAnything(pop.map(_._2.v))
@@ -43,8 +55,4 @@ object LexicaseSelection {
   }
 }
 
-object RandomSelection {
-  def apply[S, E <: Evaluation](rand: TRandom) = {
-    pop: Seq[(S, E)] => pop(rand)
-  }
-}
+ 

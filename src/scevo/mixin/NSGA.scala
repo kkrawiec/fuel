@@ -1,13 +1,20 @@
-package scevo.evo
+package scevo.mixin
 
+import scala.annotation.migration
 import scala.annotation.tailrec
+
 import org.junit.Test
+
 import scevo.Preamble.RndApply
-import scevo.tools.Random
-import scevo.tools.TRandom
-import scevo.tools.Randomness
+import scevo.evo.BestSelector
+import scevo.evo.MultiEvalNamed
+import scevo.evo.MultiobjectiveEvaluation
+import scevo.evo.ScalarEvaluationMax
 import scevo.tools.Options
 import scevo.tools.OptionsFromArgs
+import scevo.tools.Random
+import scevo.tools.Randomness
+import scevo.tools.TRandom
 
 /* Implements (with modifications) the NSGAII selection algorithm by Deb et al. 
  * Solutions are Pareto-ranked, and are selected by running tournament selection 

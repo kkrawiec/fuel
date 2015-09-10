@@ -1,13 +1,18 @@
-package scevo.evo
+package scevo.mixin
 
-import scala.Ordering
+import scala.annotation.tailrec
+
 import scevo.Distribution
 import scevo.Preamble.RndApply
+import scevo.evo.BinaryTestOutcomes
+import scevo.evo.Evaluation
+import scevo.evo.ScalarEvaluation
+import scevo.evo.ScalarEvaluationMax
 import scevo.tools.Options
 import scevo.tools.Randomness
 import scevo.tools.RngWrapper
 import scevo.tools.TRandom
-import scala.annotation.tailrec
+import scevo.evo.BestSelector
 
 /* A selector is intended to operate in two phases: 
  * 1. Creation (based on the previous population). 
@@ -47,7 +52,7 @@ trait TournamentSel[S, E <: Evaluation]
   def tournamentSize: Int
   override def selectorSol(solutions: Seq[EvaluatedSolution[S, E]]) = new Selector[S, E] {
     override val numSelected = solutions.size
-    override def next = BestSelector(solutions(rng, tournamentSize))
+    override def next = BestSelectorES(solutions(rng, tournamentSize))
   }
 }
 trait TournamentSelection[S, E <: Evaluation]
@@ -112,32 +117,13 @@ trait GreedyBestSelection[S, E <: Evaluation]
   extends Selection[S, E] {
   override def selectorSol(solutions: Seq[EvaluatedSolution[S, E]]) = new Selector[S, E] {
     override val numSelected = 1
-    override val next = BestSelector(solutions)
+    override val next = BestSelectorES(solutions)
   }
 }
 
-object BestSelector {
-  def apply[S, E <: Evaluation](set: Seq[Tuple2[S, E]]) =
-    set.reduceLeft((a, b) => if (a._2.betterThan(b._2)) a else b)
+object BestSelectorES {
 
-  def apply[S, E <: Evaluation](set: Seq[EvaluatedSolution[S, E]]) =
+  def apply[S, E <: Evaluation](set: Seq[EvaluatedSolution[S, E]]) = 
     set.reduceLeft((a, b) => if (a.eval.betterThan(b.eval)) a else b)
 
-  // I'd be happy to call this 'apply' as well, but type erasure does not permit.
-  def select[E <: Evaluation](s: Seq[E]) =
-    s.reduceLeft((a, b) => if (a.betterThan(b)) a else b)
-
-  // Generic, for non-Evaluation classes
-  def apply[T](set: Seq[T], better: (T, T) => Boolean) =
-    set.reduceLeft((a, b) => if (better(a, b)) a else b)
-
-  def apply[T](set: Seq[T], ord: Ordering[T]) =
-    set.reduceLeft((a, b) => if (ord.compare(a, b) < 0) a else b)
 }
-
-object TestBestSelector {
-  def main(args: Array[String]) =
-    println(BestSelector(List(3, 1, 3, 6), Ordering[Int]))
-}
-
-
