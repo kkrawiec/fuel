@@ -5,7 +5,6 @@ import scala.annotation.tailrec
 import scevo.evo.Evaluation
 import scevo.evo.PopulationState
 import scevo.evo.Selection
-import scevo.evo.Solution
 import scevo.evo.State
 import scevo.tools.Collector
 import scevo.tools.Options
@@ -39,7 +38,7 @@ trait IterativeAlgorithm[S <: State] extends Algorithm[S] {
 
 /* This actually hardly provides any real functionality. It's here to show the components.
  */
-trait EA[S <: Solution, E <: Evaluation]
+trait EA[S, E <: Evaluation]
   extends Options with Randomness with Collector
   with InitialState[PopulationState[S, E]]
   with IterativeAlgorithm[PopulationState[S, E]]

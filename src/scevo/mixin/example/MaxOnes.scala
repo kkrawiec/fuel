@@ -3,7 +3,6 @@ package scevo.mixin.example
 import scevo.evo.PopulationState
 import scevo.evo.ScalarEvaluationMax
 import scevo.evo.Selector
-import scevo.evo.Solution
 import scevo.evo.TournamentSelection
 import scevo.mixin.EA
 import scevo.mixin.Experiment
@@ -21,7 +20,7 @@ import scevo.tools.Rng
 object GA {
 
   // Candidate solution (bitstring)
-  class B(val v: Vector[Boolean]) extends Solution {
+  class B(val v: Vector[Boolean]) {
     override val toString = v.map(if (_) "1" else "0").reduce(_ + _)
   }
 
@@ -74,25 +73,3 @@ object GA {
 object MaxOnes {
   def main(args: Array[String]): Unit = new GA.ExperimentMaxOnes(args) {}.launch
 }
-
-/* Stochastic local search: 
-object ExperimentMaxOnesSLS {
-  def main(args: Array[String]): Unit = new ExperimentMaxOnes(args) {
-    require(populationSize == 1)
-    //  override def selection = new OnePlusOneSelection[BitVectorEvaluated]
-    override def selection = new GreedyBestSelection[BitVectorEvaluated, ScalarEvaluation]
-  }.launch
-}
-
-final class TestExperiment {
-  // val params = "--seed 8 --populationSize 100 --maxTime 300000 --maxGenerations 1000 --operatorProbs 0.5,0.5 --numVars 200"
-  val params = "--numVars 200  --tournamentSize 7  --operatorProbs 0.5,0.5"
-  @Test
-  def testExperimentMaxOnesGA =
-    ExperimentMaxOnesGA.main(params.split("\\s+"))
-
-  @Test
-  def testExperimentMaxOnesSLS =
-    ExperimentMaxOnesSLS.main((params + " --populationSize 1").split("\\s+"))
-}
- */

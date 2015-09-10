@@ -3,7 +3,6 @@ package scevo.func.example
 import scala.collection.immutable.BitSet
 
 import scevo.evo.ScalarEvaluationMax
-import scevo.evo.Solution
 import scevo.func.Breeder
 import scevo.func.EnvAndRng
 import scevo.func.EnvFromArgs
@@ -30,7 +29,7 @@ import scevo.tools.TRandom
 object GA0 {
 
   // Candidate solution (bitstring)
-  class S(val v: BitSet) extends Solution {
+  class S(val v: BitSet) {
     override val toString = v.toString
     def fitness = ScalarEvaluationMax(v.size)
   }
@@ -83,7 +82,7 @@ object TestGA0 {
 object GA1 {
 
   // Candidate solution (bitstring)
-  class S(val v: Seq[Boolean]) extends Solution {
+  class S(val v: Seq[Boolean]) {
     override val toString = {
       val sb = new StringBuilder()
       v.foreach(e => sb.append(if (e) "1" else "0"))
@@ -141,7 +140,7 @@ object TestGA1 {
 object GA2 {
 
   // Candidate solution (bitstring)
-  class S(val v: Vector[Boolean]) extends Solution {
+  class S(val v: Vector[Boolean]) {
     override val toString = v.map(if (_) "1" else "0").reduce(_ + _)
   }
 

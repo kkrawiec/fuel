@@ -18,30 +18,30 @@ import scala.annotation.tailrec
  *    than numSelected times
  */
 
-trait Selector[S <: Solution, E <: Evaluation] {
+trait Selector[S, E <: Evaluation] {
   def next: EvaluatedSolution[S, E]
   def numSelected: Int
 }
 
-trait SelectionHistory[S <: Solution, E <: Evaluation] {
+trait SelectionHistory[S, E <: Evaluation] {
   def selector(history: Seq[PopulationState[S, E]]): Selector[S, E]
 }
 
-trait SelectionLastState[S <: Solution, E <: Evaluation]
+trait SelectionLastState[S, E <: Evaluation]
   extends SelectionHistory[S, E] {
   def selector(state: PopulationState[S, E]): Selector[S, E]
   def selector(history: Seq[PopulationState[S, E]]): Selector[S, E] =
     selector(history.head)
 }
 
-trait Selection[S <: Solution, E <: Evaluation]
+trait Selection[S, E <: Evaluation]
   extends SelectionLastState[S, E] {
   def selectorSol(solutions: Seq[EvaluatedSolution[S, E]]): Selector[S, E]
   def selector(state: PopulationState[S, E]): Selector[S, E] =
     selectorSol(state.solutions)
 }
 
-trait TournamentSel[S <: Solution, E <: Evaluation]
+trait TournamentSel[S, E <: Evaluation]
   extends Selection[S, E] {
   this: Randomness =>
   def tournamentSize: Int
@@ -50,19 +50,19 @@ trait TournamentSel[S <: Solution, E <: Evaluation]
     override def next = BestSelector(solutions(rng, tournamentSize))
   }
 }
-trait TournamentSelection[S <: Solution, E <: Evaluation]
+trait TournamentSelection[S, E <: Evaluation]
   extends TournamentSel[S, E] {
   this: Options with Randomness =>
   override val tournamentSize = paramInt("tournamentSize", 7, _ >= 2)
 }
 object TournamentSelection {
-  def apply[S <: Solution, E <: Evaluation](rng: TRandom, tournamentSize_ : Int) =
+  def apply[S, E <: Evaluation](rng: TRandom, tournamentSize_ : Int) =
     new RngWrapper(rng) with TournamentSel[S, E] {
       override def tournamentSize = tournamentSize_
     }
 }
 
-trait FitnessProportionateSelection[S <: Solution, E <: ScalarEvaluationMax]
+trait FitnessProportionateSelection[S, E <: ScalarEvaluationMax]
   extends Selection[S, E] {
   this: Randomness =>
   override def selectorSol(solutions: Seq[EvaluatedSolution[S, E]]) = new Selector[S, E] {
@@ -72,7 +72,7 @@ trait FitnessProportionateSelection[S <: Solution, E <: ScalarEvaluationMax]
   }
 }
 
-trait LexicaseSelection[S <: Solution, E <: BinaryTestOutcomes]
+trait LexicaseSelection[S, E <: BinaryTestOutcomes]
   extends Selection[S, E] {
   this: Randomness =>
   override def selectorSol(solutions: Seq[EvaluatedSolution[S, E]]) = new Selector[S, E] {
@@ -92,7 +92,7 @@ trait LexicaseSelection[S <: Solution, E <: BinaryTestOutcomes]
   }
 }
 
-trait MuLambdaSelection[S <: Solution, E <: ScalarEvaluation]
+trait MuLambdaSelection[S, E <: ScalarEvaluation]
   extends Selection[S, E] {
   override def selector(history: Seq[PopulationState[S, E]]) = new Selector[S, E] {
     val pool = history.head.solutions ++ (if (history.size > 1)
@@ -108,7 +108,7 @@ trait MuLambdaSelection[S <: Solution, E <: ScalarEvaluation]
   }
 }
 
-trait GreedyBestSelection[S <: Solution, E <: Evaluation]
+trait GreedyBestSelection[S, E <: Evaluation]
   extends Selection[S, E] {
   override def selectorSol(solutions: Seq[EvaluatedSolution[S, E]]) = new Selector[S, E] {
     override val numSelected = 1
@@ -117,10 +117,10 @@ trait GreedyBestSelection[S <: Solution, E <: Evaluation]
 }
 
 object BestSelector {
-  def apply[S <: Solution, E <: Evaluation](set: Seq[Tuple2[S, E]]) =
+  def apply[S, E <: Evaluation](set: Seq[Tuple2[S, E]]) =
     set.reduceLeft((a, b) => if (a._2.betterThan(b._2)) a else b)
 
-  def apply[S <: Solution, E <: Evaluation](set: Seq[EvaluatedSolution[S, E]]) =
+  def apply[S, E <: Evaluation](set: Seq[EvaluatedSolution[S, E]]) =
     set.reduceLeft((a, b) => if (a.eval.betterThan(b.eval)) a else b)
 
   // I'd be happy to call this 'apply' as well, but type erasure does not permit.

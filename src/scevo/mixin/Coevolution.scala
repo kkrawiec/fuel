@@ -3,7 +3,6 @@ package scevo.mixin
 import scevo.evo.Evaluation
 import scevo.evo.PopulationState
 import scevo.evo.Selection
-import scevo.evo.Solution
 import scevo.evo.State
 import scevo.tools.Collector
 import scevo.tools.Options
@@ -15,14 +14,14 @@ trait TwoPopState[PS1 <: PopulationState[_, _], PS2 <: PopulationState[_, _]]
   def p2: PS2
 }
 
-trait Pipeline[S <: Solution, E <: Evaluation]
+trait Pipeline[S, E <: Evaluation]
   extends Options with Randomness
   with SearchStepStochastic[S, E]
   with Selection[S, E]
   with Evaluator[S, E]
   with StochasticSearchOperators[S, E]
 
-trait SearchStepCoev[S1 <: Solution, E1 <: Evaluation, S2 <: Solution, E2 <: Evaluation]
+trait SearchStepCoev[S1, E1 <: Evaluation, S2, E2 <: Evaluation]
   extends Step[TwoPopState[PopulationState[S1, E1], PopulationState[S2, E2]]] {
   def pipe1: Pipeline[S1, E1]
   def pipe2: Pipeline[S2, E2]
@@ -37,7 +36,7 @@ trait SearchStepCoev[S1 <: Solution, E1 <: Evaluation, S2 <: Solution, E2 <: Eva
   }
 }
 
-trait CoEA[S1 <: Solution, E1 <: Evaluation, S2 <: Solution, E2 <: Evaluation]
+trait CoEA[S1, E1 <: Evaluation, S2, E2 <: Evaluation]
   extends Options with Randomness with Collector
   with IterativeAlgorithm[TwoPopState[PopulationState[S1, E1], PopulationState[S2, E2]]]
   with InitialState[TwoPopState[PopulationState[S1, E1], PopulationState[S2, E2]]]

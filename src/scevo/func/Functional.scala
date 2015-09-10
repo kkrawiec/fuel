@@ -6,7 +6,6 @@ import scala.collection.immutable.Stream.consWrapper
 import scevo.Distribution
 import scevo.evo.BestSelector
 import scevo.evo.Evaluation
-import scevo.evo.Solution
 import scevo.evo.State
 import scevo.tools.Collector
 import scevo.tools.Options
@@ -31,7 +30,7 @@ object IterativeAlgorithm {
   }
   // Version for populatin-based algorithms, 
   // with default best-so-far and best-of-run reporting
-  def apply[S <: Solution, E <: Evaluation](
+  def apply[S, E <: Evaluation](
     env: Environment)(
       step: StatePop[(S, E)] => StatePop[(S, E)])(
         stop: Seq[StatePop[(S, E)] => Boolean]): StatePop[(S, E)] => StatePop[(S, E)] = {
@@ -43,15 +42,15 @@ object IterativeAlgorithm {
 
 // Evaluates population solution by solution (other modes of evaluation possible, e.g., in IFS)
 object IndependentEval {
-  def apply[S <: Solution, E <: Evaluation](f: S => E) =
+  def apply[S, E <: Evaluation](f: S => E) =
     (s: StatePop[S]) => StatePop(s.solutions.map(x => (x, f(x))), s.iteration)
 }
 
 object ParallelEval {
-  def apply[S <: Solution, E <: Evaluation](f: S => E) = {
+  def apply[S, E <: Evaluation](f: S => E) = {
     (s: StatePop[S]) => StatePop(s.solutions.par.map(x => (x, f(x))).to, s.iteration)
   }
-  def apply[S <: Solution, E <: Evaluation](f: S => E, parLevel: Int) = {
+  def apply[S, E <: Evaluation](f: S => E, parLevel: Int) = {
     val ts = new ForkJoinTaskSupport(new scala.concurrent.forkjoin.ForkJoinPool(parLevel))
     (s: StatePop[S]) => StatePop({
       val c = s.solutions.par
@@ -65,7 +64,7 @@ object ParallelEval {
  * Could be alternatively done via iterator, but iterators are mutable
 */
 object Breeder {
-  def apply[S <: Solution, E <: Evaluation](
+  def apply[S, E <: Evaluation](
     sel: Seq[(S, E)] => (S, E),
     solutionBuilder: () => (Stream[S] => (List[S], Stream[S])),
     isFeasible: S => Boolean = (_: S) => true) = {
@@ -88,7 +87,7 @@ object Breeder {
 
 // Picks one of the functions (pipes) at random to 
 object RandomMultiBreeder {
-  def apply[S <: Solution](rng: TRandom, config: Options)(pipes: Seq[Stream[S] => (List[S], Stream[S])]) = {
+  def apply[S](rng: TRandom, config: Options)(pipes: Seq[Stream[S] => (List[S], Stream[S])]) = {
     val prob = config.paramString("operatorProbs")
     val distribution = Distribution(
       if (prob.isDefined)
@@ -104,14 +103,14 @@ object RandomMultiBreeder {
 }
 
 object RandomStatePop {
-  def apply[S <: Solution](opt: Options, solutionGenerator: () => S) = {
+  def apply[S](opt: Options, solutionGenerator: () => S) = {
     val populationSize = opt.paramInt("populationSize", 1000, _ > 0)
     _: Unit => StatePop(for (i <- 0 until populationSize) yield solutionGenerator())
   }
 }
 
 // Reporting
-class BestSoFar[S <: Solution, E <: Evaluation] {
+class BestSoFar[S, E <: Evaluation] {
   protected var best: Option[(S, E)] = None
   def bestSoFar: Option[(S, E)] = best
 
@@ -129,7 +128,7 @@ class BestSoFar[S <: Solution, E <: Evaluation] {
 }
 
 object EpilogueBestOfRun {
-  def apply[S <: Solution, E <: Evaluation](bsf: BestSoFar[S, E], coll: Collector) =
+  def apply[S, E <: Evaluation](bsf: BestSoFar[S, E], coll: Collector) =
     (state: StatePop[(S, E)]) => {
       coll.setResult("lastGeneration", state.iteration)
       coll.setResult("bestOfRun.fitness", if (bsf.bestSoFar.isDefined) bsf.bestSoFar.get._2 else "NaN")

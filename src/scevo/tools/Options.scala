@@ -61,6 +61,11 @@ trait Options {
     assert(validator(v), s"Parameter $id invalidates $validator")
     v
   }
+  def paramBool(id: String) = getOption(id) match { 
+    case Some("true") => true
+    case Some("false") => false
+    case _ => throw new Exception(s"Parameter $id not found")
+  }
 }
 
 abstract class OptionsC(opt: Map[String, String]) extends Options {

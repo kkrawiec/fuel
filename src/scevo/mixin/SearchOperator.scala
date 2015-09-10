@@ -5,18 +5,17 @@ import scevo.Distribution
 import scevo.tools.TRandom
 import scevo.evo.Evaluation
 import scevo.evo.Selector
-import scevo.evo.Solution
 
 /*
  * Search operators. 
  * 
  */
-trait SearchOperators[S <: Solution, E <: Evaluation] {
+trait SearchOperators[S, E <: Evaluation] {
   def operators: Seq[Selector[S,E] => Seq[S]]
   assert(operators.nonEmpty, "At least one search operator should be declared")
 }
 
-trait StochasticSearchOperators[S <: Solution, E <: Evaluation] extends SearchOperators[S, E] {
+trait StochasticSearchOperators[S, E <: Evaluation] extends SearchOperators[S, E] {
   this: Options =>
   val prob = paramString("operatorProbs")
   val distribution = Distribution(

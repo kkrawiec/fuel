@@ -32,7 +32,7 @@ object NSGA {
   // Works as a wrapper around the original ES
   class Wrapper[ES <: EvaluatedSolution[_, F], F <: MultiobjectiveEvaluation](val s: ES, val rank: Int, val crowding: Int)
 
-  trait DefaultOrdering[S <: Solution, F <: MultiobjectiveEvaluation] {
+  trait DefaultOrdering[S, F <: MultiobjectiveEvaluation] {
     type ES = EvaluatedSolution[S, F]
     def globalOrdering = new Ordering[Wrapper[ES, F]] {
       override def compare(a: Wrapper[ES, F], b: Wrapper[ES, F]) = {
@@ -47,7 +47,7 @@ object NSGA {
 
   /* No-archive, memoryless variant of NSGA. Selection works on the current population only 
  */
-  protected trait NoArchive[S <: Solution, F <: MultiobjectiveEvaluation]
+  protected trait NoArchive[S, F <: MultiobjectiveEvaluation]
     extends Selection[S, F] {
     this: Options with DefaultOrdering[S, F] =>
     val removeEvalDuplicates = paramString("removeEvalDuplicates").getOrElse("false") == "true"
@@ -116,7 +116,7 @@ object NSGA {
   /* The conventional NSGA: the archive stores the selected solutions and is merged
  * with the next population prior to selection. 
  */
-  protected trait WithArchive[S <: Solution, F <: MultiobjectiveEvaluation]
+  protected trait WithArchive[S, F <: MultiobjectiveEvaluation]
     extends Options with NoArchive[S, F] {
     this: DefaultOrdering[S, F] =>
     var arch = Seq[ES]()
@@ -153,33 +153,33 @@ object NSGA {
   }
 
   object NoArchive {
-    def apply[S <: Solution, F <: MultiobjectiveEvaluation](
+    def apply[S, F <: MultiobjectiveEvaluation](
       numToGen: Int, tournamentSize: Int, rn: TRandom) =
       new OptionsFromArgs(Array[String]()) with NoArchive[S, F] with DefaultOrdering[S, F] {
         val (rng, numToGenerate, tournSize) = (rn, numToGen, tournamentSize)
       }
   }
 
-  trait NoArchiveMixin[S <: Solution, F <: MultiobjectiveEvaluation]
+  trait NoArchiveMixin[S, F <: MultiobjectiveEvaluation]
     extends NoArchive[S, F] with ParamProvider {
     this: Options with Randomness with DefaultOrdering[S, F] =>
   }
 
   object WithArchive {
-    def apply[S <: Solution, F <: MultiobjectiveEvaluation](
+    def apply[S, F <: MultiobjectiveEvaluation](
       numToGen: Int, tournamentSize: Int, rn: TRandom) =
       new OptionsFromArgs(Array[String]()) with WithArchive[S, F] with DefaultOrdering[S, F] {
         val (rng, numToGenerate, tournSize) = (rn, numToGen, tournamentSize)
       }
   }
-  trait WithArchiveMixin[S <: Solution, F <: MultiobjectiveEvaluation]
+  trait WithArchiveMixin[S, F <: MultiobjectiveEvaluation]
     extends WithArchive[S, F] with ParamProvider {
     this: Options with Randomness with DefaultOrdering[S, F] =>
   }
 }
 
 final class TestNSGA {
-  class S(val o: Seq[Int]) extends Solution
+  class S(val o: Seq[Int]) 
   class ES(o: Seq[Int]) extends ESol(new S(o),
     MultiobjectiveEvaluation(o.map(v => ScalarEvaluationMax(v)))) {
     override def toString = o.toString

@@ -1,18 +1,12 @@
 package scevo.evo
 
 /*
- * Represents a non-evaluated solution
- */
-
-trait Solution extends Serializable
-
-/*
  * Represents an evaluated solution. 
  * Only evaluated solutions can undergo selection. 
  * Search operators take evaluated solutions as arguments and produce non-evaluated solutions.
  */
 
-trait EvaluatedSolution[S <: Solution, +E <: Evaluation] extends Serializable {
+trait EvaluatedSolution[S, +E <: Evaluation] extends Serializable {
   def s: S
   def eval: E
   override def toString = eval + " " + s
@@ -21,6 +15,6 @@ trait EvaluatedSolution[S <: Solution, +E <: Evaluation] extends Serializable {
 /* Default implementation of EvaluatedSolution
  * Using case class to have equals() for free
  */
-case class ESol[S <: Solution, +E <: Evaluation](override val s: S, override val eval: E)
+case class ESol[S, +E <: Evaluation](override val s: S, override val eval: E)
   extends EvaluatedSolution[S, E]
 

@@ -4,7 +4,6 @@ import scevo.evo.BestSelector
 import scevo.evo.EvaluatedSolution
 import scevo.evo.Evaluation
 import scevo.evo.PopulationState
-import scevo.evo.Solution
 import scevo.evo.State
 import scevo.tools.Collector
 import scevo.tools.Options
@@ -25,7 +24,7 @@ trait Step[S <: State] {
   def step(s: S) = s
 }
 
-trait SearchStepStochastic[S <: Solution, E <: Evaluation]
+trait SearchStepStochastic[S, E <: Evaluation]
   extends Step[PopulationState[S, E]] {
   this: StochasticSearchOperators[S, E] with Selection[S, E] with Evaluator[S, E] with Randomness =>
   override def step(state: PopulationState[S, E]) = {
@@ -40,7 +39,7 @@ trait SearchStepStochastic[S <: Solution, E <: Evaluation]
   }
 }
 
-trait PostBestSoFar[S <: Solution, E <: Evaluation] extends Step[PopulationState[S, E]] {
+trait PostBestSoFar[S, E <: Evaluation] extends Step[PopulationState[S, E]] {
   this: Options with Collector with Step[PopulationState[S, E]] =>
   protected var best: Option[EvaluatedSolution[S, E]] = None
   def bestSoFar: Option[EvaluatedSolution[S, E]] = best
@@ -58,7 +57,7 @@ trait PostBestSoFar[S <: Solution, E <: Evaluation] extends Step[PopulationState
   }
 }
 
-trait EpilogueBestOfRun[S <: Solution, E <: Evaluation] extends Epilogue[PopulationState[S, E]] {
+trait EpilogueBestOfRun[S, E <: Evaluation] extends Epilogue[PopulationState[S, E]] {
   this: Collector with PostBestSoFar[S, E] =>
   override def epilogue(state: PopulationState[S, E]) = {
     val s = super.epilogue(state)

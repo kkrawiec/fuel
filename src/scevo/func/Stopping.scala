@@ -1,7 +1,6 @@
 package scevo.func
 
 import scevo.evo.Evaluation
-import scevo.evo.Solution
 import scevo.evo.State
 import scevo.tools.Options
 
@@ -20,7 +19,7 @@ object Termination {
       s: Any => timeElapsed > maxMillisec
     }
   }
-  def apply[S <: Solution, E <: Evaluation](config: Options, otherCond: (S, E) => Boolean = (_: S, _: E) => false) = Seq(
+  def apply[S, E <: Evaluation](config: Options, otherCond: (S, E) => Boolean = (_: S, _: E) => false) = Seq(
     MaxIter[StatePop[(S, E)]](config),
     MaxTime(config),
     (s: StatePop[(S, E)]) => s.solutions.exists(es => otherCond(es._1, es._2)))
