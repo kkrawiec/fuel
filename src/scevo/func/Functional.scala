@@ -30,9 +30,9 @@ object IterativeAlgorithm {
     }
     iterate
   }
-  // Version for populatin-based algorithms, 
+  // Version for population-based algorithms, 
   // with default best-so-far and best-of-run reporting
-  def apply[S, E <: Evaluation](
+  def apply[S, E <: Evaluation[E]](
     env: Environment)(
       step: StatePop[(S, E)] => StatePop[(S, E)])(
         stop: Seq[StatePop[(S, E)] => Boolean]): StatePop[(S, E)] => StatePop[(S, E)] = {
@@ -44,15 +44,15 @@ object IterativeAlgorithm {
 
 // Evaluates population solution by solution (other modes of evaluation possible, e.g., in IFS)
 object IndependentEval {
-  def apply[S, E <: Evaluation](f: S => E) =
+  def apply[S, E <: Evaluation[E]](f: S => E) =
     (s: StatePop[S]) => StatePop(s.solutions.map(x => (x, f(x))), s.iteration)
 }
 
 object ParallelEval {
-  def apply[S, E <: Evaluation](f: S => E) = {
+  def apply[S, E <: Evaluation[E]](f: S => E) = {
     (s: StatePop[S]) => StatePop(s.solutions.par.map(x => (x, f(x))).to, s.iteration)
   }
-  def apply[S, E <: Evaluation](f: S => E, parLevel: Int) = {
+  def apply[S, E <: Evaluation[E]](f: S => E, parLevel: Int) = {
     val ts = new ForkJoinTaskSupport(new scala.concurrent.forkjoin.ForkJoinPool(parLevel))
     (s: StatePop[S]) => StatePop({
       val c = s.solutions.par
@@ -66,7 +66,7 @@ object ParallelEval {
  * Could be alternatively done via iterator, but iterators are mutable
 */
 object Breeder {
-  def apply[S, E <: Evaluation](
+  def apply[S, E <: Evaluation[E]](
     sel: Seq[(S, E)] => (S, E),
     solutionBuilder: () => (Stream[S] => (List[S], Stream[S])),
     isFeasible: S => Boolean = (_: S) => true) = {
@@ -74,7 +74,6 @@ object Breeder {
     def selStream(src: Seq[(S, E)]): Stream[S] = sel(src)._1 #:: selStream(src)
 
     current: StatePop[(S, E)] => {
-      val parentStream = selStream(current.solutions)
       @tailrec def breed(offspring: List[S], parStream: Stream[S]): Seq[S] =
         if (offspring.size >= current.solutions.size)
           offspring.take(current.solutions.size)
@@ -82,6 +81,7 @@ object Breeder {
           val (off, parentTail) = solutionBuilder()(parStream)
           breed(offspring ++ off.filter(isFeasible), parentTail)
         }
+      val parentStream = selStream(current.solutions)
       StatePop(breed(List[S](), parentStream), current.iteration + 1)
     }
   }
@@ -112,7 +112,7 @@ object RandomStatePop {
 }
 
 // Reporting
-class BestSoFar[S, E <: Evaluation] {
+class BestSoFar[S, E <: Evaluation[E]] {
   protected var best: Option[(S, E)] = None
   def bestSoFar: Option[(S, E)] = best
 
@@ -130,7 +130,7 @@ class BestSoFar[S, E <: Evaluation] {
 }
 
 object EpilogueBestOfRun {
-  def apply[S, E <: Evaluation](bsf: BestSoFar[S, E], coll: Collector) =
+  def apply[S, E <: Evaluation[E]](bsf: BestSoFar[S, E], coll: Collector) =
     (state: StatePop[(S, E)]) => {
       coll.setResult("lastGeneration", state.iteration)
       coll.setResult("bestOfRun.fitness", if (bsf.bestSoFar.isDefined) bsf.bestSoFar.get._2 else "NaN")

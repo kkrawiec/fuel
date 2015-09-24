@@ -3,7 +3,7 @@ package scevo.mixin
 import scevo.tools.Options
 import scevo.evo.Evaluation
 
-trait InitialPopulationState[S, E <: Evaluation]
+trait InitialPopulationState[S, E <: Evaluation[_]]
   extends InitialState[PopulationState[S, E]] {
   this: Options with SeparableEvaluator[S, E] =>
   val populationSize = paramInt("populationSize", 1000, _ > 0)
@@ -14,11 +14,11 @@ trait InitialPopulationState[S, E <: Evaluation]
 
 /* Archive is a set, so no duplicates allowed
  */
-trait Archive[S, E <: Evaluation] extends Serializable {
+trait Archive[S, E <: Evaluation[_]] extends Serializable {
   def archive: Set[EvaluatedSolution[S, E]]
 }
 
-trait PopStateWithArchive[S, E <: Evaluation]
+trait PopStateWithArchive[S, E <: Evaluation[_]]
   extends PopulationState[S, E]
   with Archive[S, E]
   with Serializable 

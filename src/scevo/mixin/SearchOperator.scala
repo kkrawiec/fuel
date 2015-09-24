@@ -10,12 +10,12 @@ import scevo.mixin.Selector
  * Search operators. 
  * 
  */
-trait SearchOperators[S, E <: Evaluation] {
+trait SearchOperators[S, E <: Evaluation[_]] {
   def operators: Seq[Selector[S,E] => Seq[S]]
   assert(operators.nonEmpty, "At least one search operator should be declared")
 }
 
-trait StochasticSearchOperators[S, E <: Evaluation] extends SearchOperators[S, E] {
+trait StochasticSearchOperators[S, E <: Evaluation[_]] extends SearchOperators[S, E] {
   this: Options =>
   val prob = paramString("operatorProbs")
   val distribution = Distribution(

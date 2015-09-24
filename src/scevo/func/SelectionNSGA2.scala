@@ -9,6 +9,7 @@ import scala.annotation.tailrec
 import scevo.tools.Random
 import org.junit.Test
 import scevo.Preamble.RndApply
+import scevo.evo.ScalarEvaluationMin
 
 class NSGA2Selection(val tournSize: Int, val removeEvalDuplicates: Boolean, val promoteFrontExtremes: Boolean) {
 
@@ -99,9 +100,9 @@ class NSGA2Selection(val tournSize: Int, val removeEvalDuplicates: Boolean, val 
 }
 
 final class TestNSGA2 {
+  MultiobjectiveEvaluation(List(ScalarEvaluationMax(0),ScalarEvaluationMin(0)))
   def e(o: Seq[Int]) = MultiobjectiveEvaluation(o.map(v => ScalarEvaluationMax(v)))
   @Test def test: Unit = {
-    val nsga = new NSGA2Selection(10, false, false)
     val state = List(
       ('a, e(Seq(2, 3, 3))),
       ('b, e(Seq(3, 3, 1))),
@@ -110,7 +111,8 @@ final class TestNSGA2 {
       ('e, e(Seq(1, 2, 2))),
       ('f, e(Seq(1, 2, 2))),
       ('g, e(Seq(1, 1, 1))))
-    val ranking = nsga.rank(3)(state)
+    val nsga = new NSGA2Selection(10, false, false)
+    val ranking = nsga.rank(3)(state) 
     println("Ranking: " + ranking.mkString("\n"))
     println("Selections:")
     val sel = nsga[Symbol, MultiobjectiveEvaluation](new Random)

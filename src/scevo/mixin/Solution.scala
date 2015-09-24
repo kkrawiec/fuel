@@ -8,7 +8,7 @@ import scevo.evo.Evaluation
  * Search operators take evaluated solutions as arguments and produce non-evaluated solutions.
  */
 
-trait EvaluatedSolution[S, +E <: Evaluation] extends Serializable {
+trait EvaluatedSolution[S, +E <: Evaluation[_]] extends Serializable {
   def s: S
   def eval: E
   override def toString = eval + " " + s
@@ -17,6 +17,6 @@ trait EvaluatedSolution[S, +E <: Evaluation] extends Serializable {
 /* Default implementation of EvaluatedSolution
  * Using case class to have equals() for free
  */
-case class ESol[S, +E <: Evaluation](override val s: S, override val eval: E)
+case class ESol[S, +E <: Evaluation[_]](override val s: S, override val eval: E)
   extends EvaluatedSolution[S, E]
 

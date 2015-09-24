@@ -9,6 +9,7 @@ import scevo.Preamble.RndApply
 import scevo.evo.BestSelector
 import scevo.evo.MultiEvalNamed
 import scevo.evo.MultiobjectiveEvaluation
+import scevo.evo.ScalarEvaluation
 import scevo.evo.ScalarEvaluationMax
 import scevo.tools.Options
 import scevo.tools.OptionsFromArgs
@@ -105,11 +106,11 @@ object NSGA {
       (0 until layers.size).map(i => {
         val lay = layers(i)
         if (promoteFrontExtremes) {
-          val evals = lay.map(j => solutions(j).eval.v.map(_.v)).transpose
+          val evals = lay.map(j => solutions(j).eval.v.map(_.asInstanceOf[ScalarEvaluation].v)).transpose
           val mins = evals.map(_.min)
           val maxs = evals.map(_.max)
           lay.map(j => new Wrapper[ES, F](solutions(j), i, {
-            val ev = solutions(j).eval.v.map(_.v)
+            val ev = solutions(j).eval.v.map(_.asInstanceOf[ScalarEvaluation].v)
             val detExtreme = (0 until ev.size).map(k => (ev(k) - mins(k)) * (ev(k) - maxs(k)))
             if (detExtreme.contains(0)) 0
             else identical(j)
@@ -134,9 +135,9 @@ object NSGA {
       //for debugging
       val evals = combined.map(_.eval)
       val n = combined.size
-      val avgs = evals.map(_.v.map(_.v)).transpose.map(_.sum / n)
-      val mins = evals.map(_.v.map(_.v)).transpose.map(_.min)
-      val maxs = evals.map(_.v.map(_.v)).transpose.map(_.max)
+      val avgs = evals.map(_.v.map(_.asInstanceOf[ScalarEvaluation].v)).transpose.map(_.sum / n)
+      val mins = evals.map(_.v.map(_.asInstanceOf[ScalarEvaluation].v)).transpose.map(_.min)
+      val maxs = evals.map(_.v.map(_.asInstanceOf[ScalarEvaluation].v)).transpose.map(_.max)
       def form(v: Seq[Double]) = v.map(d => f"$d%6.2f").mkString(" ")
       if (evals(0).isInstanceOf[MultiEvalNamed])
         println(f"       ${evals(0).asInstanceOf[MultiEvalNamed].m.keys}")

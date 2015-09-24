@@ -21,7 +21,7 @@ trait Step[S <: State] {
   def step(s: S) = s
 }
 
-trait SearchStepStochastic[S, E <: Evaluation]
+trait SearchStepStochastic[S, E <: Evaluation[E]]
   extends Step[PopulationState[S, E]] {
   this: StochasticSearchOperators[S, E] with Selection[S, E] with Evaluator[S, E] with Randomness =>
   override def step(state: PopulationState[S, E]) = {
@@ -36,7 +36,7 @@ trait SearchStepStochastic[S, E <: Evaluation]
   }
 }
 
-trait PostBestSoFar[S, E <: Evaluation] extends Step[PopulationState[S, E]] {
+trait PostBestSoFar[S, E <: Evaluation[E]] extends Step[PopulationState[S, E]] {
   this: Options with Collector with Step[PopulationState[S, E]] =>
   protected var best: Option[EvaluatedSolution[S, E]] = None
   def bestSoFar: Option[EvaluatedSolution[S, E]] = best
@@ -54,7 +54,7 @@ trait PostBestSoFar[S, E <: Evaluation] extends Step[PopulationState[S, E]] {
   }
 }
 
-trait EpilogueBestOfRun[S, E <: Evaluation] extends Epilogue[PopulationState[S, E]] {
+trait EpilogueBestOfRun[S, E <: Evaluation[E]] extends Epilogue[PopulationState[S, E]] {
   this: Collector with PostBestSoFar[S, E] =>
   override def epilogue(state: PopulationState[S, E]) = {
     val s = super.epilogue(state)

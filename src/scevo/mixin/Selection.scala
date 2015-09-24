@@ -23,30 +23,30 @@ import scevo.evo.BestSelector
  *    than numSelected times
  */
 
-trait Selector[S, E <: Evaluation] {
+trait Selector[S, E <: Evaluation[E]] {
   def next: EvaluatedSolution[S, E]
   def numSelected: Int
 }
 
-trait SelectionHistory[S, E <: Evaluation] {
+trait SelectionHistory[S, E <: Evaluation[E]] {
   def selector(history: Seq[PopulationState[S, E]]): Selector[S, E]
 }
 
-trait SelectionLastState[S, E <: Evaluation]
+trait SelectionLastState[S, E <: Evaluation[E]]
   extends SelectionHistory[S, E] {
   def selector(state: PopulationState[S, E]): Selector[S, E]
   def selector(history: Seq[PopulationState[S, E]]): Selector[S, E] =
     selector(history.head)
 }
 
-trait Selection[S, E <: Evaluation]
+trait Selection[S, E <: Evaluation[E]]
   extends SelectionLastState[S, E] {
   def selectorSol(solutions: Seq[EvaluatedSolution[S, E]]): Selector[S, E]
   def selector(state: PopulationState[S, E]): Selector[S, E] =
     selectorSol(state.solutions)
 }
 
-trait TournamentSel[S, E <: Evaluation]
+trait TournamentSel[S, E <: Evaluation[E]]
   extends Selection[S, E] {
   this: Randomness =>
   def tournamentSize: Int
@@ -55,13 +55,13 @@ trait TournamentSel[S, E <: Evaluation]
     override def next = BestSelectorES(solutions(rng, tournamentSize))
   }
 }
-trait TournamentSelection[S, E <: Evaluation]
+trait TournamentSelection[S, E <: Evaluation[E]]
   extends TournamentSel[S, E] {
   this: Options with Randomness =>
   override val tournamentSize = paramInt("tournamentSize", 7, _ >= 2)
 }
 object TournamentSelection {
-  def apply[S, E <: Evaluation](rng: TRandom, tournamentSize_ : Int) =
+  def apply[S, E <: Evaluation[E]](rng: TRandom, tournamentSize_ : Int) =
     new RngWrapper(rng) with TournamentSel[S, E] {
       override def tournamentSize = tournamentSize_
     }
@@ -89,7 +89,7 @@ trait LexicaseSelection[S, E <: BinaryTestOutcomes]
         else if (tests.size == 1) sols(rng)
         else {
           val theTest = tests(rng)
-          val bestEval = BestSelector.select(sols.map(_.eval(theTest)))
+          val bestEval = BestSelector.select(sols.map( _.eval(theTest)))
           sel(sols.filter(s => s.eval(theTest) == bestEval), tests.diff(List(theTest)))
         }
       sel(solutions, 0.until(solutions(0).eval.size).toList)
@@ -97,7 +97,7 @@ trait LexicaseSelection[S, E <: BinaryTestOutcomes]
   }
 }
 
-trait MuLambdaSelection[S, E <: ScalarEvaluation]
+trait MuLambdaSelection[S, E <: Evaluation[E]]
   extends Selection[S, E] {
   override def selector(history: Seq[PopulationState[S, E]]) = new Selector[S, E] {
     val pool = history.head.solutions ++ (if (history.size > 1)
@@ -113,7 +113,7 @@ trait MuLambdaSelection[S, E <: ScalarEvaluation]
   }
 }
 
-trait GreedyBestSelection[S, E <: Evaluation]
+trait GreedyBestSelection[S, E <: Evaluation[E]]
   extends Selection[S, E] {
   override def selectorSol(solutions: Seq[EvaluatedSolution[S, E]]) = new Selector[S, E] {
     override val numSelected = 1
@@ -123,7 +123,7 @@ trait GreedyBestSelection[S, E <: Evaluation]
 
 object BestSelectorES {
 
-  def apply[S, E <: Evaluation](set: Seq[EvaluatedSolution[S, E]]) = 
+  def apply[S, E <: Evaluation[E]](set: Seq[EvaluatedSolution[S, E]]) = 
     set.reduceLeft((a, b) => if (a.eval.betterThan(b.eval)) a else b)
 
 }
