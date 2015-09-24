@@ -1,18 +1,16 @@
 package scevo.func
 
 import java.util.Calendar
-
 import scala.annotation.tailrec
 import scala.collection.immutable.Stream.consWrapper
 import scala.collection.parallel.ForkJoinTaskSupport
-
 import scevo.Distribution
 import scevo.evo.BestSelector
-import scevo.evo.Evaluation
 import scevo.evo.State
 import scevo.tools.Collector
 import scevo.tools.Options
 import scevo.tools.TRandom
+import scevo.evo.BestES
 
 /* Scevo-like functionality in functional programming style
  */
@@ -32,27 +30,28 @@ object IterativeAlgorithm {
   }
   // Version for population-based algorithms, 
   // with default best-so-far and best-of-run reporting
-  def apply[S, E <: Evaluation[E]](
+  def apply[S, E](
     env: Environment)(
       step: StatePop[(S, E)] => StatePop[(S, E)])(
-        stop: Seq[StatePop[(S, E)] => Boolean]): StatePop[(S, E)] => StatePop[(S, E)] = {
+        stop: Seq[StatePop[(S, E)] => Boolean])( 
+        o: PartialOrdering[E]): StatePop[(S, E)] => StatePop[(S, E)] = {
     val bsf = new BestSoFar[S, E]
-    def reporting = bsf(env, env)
+    def reporting = bsf(env, env, o)
     apply(step andThen reporting)(stop) andThen EpilogueBestOfRun(bsf, env)
   }
 }
 
 // Evaluates population solution by solution (other modes of evaluation possible, e.g., in IFS)
 object IndependentEval {
-  def apply[S, E <: Evaluation[E]](f: S => E) =
+  def apply[S, E](f: S => E) =
     (s: StatePop[S]) => StatePop(s.solutions.map(x => (x, f(x))), s.iteration)
 }
 
 object ParallelEval {
-  def apply[S, E <: Evaluation[E]](f: S => E) = {
+  def apply[S, E](f: S => E) = {
     (s: StatePop[S]) => StatePop(s.solutions.par.map(x => (x, f(x))).to, s.iteration)
   }
-  def apply[S, E <: Evaluation[E]](f: S => E, parLevel: Int) = {
+  def apply[S, E](f: S => E, parLevel: Int) = {
     val ts = new ForkJoinTaskSupport(new scala.concurrent.forkjoin.ForkJoinPool(parLevel))
     (s: StatePop[S]) => StatePop({
       val c = s.solutions.par
@@ -66,7 +65,7 @@ object ParallelEval {
  * Could be alternatively done via iterator, but iterators are mutable
 */
 object Breeder {
-  def apply[S, E <: Evaluation[E]](
+  def apply[S, E](
     sel: Seq[(S, E)] => (S, E),
     solutionBuilder: () => (Stream[S] => (List[S], Stream[S])),
     isFeasible: S => Boolean = (_: S) => true) = {
@@ -112,15 +111,15 @@ object RandomStatePop {
 }
 
 // Reporting
-class BestSoFar[S, E <: Evaluation[E]] {
+class BestSoFar[S, E] {
   protected var best: Option[(S, E)] = None
   def bestSoFar: Option[(S, E)] = best
 
-  def apply(opt: Options, coll: Collector) = {
+  def apply(opt: Options, coll: Collector, o: PartialOrdering[E]) = {
     val snapFreq = opt.paramInt("snapshot-frequency", 0)
     (s: StatePop[(S, E)]) => {
-      val bestOfGen = BestSelector(s.solutions)
-      if (bestSoFar.isEmpty || bestOfGen._2.betterThan(best.get._2)) best = Some(bestOfGen)
+      val bestOfGen = BestES(s.solutions, o)
+      if (bestSoFar.isEmpty || o.lt(bestOfGen._2,best.get._2)) best = Some(bestOfGen)
       println(f"Gen: ${s.iteration}  BestSoFar: ${bestSoFar.get}")
       if (snapFreq > 0 && s.iteration % snapFreq == 0)
         coll.saveSnapshot(f"${s.iteration}%04d")
@@ -130,7 +129,7 @@ class BestSoFar[S, E <: Evaluation[E]] {
 }
 
 object EpilogueBestOfRun {
-  def apply[S, E <: Evaluation[E]](bsf: BestSoFar[S, E], coll: Collector) =
+  def apply[S, E](bsf: BestSoFar[S, E], coll: Collector) =
     (state: StatePop[(S, E)]) => {
       coll.setResult("lastGeneration", state.iteration)
       coll.setResult("bestOfRun.fitness", if (bsf.bestSoFar.isDefined) bsf.bestSoFar.get._2 else "NaN")

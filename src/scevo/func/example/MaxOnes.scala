@@ -1,7 +1,6 @@
 package scevo.func.example
 
 import scala.collection.immutable.BitSet
-import scevo.evo.ScalarEvaluationMax
 import scevo.func.Breeder
 import scevo.func.EnvAndRng
 import scevo.func.EnvFromArgs
@@ -17,21 +16,24 @@ import scevo.func.Termination
 import scevo.func.TournamentSelection
 import scevo.tools.Rng
 import scevo.tools.TRandom
-import scevo.evo.ScalarEvaluation
 
-// Use case: MaxOnes with GA
+/**
+  * Use case: MaxOnes with GA. 
+  *
+  */
 
-/* Style 0: Compact, fitness defined as a member function, parallel evaluation,
- * solutions represented as BitSets (TreeSet much slower)
- * 
- */
+/**
+  * Style 0: Compact, fitness defined as a member function, parallel evaluation,
+  * solutions represented as BitSets (TreeSet much slower)
+  *
+  */
 
 object GA0 {
 
   // Candidate solution (bitstring)
   class S(val v: BitSet) {
     override val toString = v.toString
-    def fitness = ScalarEvaluationMax(v.size)
+    def fitness = v.size
   }
 
   def apply(env: Environment): Unit = {
@@ -41,10 +43,9 @@ object GA0 {
       () => new S(BitSet.empty ++
         (for (i <- 0.until(numVars); if (rng.nextBoolean)) yield i)))
 
-    type E = ScalarEvaluationMax
     def eval = ParallelEval((s: S) => s.fitness)
-    def iteration = eval compose Breeder[S,E](
-      TournamentSelection[S, E](env)(rng),
+    def iteration = eval compose Breeder[S, Int](
+      TournamentSelection(env)(rng)(Ordering[Int]),
       RandomMultiBreeder(rng, env)(Seq( // Each search operator: Stream[S] => (List[S], Stream[S])
         (source: Stream[S]) => { // One-bit mutation:
           val s = source.head
@@ -58,11 +59,11 @@ object GA0 {
           (List(new S(myHead ++ hisTail), new S(hisHead ++ myTail)), source.drop(2))
         })))
 
-    def stopBestFit = (s: StatePop[(S, E)]) => s.solutions.exists(_._2.v == numVars)
+    def stopBestFit = (s: StatePop[(S, Int)]) => s.solutions.exists(_._2 == numVars)
 
     // Compose the components into a search algorithm:
     def alg = initializer andThen eval andThen
-      IterativeAlgorithm(env)(iteration)(Termination[S, E](env) :+ stopBestFit)
+      IterativeAlgorithm(env)(iteration)(Termination[S, Int](env) :+ stopBestFit)(Ordering[Int])
 
     // Run the algorithm:
     Experiment(env)(alg)()
@@ -74,6 +75,8 @@ object TestGA0 {
     GA0(EnvFromArgs("--numVars 500  --maxGenerations 1000 --populationSize 1000 "))
   }
 }
+
+/*
 
 /* Style 1: Compact, fitness defined as a member function, parallel evaluation,
  * fast toString (the other one is really slow)
@@ -100,7 +103,7 @@ object GA1 {
 
     type E = ScalarEvaluationMax
     def eval = ParallelEval((s: S) => s.fitness)
-    def iteration = eval compose Breeder[S,E](
+    def iteration = eval compose Breeder[S, E](
       TournamentSelection[S, E](env)(rng),
       RandomMultiBreeder(rng, env)(Seq( // Each search operator: Stream[S] => (List[S], Stream[S])
         (source: Stream[S]) => { // One-bit mutation:
@@ -175,7 +178,7 @@ object GA2 {
     def sel = TournamentSelection[S, E](env)(rng)
     def eval = IndependentEval(evaluate)
     def rmp = RandomMultiBreeder(rng, env)(operators(rng))
-    def iteration = Breeder[S,E](sel, rmp) andThen eval
+    def iteration = Breeder[S, E](sel, rmp) andThen eval
     def stopBestFit = (s: StatePop[ES]) => s.solutions.exists(_._2.v == numVars)
 
     // Compose the components into search algorithm:
@@ -197,5 +200,7 @@ object TestGA2 {
     //    def alg = IterativeAlgorithm[S,E](env)(initializer andThen IndependentEvaluation(evaluate))(iteration)(Termination[S, E](config) :+ stopMaxFit)
     //    def alg = IterativeAlgorithm[StatePop[ES]](initializer andThen eval)(iteration)(Termination[S, E](config) :+ stopMaxFit)(EpilogueBestOfRun[S, E](bsf, config))
 trait Solver[Sol <: Solution] extends (() => Sol)
+
+*/
 
 */
