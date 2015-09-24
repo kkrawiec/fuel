@@ -7,6 +7,7 @@ import scevo.evo.Evaluation
 import scevo.evo.ScalarEvaluationMax
 import scevo.tools.Options
 import scevo.tools.TRandom
+import scevo.evo.MultiobjectiveEvaluation
 
 object RandomSelection {
   def apply[S, E <: Evaluation[E]](rand: TRandom) = {
@@ -44,7 +45,6 @@ object FitnessProportionateSelection {
       }
 }
 
-/*
 object LexicaseSelection {
   def apply[S, E <: MultiobjectiveEvaluation](rand: TRandom) = {
     def sel(sols: Seq[(S, E)], cases: List[Int]): (S, E) =
@@ -62,5 +62,3 @@ object LexicaseSelection {
     pop: Seq[(S, E)] => sel(pop, 0.until(pop(0)._2.size).toList)
   }
 }
-
-*/ 

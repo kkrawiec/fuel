@@ -31,7 +31,7 @@ object GA0 {
   // Candidate solution (bitstring)
   class S(val v: BitSet) {
     override val toString = v.toString
-    def fitness : ScalarEvaluation = ScalarEvaluationMax(v.size)
+    def fitness = ScalarEvaluationMax(v.size)
   }
 
   def apply(env: Environment): Unit = {
@@ -41,7 +41,7 @@ object GA0 {
       () => new S(BitSet.empty ++
         (for (i <- 0.until(numVars); if (rng.nextBoolean)) yield i)))
 
-    type E = ScalarEvaluation
+    type E = ScalarEvaluationMax
     def eval = ParallelEval((s: S) => s.fitness)
     def iteration = eval compose Breeder[S,E](
       TournamentSelection[S, E](env)(rng),
@@ -88,7 +88,7 @@ object GA1 {
       v.foreach(e => sb.append(if (e) "1" else "0"))
       sb.toString
     }
-    def fitness : ScalarEvaluation = ScalarEvaluationMax(v.count(e => e))
+    def fitness = ScalarEvaluationMax(v.count(e => e))
   }
 
   def apply(env: Environment): Unit = {
@@ -98,7 +98,7 @@ object GA1 {
     // List much less effective
     // Int less effective than Boolean
 
-    type E = ScalarEvaluation
+    type E = ScalarEvaluationMax
     def eval = ParallelEval((s: S) => s.fitness)
     def iteration = eval compose Breeder[S,E](
       TournamentSelection[S, E](env)(rng),
@@ -145,11 +145,11 @@ object GA2 {
   }
 
   // Shorthands: 
-  type E = ScalarEvaluation
+  type E = ScalarEvaluationMax
   type ES = (S, E) // Evaluated solution
 
   // Fitness function = the number of ones:
-  def evaluate(p: S) : ScalarEvaluation = ScalarEvaluationMax(p.v.count(b => b))
+  def evaluate(p: S) = ScalarEvaluationMax(p.v.count(b => b))
 
   def main(args: Array[String]): Unit = {
     val (env, rng) = EnvAndRng(args)
