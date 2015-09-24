@@ -1,7 +1,6 @@
 package scevo.func.example
 
 import scala.collection.immutable.BitSet
-
 import scevo.evo.ScalarEvaluationMax
 import scevo.func.Breeder
 import scevo.func.EnvAndRng
@@ -18,6 +17,7 @@ import scevo.func.Termination
 import scevo.func.TournamentSelection
 import scevo.tools.Rng
 import scevo.tools.TRandom
+import scevo.evo.ScalarEvaluation
 
 // Use case: MaxOnes with GA
 
@@ -31,7 +31,7 @@ object GA0 {
   // Candidate solution (bitstring)
   class S(val v: BitSet) {
     override val toString = v.toString
-    def fitness = ScalarEvaluationMax(v.size)
+    def fitness : ScalarEvaluation = ScalarEvaluationMax(v.size)
   }
 
   def apply(env: Environment): Unit = {
@@ -41,9 +41,9 @@ object GA0 {
       () => new S(BitSet.empty ++
         (for (i <- 0.until(numVars); if (rng.nextBoolean)) yield i)))
 
-    type E = ScalarEvaluationMax
+    type E = ScalarEvaluation
     def eval = ParallelEval((s: S) => s.fitness)
-    def iteration = eval compose Breeder(
+    def iteration = eval compose Breeder[S,E](
       TournamentSelection[S, E](env)(rng),
       RandomMultiBreeder(rng, env)(Seq( // Each search operator: Stream[S] => (List[S], Stream[S])
         (source: Stream[S]) => { // One-bit mutation:
@@ -88,7 +88,7 @@ object GA1 {
       v.foreach(e => sb.append(if (e) "1" else "0"))
       sb.toString
     }
-    def fitness = ScalarEvaluationMax(v.count(e => e))
+    def fitness : ScalarEvaluation = ScalarEvaluationMax(v.count(e => e))
   }
 
   def apply(env: Environment): Unit = {
@@ -98,9 +98,9 @@ object GA1 {
     // List much less effective
     // Int less effective than Boolean
 
-    type E = ScalarEvaluationMax
+    type E = ScalarEvaluation
     def eval = ParallelEval((s: S) => s.fitness)
-    def iteration = eval compose Breeder(
+    def iteration = eval compose Breeder[S,E](
       TournamentSelection[S, E](env)(rng),
       RandomMultiBreeder(rng, env)(Seq( // Each search operator: Stream[S] => (List[S], Stream[S])
         (source: Stream[S]) => { // One-bit mutation:
@@ -145,11 +145,11 @@ object GA2 {
   }
 
   // Shorthands: 
-  type E = ScalarEvaluationMax
+  type E = ScalarEvaluation
   type ES = (S, E) // Evaluated solution
 
   // Fitness function = the number of ones:
-  def evaluate(p: S) = ScalarEvaluationMax(p.v.count(b => b))
+  def evaluate(p: S) : ScalarEvaluation = ScalarEvaluationMax(p.v.count(b => b))
 
   def main(args: Array[String]): Unit = {
     val (env, rng) = EnvAndRng(args)
@@ -175,7 +175,7 @@ object GA2 {
     def sel = TournamentSelection[S, E](env)(rng)
     def eval = IndependentEval(evaluate)
     def rmp = RandomMultiBreeder(rng, env)(operators(rng))
-    def iteration = Breeder(sel, rmp) andThen eval
+    def iteration = Breeder[S,E](sel, rmp) andThen eval
     def stopBestFit = (s: StatePop[ES]) => s.solutions.exists(_._2.v == numVars)
 
     // Compose the components into search algorithm:

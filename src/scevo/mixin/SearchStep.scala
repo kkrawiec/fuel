@@ -21,7 +21,7 @@ trait Step[S <: State] {
   def step(s: S) = s
 }
 
-trait SearchStepStochastic[S, E <: Evaluation[E]]
+trait SearchStepStochastic[S, E <: Evaluation[_]]
   extends Step[PopulationState[S, E]] {
   this: StochasticSearchOperators[S, E] with Selection[S, E] with Evaluator[S, E] with Randomness =>
   override def step(state: PopulationState[S, E]) = {

@@ -23,23 +23,23 @@ import scevo.evo.BestSelector
  *    than numSelected times
  */
 
-trait Selector[S, E <: Evaluation[E]] {
+trait Selector[S, E <: Evaluation[_]] {
   def next: EvaluatedSolution[S, E]
   def numSelected: Int
 }
 
-trait SelectionHistory[S, E <: Evaluation[E]] {
+trait SelectionHistory[S, E <: Evaluation[_]] {
   def selector(history: Seq[PopulationState[S, E]]): Selector[S, E]
 }
 
-trait SelectionLastState[S, E <: Evaluation[E]]
+trait SelectionLastState[S, E <: Evaluation[_]]
   extends SelectionHistory[S, E] {
   def selector(state: PopulationState[S, E]): Selector[S, E]
   def selector(history: Seq[PopulationState[S, E]]): Selector[S, E] =
     selector(history.head)
 }
 
-trait Selection[S, E <: Evaluation[E]]
+trait Selection[S, E <: Evaluation[_]]
   extends SelectionLastState[S, E] {
   def selectorSol(solutions: Seq[EvaluatedSolution[S, E]]): Selector[S, E]
   def selector(state: PopulationState[S, E]): Selector[S, E] =

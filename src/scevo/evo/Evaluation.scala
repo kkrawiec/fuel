@@ -18,9 +18,6 @@ trait Evaluation[E] extends Serializable {
   def betterThan(that: E): Boolean = comparePartial(that).getOrElse(0) < 0
 }
 
-object Eval {
-  implicit class comparePartial[E1 <: Evaluation](a: )
-}
 // Implements *complete* order
 abstract class ScalarEvaluation(val v: Double)
     extends Evaluation[ScalarEvaluation]
@@ -32,13 +29,13 @@ abstract class ScalarEvaluation(val v: Double)
     case _                       => false
   }
   override def hashCode = v.hashCode
+  override def comparePartial(that: ScalarEvaluation): Option[Int] = Some(compare(that))
 }
 
 class ScalarEvaluationMax(vv: Double)
     extends ScalarEvaluation(if (vv.isNaN) Double.MinValue else vv) {
-  override def betterThan(that: ScalarEvaluation): Boolean = v.compare(that.v) < 0
-  override def compare(that: ScalarEvaluation) = that.v compare v
-  override def comparePartial(that: ScalarEvaluationMax): Option[Int] = Some(compare(that))
+  override def betterThan(that: ScalarEvaluation): Boolean = v.compare(that.asInstanceOf[ScalarEvaluationMax].v) > 0
+  override def compare(that: ScalarEvaluation) = that.asInstanceOf[ScalarEvaluationMax].v compare v
 }
 object ScalarEvaluationMax {
   def apply(v: Double) = new ScalarEvaluationMax(v)
@@ -46,9 +43,8 @@ object ScalarEvaluationMax {
 
 class ScalarEvaluationMin(vv: Double)
     extends ScalarEvaluation(if (vv.isNaN) Double.MaxValue else vv) {
-  override def betterThan(that: ScalarEvaluationMin): Boolean = compare(that) < 0
-  override def compare(that: ScalarEvaluationMin) = v compare that.v
-  override def comparePartial(that: ScalarEvaluationMin): Option[Int] = Some(compare(that))
+  override def betterThan(that: ScalarEvaluation): Boolean = v.compare(that.asInstanceOf[ScalarEvaluationMin].v) < 0
+  override def compare(that: ScalarEvaluation) = v compare that.asInstanceOf[ScalarEvaluationMin].v
 }
 object ScalarEvaluationMin {
   def apply(v: Double) = new ScalarEvaluationMin(v)
@@ -59,18 +55,20 @@ object ScalarEvaluationMin {
  * does not check if the objectives are the same.  
  */
 
-trait AbstractMultiobjectiveEvaluation {
-  def apply(i: Int): Evaluation[_]
-  def size: Int
+class MultiobjectiveEvaluation(val v: Seq[ScalarEvaluation])
+    extends Evaluation[MultiobjectiveEvaluation] {
+  require(v.nonEmpty)
+  override def toString = v.toString
+  def apply(i: Int) = v(i)
+  val size = v.size
   /* Not very elegant, but much faster than other method:
    */
-  override def comparePartial(that: AbstractMultiobjectiveEvaluation): Option[Int] = {
-    val n = size
-    require(n == that.size)
+  override def comparePartial(that: MultiobjectiveEvaluation): Option[Int] = {
+    require(size == that.size)
     var meBetter: Boolean = false
     var thatBetter: Boolean = false
-    for (i <- 0 until n) {
-      val c = apply(i).compareAny(that(i)).getOrElse(0)
+    for (i <- 0 until size) {
+      val c = v(i).compareAny(that.v(i)).getOrElse(0)
       if (c < 0)
         meBetter = true
       else if (c > 0)
@@ -84,43 +82,34 @@ trait AbstractMultiobjectiveEvaluation {
     }
   }
   override def equals(that: Any) = that match {
-    case other: AbstractMultiobjectiveEvaluation => size == other.size && (0 until size).forall(i => apply(i) == other(i))
+    case other: MultiobjectiveEvaluation => size == other.size && (0 until size).forall(i => v(i) == other.v(i))
     case _                                       => false
   }
-  override def hashCode = (0 until size).map(i => apply(i).hashCode).reduce(_ ^ _)
-}
-
-class MultiobjectiveEvaluation(val v: Seq[Evaluation[_]])
-    extends Evaluation[MultiobjectiveEvaluation] with AbstractMultiobjectiveEvaluation {
-  require(v.nonEmpty)
-  override def toString = v.toString
-  override def apply(i: Int) = v(i)
-  override def size = v.size
+  override def hashCode = (0 until size).map(i => v(i).hashCode).reduce(_ ^ _)
 }
 
 object MultiobjectiveEvaluation {
-  def apply[E](v: Seq[Evaluation[E]]) = new MultiobjectiveEvaluation(v)
+  def apply(v: Seq[ScalarEvaluation]) = new MultiobjectiveEvaluation(v)
 }
 
 // TODO: equals
-class MultiEvalNamed(val m: Map[Any, Evaluation[_]])
+class MultiEvalNamed(val m: Map[Any, ScalarEvaluation])
     extends MultiobjectiveEvaluation(m.values.toVector) {
   override def toString = m.toString
   def apply(k: Any) = m(k)
 }
 
 object MultiEvalNamed {
-  def apply(m: Map[Any, Evaluation[_]]) = new MultiEvalNamed(m)
+  def apply(m: Map[Any, ScalarEvaluation]) = new MultiEvalNamed(m)
 }
 
-class TestOutcomes(override val v: Seq[ScalarEvaluationMax]) extends MultiobjectiveEvaluation(v) {
+class TestOutcomes(v: Seq[ScalarEvaluationMax]) extends MultiobjectiveEvaluation(v) {
   require(v.forall(e => e.v >= 0 && e.v <= 1))
   def allPassed = v.forall(_.v == 1)
-  override def apply(i: Int): ScalarEvaluationMax = v(i)
 }
 /* Important: Overrides comparePartial(), comparing w.r.t. the number of tests passed.
  */
-class BinaryTestOutcomes(override val v: Seq[ScalarEvaluationMax]) extends TestOutcomes(v) {
+class BinaryTestOutcomes(v: Seq[ScalarEvaluationMax]) extends TestOutcomes(v) {
   require(v.forall(e => e.v == 0 || e.v == 1))
   override def toString = numTestsPassed.toString // + super.toString
   def numTestsPassed = v.map(_.v).sum

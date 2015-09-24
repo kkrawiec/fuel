@@ -38,7 +38,7 @@ trait IterativeAlgorithm[S <: State] extends Algorithm[S] {
 
 /* This actually hardly provides any real functionality. It's here to show the components.
  */
-trait EA[S, E <: Evaluation[_]]
+trait EA[S, E <: Evaluation[E]]
   extends Options with Randomness with Collector
   with InitialState[PopulationState[S, E]]
   with IterativeAlgorithm[PopulationState[S, E]]
