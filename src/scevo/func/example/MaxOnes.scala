@@ -1,7 +1,7 @@
 package scevo.func.example
 
 import scala.collection.immutable.BitSet
-import scevo.func.Breeder
+import scevo.func.SimpleBreeder
 import scevo.func.EnvAndRng
 import scevo.func.EnvFromArgs
 import scevo.func.Environment
@@ -23,47 +23,40 @@ import scevo.tools.TRandom
   */
 
 /**
-  * Style 0: Compact, fitness defined as a member function, parallel evaluation,
+  * Style 0: Candidate solution as BitSet, fitness defined as an anonymous function, parallel evaluation,
   * solutions represented as BitSets (TreeSet much slower)
   *
   */
 
 object GA0 {
-
-  // Candidate solution (bitstring)
-  class S(val v: BitSet) {
-    override val toString = v.toString
-    def fitness = v.size
-  }
-
   def apply(env: Environment): Unit = {
     val rng = Rng(env)
     val numVars = env.paramInt("numVars", _ > 0)
     def initializer = RandomStatePop(env,
-      () => new S(BitSet.empty ++
-        (for (i <- 0.until(numVars); if (rng.nextBoolean)) yield i)))
+      () => BitSet.empty ++
+        (for (i <- 0.until(numVars); if (rng.nextBoolean)) yield i))
 
-    def eval = ParallelEval((s: S) => s.fitness)
-    def iteration = eval compose Breeder[S, Int](
+    def eval = ParallelEval((s: BitSet) => s.size)
+    def iteration = eval compose SimpleBreeder[BitSet, Int](
       TournamentSelection(env)(rng)(Ordering[Int]),
       RandomMultiBreeder(rng, env)(Seq( // Each search operator: Stream[S] => (List[S], Stream[S])
-        (source: Stream[S]) => { // One-bit mutation:
+        (source: Stream[BitSet]) => { // One-bit mutation:
           val s = source.head
           val bitToMutate = rng.nextInt(numVars)
-          (List(new S(if (s.v(bitToMutate)) s.v - bitToMutate else s.v + bitToMutate)), source.tail)
+          (List(if (s(bitToMutate)) s - bitToMutate else s + bitToMutate), source.tail)
         },
-        (source: Stream[S]) => { // One-point crossover: 
+        (source: Stream[BitSet]) => { // One-point crossover: 
           val cuttingPoint = rng.nextInt(numVars)
-          val (myHead, myTail) = source(0).v.partition(_ < cuttingPoint)
-          val (hisHead, hisTail) = source(1).v.partition(_ < cuttingPoint)
-          (List(new S(myHead ++ hisTail), new S(hisHead ++ myTail)), source.drop(2))
+          val (myHead, myTail) = source(0).partition(_ < cuttingPoint)
+          val (hisHead, hisTail) = source(1).partition(_ < cuttingPoint)
+          (List(myHead ++ hisTail, hisHead ++ myTail), source.drop(2))
         })))
 
-    def stopBestFit = (s: StatePop[(S, Int)]) => s.solutions.exists(_._2 == numVars)
+    def stopBestFit = (s: StatePop[(BitSet, Int)]) => s.solutions.exists(_._2 == 0)
 
     // Compose the components into a search algorithm:
     def alg = initializer andThen eval andThen
-      IterativeAlgorithm(env)(iteration)(Termination[S, Int](env) :+ stopBestFit)(Ordering[Int])
+      IterativeAlgorithm(env)(iteration)(Termination[BitSet, Int](env) :+ stopBestFit)(Ordering[Int])
 
     // Run the algorithm:
     Experiment(env)(alg)()
@@ -76,9 +69,8 @@ object TestGA0 {
   }
 }
 
-/*
 
-/* Style 1: Compact, fitness defined as a member function, parallel evaluation,
+/* Style 1: Candidate solution as a separate class, fitness defined as a member function, parallel evaluation,
  * fast toString (the other one is really slow)
  * 
  */
@@ -91,7 +83,7 @@ object GA1 {
       v.foreach(e => sb.append(if (e) "1" else "0"))
       sb.toString
     }
-    def fitness = ScalarEvaluationMax(v.count(e => e))
+    def fitness = v.count(_ == true)
   }
 
   def apply(env: Environment): Unit = {
@@ -101,10 +93,9 @@ object GA1 {
     // List much less effective
     // Int less effective than Boolean
 
-    type E = ScalarEvaluationMax
     def eval = ParallelEval((s: S) => s.fitness)
-    def iteration = eval compose Breeder[S, E](
-      TournamentSelection[S, E](env)(rng),
+    def iteration = eval compose SimpleBreeder[S, Int](
+      TournamentSelection(env)(rng)(Ordering[Int]),
       RandomMultiBreeder(rng, env)(Seq( // Each search operator: Stream[S] => (List[S], Stream[S])
         (source: Stream[S]) => { // One-bit mutation:
           val s = source.head
@@ -119,11 +110,11 @@ object GA1 {
           (List(new S(myHead ++ hisTail), new S(hisHead ++ myTail)), source.drop(2))
         })))
 
-    def stopBestFit = (s: StatePop[(S, E)]) => s.solutions.exists(_._2.v == numVars)
+    def stopBestFit = (s: StatePop[(S, Int)]) => s.solutions.exists(_._2 == 0)
 
     // Compose the components into a search algorithm:
     def alg = initializer andThen eval andThen
-      IterativeAlgorithm(env)(iteration)(Termination[S, E](env) :+ stopBestFit)
+      IterativeAlgorithm[S,Int](env)(iteration)(Termination[S, Int](env) :+ stopBestFit)(Ordering[Int])
 
     // Run the algorithm:
     Experiment(env)(alg)()
@@ -136,6 +127,9 @@ object TestGA1 {
   }
 }
 
+/*
+ * 
+ 
 /* Style 2: Fitness as an independent function (evaluate). 
  * 
  */
