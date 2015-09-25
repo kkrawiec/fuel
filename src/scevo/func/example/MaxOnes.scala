@@ -1,24 +1,26 @@
 package scevo.func.example
 
+import scala.Ordering
 import scala.collection.immutable.BitSet
-import scevo.func.SimpleBreeder
-import scevo.func.EnvAndRng
 import scevo.func.EnvFromArgs
 import scevo.func.Environment
 import scevo.func.Experiment
-import scevo.func.IndependentEval
-import scevo.func.IterativeAlgorithm
+import scevo.func.Iteration
 import scevo.func.ParallelEval
-import scevo.func.RandomMultiBreeder
+import scevo.func.RandomMultiOperator
 import scevo.func.RandomStatePop
+import scevo.func.SearchOperator1
+import scevo.func.SearchOperator2
+import scevo.func.SimpleBreeder
 import scevo.func.StatePop
 import scevo.func.Termination
 import scevo.func.TournamentSelection
 import scevo.tools.Rng
-import scevo.tools.TRandom
+import scevo.func.BestSoFar
+import scevo.func.EpilogueBestOfRun
 
 /**
-  * Use case: MaxOnes with GA. 
+  * Use case: MaxOnes with GA.
   *
   */
 
@@ -28,7 +30,8 @@ import scevo.tools.TRandom
   *
   */
 
-object GA0 {
+object TestGA0 {
+
   def apply(env: Environment): Unit = {
     val rng = Rng(env)
     val numVars = env.paramInt("numVars", _ > 0)
@@ -37,38 +40,38 @@ object GA0 {
         (for (i <- 0.until(numVars); if (rng.nextBoolean)) yield i))
 
     def eval = ParallelEval((s: BitSet) => s.size)
-    def iteration = eval compose SimpleBreeder[BitSet, Int](
+    def breed = SimpleBreeder[BitSet, Int](
       TournamentSelection(env)(rng)(Ordering[Int]),
-      RandomMultiBreeder(rng, env)(Seq( // Each search operator: Stream[S] => (List[S], Stream[S])
-        (source: Stream[BitSet]) => { // One-bit mutation:
-          val s = source.head
+      RandomMultiOperator(rng, env)(
+        SearchOperator1((p: BitSet) => { // One-bit mutation:
           val bitToMutate = rng.nextInt(numVars)
-          (List(if (s(bitToMutate)) s - bitToMutate else s + bitToMutate), source.tail)
-        },
-        (source: Stream[BitSet]) => { // One-point crossover: 
+          if (p(bitToMutate)) p - bitToMutate else p + bitToMutate
+        }),
+        SearchOperator2((p1: BitSet, p2: BitSet) => { // One-point crossover: 
           val cuttingPoint = rng.nextInt(numVars)
-          val (myHead, myTail) = source(0).partition(_ < cuttingPoint)
-          val (hisHead, hisTail) = source(1).partition(_ < cuttingPoint)
-          (List(myHead ++ hisTail, hisHead ++ myTail), source.drop(2))
+          val (myHead, myTail) = p1.partition(_ < cuttingPoint)
+          val (hisHead, hisTail) = p2.partition(_ < cuttingPoint)
+          (myHead ++ hisTail, hisHead ++ myTail)
         })))
 
     def stopBestFit = (s: StatePop[(BitSet, Int)]) => s.solutions.exists(_._2 == 0)
 
-    // Compose the components into a search algorithm:
-    def alg = initializer andThen eval andThen
-      IterativeAlgorithm(env)(iteration)(Termination[BitSet, Int](env) :+ stopBestFit)(Ordering[Int])
+    def report = new BestSoFar[BitSet, Int](env, env, Ordering[Int])
 
-    // Run the algorithm:
+    // Combine the components into a search algorithm:
+    def alg = initializer andThen eval andThen
+      Iteration(breed andThen eval andThen report)(
+        Termination[BitSet, Int](env) :+ stopBestFit) andThen
+        EpilogueBestOfRun(report, env)
+    // Create the experiment and run the algorithm:
     Experiment(env)(alg)()
   }
-}
 
-object TestGA0 {
   def main(args: Array[String]) {
-    GA0(EnvFromArgs("--numVars 500  --maxGenerations 1000 --populationSize 1000 "))
+    TestGA0(EnvFromArgs("--numVars 500  --maxGenerations 1000 --populationSize 1000 "))
   }
 }
-
+/*
 
 /* Style 1: Candidate solution as a separate class, fitness defined as a member function, parallel evaluation,
  * fast toString (the other one is really slow)
@@ -114,7 +117,7 @@ object GA1 {
 
     // Compose the components into a search algorithm:
     def alg = initializer andThen eval andThen
-      IterativeAlgorithm[S,Int](env)(iteration)(Termination[S, Int](env) :+ stopBestFit)(Ordering[Int])
+      IterativeAlgorithm[S, Int](env)(iteration)(Termination[S, Int](env) :+ stopBestFit)(Ordering[Int])
 
     // Run the algorithm:
     Experiment(env)(alg)()
@@ -127,8 +130,6 @@ object TestGA1 {
   }
 }
 
-/*
- * 
  
 /* Style 2: Fitness as an independent function (evaluate). 
  * 

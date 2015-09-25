@@ -1,34 +1,22 @@
 package scevo.func
 
-import java.util.Calendar
-import scala.annotation.tailrec
-import scala.collection.immutable.Stream.consWrapper
-import scala.collection.parallel.ForkJoinTaskSupport
-import scevo.Distribution
-import scevo.evo.BestSelector
-import scevo.evo.State
+import scevo.evo.BestES
 import scevo.tools.Collector
 import scevo.tools.Options
-import scevo.tools.TRandom
-import scevo.evo.BestES
-
-
 
 // Reporting
-class BestSoFar[S, E] {
+class BestSoFar[S, E](opt: Options, coll: Collector, o: PartialOrdering[E]) extends Step[(S,E)]{
   protected var best: Option[(S, E)] = None
   def bestSoFar: Option[(S, E)] = best
-
-  def apply(opt: Options, coll: Collector, o: PartialOrdering[E]) = {
     val snapFreq = opt.paramInt("snapshot-frequency", 0)
-    (s: StatePop[(S, E)]) => {
+
+  override def apply (s: StatePop[(S, E)]) = {
       val bestOfGen = BestES(s.solutions, o)
       if (bestSoFar.isEmpty || o.lt(bestOfGen._2,best.get._2)) best = Some(bestOfGen)
       println(f"Gen: ${s.iteration}  BestSoFar: ${bestSoFar.get}")
       if (snapFreq > 0 && s.iteration % snapFreq == 0)
         coll.saveSnapshot(f"${s.iteration}%04d")
       s
-    }
   }
 }
 
@@ -42,34 +30,6 @@ object EpilogueBestOfRun {
       state
     }
 }
-
-object Experiment {
-  def apply[S <: State](env: Environment)(alg: Unit => S) = {
-    _: Unit =>
-      {
-        val startTime = System.currentTimeMillis()
-        try {
-          env.warnNonRetrieved
-          val state = alg()
-          env.set("status", "completed")
-          if (env.paramString("saveLastState", "false") == "true")
-            env.write("lastState", state)
-          Some(state)
-        } catch {
-          case e: Exception => {
-            env.set("status", "error: " + e.getLocalizedMessage + e.getStackTrace().mkString(" ")) // .toString.replace('\n', ' '))
-            throw e
-          }
-        } finally {
-          env.setResult("totalTimeSystem", System.currentTimeMillis() - startTime)
-          env.setResult("system.endTime", Calendar.getInstance().getTime().toString)
-          env.close
-          None
-        }
-      }
-  }
-}
-
 
   /*
   def apply[S <: State](init: Unit => S)(step: S => S)(stop: Seq[S => Boolean])(epilogue: S => S) : Unit => S = 

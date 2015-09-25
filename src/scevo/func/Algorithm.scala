@@ -1,8 +1,9 @@
 package scevo.func
 
-import scevo.tools.Options
 import scala.annotation.tailrec
+
 import scevo.evo.State
+import scevo.tools.Options
 
 
 /** Scevo-like functionality in functional programming style
@@ -11,7 +12,7 @@ import scevo.evo.State
  * Note that IterativeAlgorithm is in general agnostic about evaluation.
  */
 
-object IterativeAlgorithm {
+object Iteration {
   def apply[S <: State](step: S => S)(stop: Seq[S => Boolean]): S => S = {
     @tailrec def iterate(s: S): S = stop.forall((sc: S => Boolean) => !sc(s)) match {
       case false => s
@@ -20,18 +21,14 @@ object IterativeAlgorithm {
     iterate
   }
   // Version for population-based algorithms, 
-  // with default best-so-far and best-of-run reporting
-  def apply[S, E](
-    env: Environment)(
-      step: StatePop[(S, E)] => StatePop[(S, E)])(
-        stop: Seq[StatePop[(S, E)] => Boolean])( 
-        o: PartialOrdering[E]): StatePop[(S, E)] => StatePop[(S, E)] = {
-    val bsf = new BestSoFar[S, E]
-    def reporting = bsf(env, env, o)
-    apply(step andThen reporting)(stop) andThen EpilogueBestOfRun(bsf, env)
+  /*
+  def apply[S, E](step: StatePop[(S, E)] => StatePop[(S, E)])(
+        stop: Seq[StatePop[(S, E)] => Boolean]) : StatePop[(S,E)] => StatePop[(S,E)] = {
+    apply(step)(stop) 
   }
+  * 
+  */
 }
-
 
 object RandomStatePop {
   def apply[S](opt: Options, solutionGenerator: () => S) = {

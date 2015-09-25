@@ -2,6 +2,7 @@ package scevo.func
 
 import scevo.evo.State
 
+
 /** A working population is a state storing a set of solutions 
  *  
  */
@@ -9,6 +10,7 @@ trait StatePop[T] extends State {
   def solutions: Seq[T]
 }
 
+trait Step[T] extends (StatePop[T] => StatePop[T])
 
 class Population[T](override val solutions: Seq[T], override val iteration: Int = 0)
     extends StatePop[T] {
