@@ -31,7 +31,7 @@ object Iteration {
 }
 
 object RandomStatePop {
-  def apply[S](opt: Options, solutionGenerator: () => S) = {
+  def apply[S]( solutionGenerator: () => S)(implicit opt: Options) = {
     val populationSize = opt.paramInt("populationSize", 1000, _ > 0)
     _: Unit => Population(for (i <- 0 until populationSize) yield solutionGenerator())
   }

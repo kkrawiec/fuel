@@ -14,7 +14,6 @@ import scala.collection.immutable.Stream.consWrapper
   * applications of search operators may be needed to populate next population.
   *
   */
-
 trait Breeder[S, E] extends (StatePop[(S, E)] => StatePop[S])
 
 class SimpleBreeder[S, E](val sel: Selection[S, E],

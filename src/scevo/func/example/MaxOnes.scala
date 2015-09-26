@@ -2,10 +2,9 @@ package scevo.func.example
 
 import scala.Ordering
 import scala.collection.immutable.BitSet
-import scevo.func.EnvFromArgs
-import scevo.func.Environment
-import scevo.func.Experiment
+import scevo.func.BestSoFar
 import scevo.func.Iteration
+import scevo.func.OptAndColl
 import scevo.func.ParallelEval
 import scevo.func.RandomMultiOperator
 import scevo.func.RandomStatePop
@@ -13,11 +12,14 @@ import scevo.func.SearchOperator1
 import scevo.func.SearchOperator2
 import scevo.func.SimpleBreeder
 import scevo.func.StatePop
-import scevo.func.Termination
 import scevo.func.TournamentSelection
 import scevo.tools.Rng
-import scevo.func.BestSoFar
 import scevo.func.EpilogueBestOfRun
+import scevo.func.Termination
+import scevo.func.Experiment
+import scevo.tools.Options
+import scevo.tools.TRandom
+import scevo.tools.NoOptions
 
 /**
   * Use case: MaxOnes with GA.
@@ -28,47 +30,49 @@ import scevo.func.EpilogueBestOfRun
   * Style 0: Candidate solution as BitSet, fitness defined as an anonymous function, parallel evaluation,
   * solutions represented as BitSets (TreeSet much slower)
   *
+  * Environment (options and collector) passed automatically as implicit parameters.
+  *
+  * All solutions are considered feasible.
+  *
   */
 
 object TestGA0 {
-
-  def apply(env: Environment): Unit = {
-    val rng = Rng(env)
-    val numVars = env.paramInt("numVars", _ > 0)
-    def initializer = RandomStatePop(env,
-      () => BitSet.empty ++
+  def main(args: Array[String]) {
+    implicit val (opt,coll) = OptAndColl("--numVars 500  --maxGenerations 1000 --populationSize 1000 ")
+    implicit val rng = Rng(opt)
+    val numVars = opt.paramInt("numVars", _ > 0)
+    
+    def initialize = RandomStatePop( () => BitSet.empty ++
         (for (i <- 0.until(numVars); if (rng.nextBoolean)) yield i))
 
-    def eval = ParallelEval((s: BitSet) => s.size)
+    def evaluate = ParallelEval((s: BitSet) => s.size)
+
     def breed = SimpleBreeder[BitSet, Int](
-      TournamentSelection(env)(rng)(Ordering[Int]),
-      RandomMultiOperator(rng, env)(
-        SearchOperator1((p: BitSet) => { // One-bit mutation:
+      TournamentSelection(Ordering[Int]),
+      RandomMultiOperator(
+        SearchOperator1((p: BitSet) => { // One-bit mutation
           val bitToMutate = rng.nextInt(numVars)
           if (p(bitToMutate)) p - bitToMutate else p + bitToMutate
         }),
-        SearchOperator2((p1: BitSet, p2: BitSet) => { // One-point crossover: 
+        SearchOperator2((p1: BitSet, p2: BitSet) => { // One-point crossover 
           val cuttingPoint = rng.nextInt(numVars)
           val (myHead, myTail) = p1.partition(_ < cuttingPoint)
           val (hisHead, hisTail) = p2.partition(_ < cuttingPoint)
           (myHead ++ hisTail, hisHead ++ myTail)
         })))
 
-    def stopBestFit = (s: StatePop[(BitSet, Int)]) => s.solutions.exists(_._2 == 0)
+    def terminate = Termination((s: BitSet, e: Int) => e == 0)
 
-    def report = new BestSoFar[BitSet, Int](env, env, Ordering[Int])
+    def report = BestSoFar[BitSet, Int](Ordering[Int])
 
     // Combine the components into a search algorithm:
-    def alg = initializer andThen eval andThen
-      Iteration(breed andThen eval andThen report)(
-        Termination[BitSet, Int](env) :+ stopBestFit) andThen
-        EpilogueBestOfRun(report, env)
-    // Create the experiment and run the algorithm:
-    Experiment(env)(alg)()
-  }
+    def alg = initialize andThen evaluate andThen
+      Iteration(breed andThen evaluate andThen report)(terminate) andThen
+      EpilogueBestOfRun(report)
 
-  def main(args: Array[String]) {
-    TestGA0(EnvFromArgs("--numVars 500  --maxGenerations 1000 --populationSize 1000 "))
+    // Create the experiment and launch it:
+    val exp = Experiment(alg)
+    exp()
   }
 }
 /*

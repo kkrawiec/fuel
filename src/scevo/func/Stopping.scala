@@ -18,7 +18,7 @@ object Termination {
       s: Any => timeElapsed > maxMillisec
     }
   }
-  def apply[S, E](config: Options, otherCond: (S, E) => Boolean = (_: S, _: E) => false) = Seq(
+  def apply[S, E](otherCond: (S, E) => Boolean = (_: S, _: E) => false)(implicit config: Options) = Seq(
     MaxIter[StatePop[(S, E)]](config),
     MaxTime(config),
     (s: StatePop[(S, E)]) => s.solutions.exists(es => otherCond(es._1, es._2)))

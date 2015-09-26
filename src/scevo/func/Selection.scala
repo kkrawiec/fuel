@@ -19,14 +19,16 @@ class RandomSelection[S, E](rand: TRandom) extends StochasticSelection[S, E](ran
   override def apply(pop: Seq[(S, E)]) = pop(rand)
 }
 
-class TournamentSelection[S, E](opt: Options)(rand: TRandom)(o: Ordering[E])
+class TournamentSelection[S, E](o: Ordering[E])(implicit opt: Options,rand: TRandom)
     extends StochasticSelection[S, E](rand) {
   val tournamentSize = opt.paramInt("tournamentSize", 7, _ >= 2)
   def apply(pop: Seq[(S, E)]) = BestES(pop(rand, tournamentSize), o)
 }
 object TournamentSelection {
+  def apply[S, E](o: Ordering[E])(implicit opt: Options,rand: TRandom) =
+    new TournamentSelection[S, E](o)(opt, rand)
   def apply[S, E](opt: Options)(rand: TRandom)(o: Ordering[E]) =
-    new TournamentSelection[S, E](opt)(rand)(o)
+    new TournamentSelection[S, E](o)(opt, rand)
 }
 
 class FitnessProportionateSelection[S](rand: TRandom) extends Selection[S, Double] {

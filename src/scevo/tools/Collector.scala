@@ -19,14 +19,13 @@ trait Collector extends Closeable {
   def saveSnapshot(fnameSuffix: String): Unit
 }
 
-trait CollectorFile extends Collector {
-  this: Options =>
+class CollectorFile(opt: Options) extends Collector {
   // Prepare result database and fill it with the technical parameters 
-  override val rdb = new ResultDatabase(paramString("outputDir", "./"))
+  override val rdb = new ResultDatabase(opt.paramString("outputDir", "./"))
   println("Result file: " + rdb.fname)
 
-  allOptions.foreach(t => rdb.put(t._1, t._2))
-  retrievedOptions.foreach(t => rdb.put(t._1, t._2))
+  opt.allOptions.foreach(t => rdb.put(t._1, t._2))
+  opt.retrievedOptions.foreach(t => rdb.put(t._1, t._2))
 
   rdb.setResult("system.hostname", try {
     InetAddress.getLocalHost().getHostName()
@@ -47,7 +46,7 @@ trait CollectorFile extends Collector {
 
   override def close = {
     // Do this again, something may have changed during run:
-    retrievedOptions.foreach(t => rdb.put(t._1, t._2))
+    opt.retrievedOptions.foreach(t => rdb.put(t._1, t._2))
     rdb.save
     super.close
   }

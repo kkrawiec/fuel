@@ -10,6 +10,7 @@ trait Closeable {
 }
 
 // Note: passing arguments by name, so that they get evaluated only when needed
+/*
 trait Logger[K] {
   def log(key: => K, value: => Any): Logger[K]
 }
@@ -34,3 +35,4 @@ trait LoggerIter extends Logger[(Int, Any)] with Closeable {
     super.close
   }
 }
+*/

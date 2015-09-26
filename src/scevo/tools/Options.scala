@@ -12,7 +12,7 @@ trait Options {
   def allOptions: Map[String, String]
 
   // Stores the values of retrieved options, *including the default values*
-  protected lazy val retrievedOptions = scala.collection.mutable.Map[String, String]()
+  lazy val retrievedOptions = scala.collection.mutable.Map[String, String]()
   
   def warnNonRetrieved = {
     val nonRetrieved = allOptions.toList.diff(retrievedOptions.toList)
@@ -74,15 +74,19 @@ abstract class OptionsC(opt: Map[String, String]) extends Options {
 }
 
 class OptionsFromArgs(args: Array[String])
-  extends OptionsC(OptionParser(args)) with CollectorFile {
+  extends OptionsC(OptionParser(args)) {
   def this(params: String) =
     this(if (params.trim == "") Array[String]() else params.trim.split("\\s+"))
 }
 
-trait NoOptions extends Options {
+class NoOptions extends Options {
   override def allOptions = Map[String, String]()
   override protected def options = (_: String) => None
 }
+object NoOptions {
+  def apply = new NoOptions
+}
+
 /*
  * TODO: Make the parsing more robust
  */

@@ -43,7 +43,7 @@ object SearchOperator2_1 {
 
 // Picks one of the functions (pipes) at random to 
 object RandomMultiOperator {
-  def apply[S](rng: TRandom, config: Options)(pipes: SearchOperator[S]*) = {
+  def apply[S](pipes: SearchOperator[S]*)(implicit config: Options, rng: TRandom) = {
     val prob = config.paramString("operatorProbs")
     val distribution = Distribution(
       if (prob.isDefined)

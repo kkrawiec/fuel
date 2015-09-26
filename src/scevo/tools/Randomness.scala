@@ -23,26 +23,26 @@ trait Rng extends Randomness {
   val seed = paramInt("seed", 1)
   override lazy val rng = new Random(seed)
 }
-class RngWrapper(override val rng : TRandom) extends Randomness
+class RngWrapper(override val rng: TRandom) extends Randomness
 
 object Rng {
-  def apply( conf: Options ) = new Random(conf.paramInt("seed", 1))
+  def apply(conf: Options) = new Random(conf.paramInt("seed", 1))
 }
 
 /*
  * This trait is intended to enable elegant use of different random number generators
  */
 trait TRandom {
-  def nextBoolean(): Boolean 
-  def nextBytes(bytes: Array[Byte]) 
-  def nextDouble(): Double 
-  def nextFloat(): Float 
-  def nextGaussian(): Double 
-  def nextInt(): Int 
+  def nextBoolean(): Boolean
+  def nextBytes(bytes: Array[Byte])
+  def nextDouble(): Double
+  def nextFloat(): Float
+  def nextGaussian(): Double
+  def nextInt(): Int
   def nextInt(n: Int): Int
-  def nextLong(): Long 
-  def setSeed(seed: Long) 
-  def shuffle[T, CC[X] <: TraversableOnce[X]](xs: CC[T])(implicit bf: CanBuildFrom[CC[T], T, CC[T]]): CC[T] 
+  def nextLong(): Long
+  def setSeed(seed: Long)
+  def shuffle[T, CC[X] <: TraversableOnce[X]](xs: CC[T])(implicit bf: CanBuildFrom[CC[T], T, CC[T]]): CC[T]
 }
 
 /*
