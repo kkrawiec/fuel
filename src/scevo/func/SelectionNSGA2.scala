@@ -56,7 +56,7 @@ class NSGA2Selection(val tournSize: Int, val removeEvalDuplicates: Boolean, val 
 
   // Phase 2: The actual selection, based on the wrapped solutions
   // May be called arbitrarily many times. 
-  def apply[S, E ](rand: TRandom) = {
+  def apply[S, E ](implicit rand: TRandom) = {
     sel: Seq[Wrapper[S, E]] => BestSelector(sel(rand, tournSize), globalOrdering[S, E]).s
   }
 

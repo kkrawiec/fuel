@@ -15,7 +15,7 @@ class GreedyBestSelection[S, E](o: Ordering[E]) extends Selection[S, E] {
 
 abstract class StochasticSelection[S, E](val rand: TRandom) extends Selection[S, E]
 
-class RandomSelection[S, E](rand: TRandom) extends StochasticSelection[S, E](rand) {
+class RandomSelection[S, E](implicit rand: TRandom) extends StochasticSelection[S, E](rand) {
   override def apply(pop: Seq[(S, E)]) = pop(rand)
 }
 
@@ -31,7 +31,7 @@ object TournamentSelection {
     new TournamentSelection[S, E](o)(opt, rand)
 }
 
-class FitnessProportionateSelection[S](rand: TRandom) extends Selection[S, Double] {
+class FitnessProportionateSelection[S](implicit rand: TRandom) extends Selection[S, Double] {
   // Inefficient version: recalculates distribution in every selection act. 
   def apply(pop: Seq[(S, Double)]) = {
     val distribution = Distribution.fromAnything(pop.map(_._2))
@@ -50,7 +50,7 @@ class FitnessProportionateSelection[S](rand: TRandom) extends Selection[S, Doubl
 }
 
 // Note: Here E stands for one objective, not entire evaluation. 
-class LexicaseSelection[S, E](rand: TRandom)(o: Ordering[E])
+class LexicaseSelection[S, E](o: Ordering[E])(implicit rand: TRandom)
     extends StochasticSelection[S, Seq[E]](rand) {
   def apply(pop: Seq[(S, Seq[E])]) = {
     def sel(sols: Seq[(S, Seq[E])], cases: List[Int]): (S, Seq[E]) =

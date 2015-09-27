@@ -1,32 +1,98 @@
-package scevo.func.example
+package scevo.func
 
-import scevo.func.Experiment
-import scevo.tools.OptAndColl
-import scevo.tools.Rng
-import scevo.func.BitSetDomain
-import scevo.func.SimpleGA
 import scala.collection.immutable.BitSet
+import scevo.tools.Collector
+import scevo.tools.Options
+import scevo.tools.TRandom
+import scala.collection.TraversableLike
 
-/**
-  * Use case: MaxOnes with GA.
+/** Bitstring domain implemented as BitSets
+  * solutions represented as BitSets (TreeSet much slower)
   *
-  */
-object TestGA0 {
-  def main(args: Array[String]) {
-    implicit val (opt, coll) = OptAndColl("--numVars 500  --maxGenerations 1000 --populationSize 1000 ")
-    implicit val rng = Rng(opt)
+ */
 
-    val ga = new SimpleGA[BitSet,Int](
-      domain = BitSetDomain(opt.paramInt("numVars", _ > 0)),
-      eval = (s: BitSet) => s.size,
-      stop = (s: BitSet, e: Int) => e == 0)
-
-    // Create the experiment and launch it:
-    val exp = Experiment(ga)
-    exp()
-  }
+trait Domain[S] {
+  def randomSolution: S
 }
-/*
+
+trait GADomain[S] extends Domain[S] {
+  def randomSolution: S
+  def oneBitMutation: SearchOperator1[S]
+  def onePointCrossover: SearchOperator2[S]
+  def twoPointCrossover: SearchOperator2[S]
+}
+
+class BitSetDomain(numVars: Int)(implicit rng: TRandom)
+    extends GADomain[BitSet] {
+
+  override def randomSolution = BitSet.empty ++
+    (for (i <- 0.until(numVars); if (rng.nextBoolean)) yield i)
+
+  override def oneBitMutation = SearchOperator1((p: BitSet) => {
+    val bitToMutate = rng.nextInt(numVars)
+    if (p(bitToMutate)) p - bitToMutate else p + bitToMutate
+  })
+
+  override def onePointCrossover = SearchOperator2((p1: BitSet, p2: BitSet) => {
+    val cuttingPoint = rng.nextInt(numVars)
+    val (myHead, myTail) = p1.splitAt(cuttingPoint)
+    val (hisHead, hisTail) = p2.splitAt(cuttingPoint)
+    (myHead ++ hisTail, hisHead ++ myTail)
+  })
+
+  override def twoPointCrossover = SearchOperator2((p1: BitSet, p2: BitSet) => {
+    val h = (rng.nextInt(numVars), rng.nextInt(numVars))
+    val c = if (h._1 <= h._2) h else h.swap
+    val (myHead, myRest) = p1.splitAt(c._1)
+    val (myMid, myTail) = myRest.splitAt(c._2)
+    val (hisHead, hisRest) = p2.splitAt(c._1)
+    val (hisMid, hisTail) = myRest.splitAt(c._2)
+    (myHead ++ hisMid ++ myTail, hisHead ++ myMid ++ hisTail)
+  })
+}
+object BitSetDomain {
+  def apply(numVars: Int)(implicit rng: TRandom) = new BitSetDomain(numVars)(rng)
+}
+
+
+
+/** Bitstring domain implemented as vectors of Booleans. 
+ *  
+ * The implementations of crossovers are identical as in BitSetDomain, but pulling them up to GADomain
+ * would be a bit tricky. 
+ */
+
+class VectorDomain(numVars: Int)(implicit rng: TRandom)
+    extends GADomain[IndexedSeq[Boolean]] {
+
+  override def randomSolution = IndexedSeq.fill(numVars)(rng.nextBoolean)
+
+  override def oneBitMutation = SearchOperator1((p: IndexedSeq[Boolean]) => {
+    val bitToMutate = rng.nextInt(numVars)
+    p.updated(bitToMutate, !p(bitToMutate))
+  })
+
+  override def onePointCrossover = SearchOperator2((p1: IndexedSeq[Boolean], p2: IndexedSeq[Boolean]) => {
+    val cuttingPoint = rng.nextInt(numVars)
+    val (myHead, myTail) = p1.splitAt(cuttingPoint)
+    val (hisHead, hisTail) = p2.splitAt(cuttingPoint)
+    (myHead ++ hisTail, hisHead ++ myTail)
+  })
+
+  override def twoPointCrossover = SearchOperator2((p1: IndexedSeq[Boolean], p2: IndexedSeq[Boolean]) => {
+    val h = (rng.nextInt(numVars), rng.nextInt(numVars))
+    val c = if (h._1 <= h._2) h else h.swap
+    val (myHead, myRest) = p1.splitAt(c._1)
+    val (myMid, myTail) = myRest.splitAt(c._2)
+    val (hisHead, hisRest) = p2.splitAt(c._1)
+    val (hisMid, hisTail) = myRest.splitAt(c._2)
+    (myHead ++ hisMid ++ myTail, hisHead ++ myMid ++ hisTail)
+  })
+}
+
+
+  
+  /*
 
 /* Style 1: Candidate solution as a separate class, fitness defined as a member function, parallel evaluation,
  * fast toString (the other one is really slow)
