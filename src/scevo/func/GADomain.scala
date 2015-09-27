@@ -6,24 +6,30 @@ import scevo.tools.Options
 import scevo.tools.TRandom
 import scala.collection.TraversableLike
 
-/** Bitstring domain implemented as BitSets
+/**
+  * Bitstring domain implemented as BitSets
   * solutions represented as BitSets (TreeSet much slower)
   *
- */
+  */
 
 trait Domain[S] {
   def randomSolution: S
 }
 
-trait GADomain[S] extends Domain[S] {
-  def randomSolution: S
+trait Moves[S] {
+  def moves: Seq[SearchOperator[S]]
+}
+
+trait GADomain[S] extends Domain[S] with Moves[S] {
   def oneBitMutation: SearchOperator1[S]
   def onePointCrossover: SearchOperator2[S]
   def twoPointCrossover: SearchOperator2[S]
+  override def moves = Seq(oneBitMutation, onePointCrossover, twoPointCrossover)
 }
 
-class BitSetDomain(numVars: Int)(implicit rng: TRandom)
+class BitSetDomain(numVars: Int)(rng: TRandom)
     extends GADomain[BitSet] {
+  require(numVars > 0)
 
   override def randomSolution = BitSet.empty ++
     (for (i <- 0.until(numVars); if (rng.nextBoolean)) yield i)
@@ -54,16 +60,16 @@ object BitSetDomain {
   def apply(numVars: Int)(implicit rng: TRandom) = new BitSetDomain(numVars)(rng)
 }
 
+/**
+  * Bitstring domain implemented as vectors of Booleans.
+  *
+  * The implementations of crossovers are identical as in BitSetDomain, but pulling them up to GADomain
+  * would be a bit tricky.
+  */
 
-
-/** Bitstring domain implemented as vectors of Booleans. 
- *  
- * The implementations of crossovers are identical as in BitSetDomain, but pulling them up to GADomain
- * would be a bit tricky. 
- */
-
-class VectorDomain(numVars: Int)(implicit rng: TRandom)
+class VectorDomain(numVars: Int)(rng: TRandom)
     extends GADomain[IndexedSeq[Boolean]] {
+  require(numVars > 0)
 
   override def randomSolution = IndexedSeq.fill(numVars)(rng.nextBoolean)
 
@@ -90,7 +96,34 @@ class VectorDomain(numVars: Int)(implicit rng: TRandom)
   })
 }
 
+class TSPDomain(numCities: Int)(rng: TRandom)
+    extends Domain[Seq[Int]] with Moves[Seq[Int]] {
 
+  require(numCities > 0)
+  
+  // TODO: add random permutation
+  override def randomSolution = Seq.fill(numCities)(rng.nextInt(numCities))
+
+  def mutation = SearchOperator1( (p: Seq[Int]) => {
+      val (c1, c2) = (rng.nextInt(numCities), rng.nextInt(numCities))
+      val h = p(c1)
+      p.updated(c1, p(c2)).updated(c2, h)
+    })
+    /*
+  def crossover = SearchOperator1( (p1: Seq[Int], p2: Seq[Int]) => {
+      val (c1, c2) = (rng.nextInt(numCities), rng.nextInt(numCities))
+      val h = p(c1)
+      p.updated(c1, p(c2)).updated(c2, h)
+    })
+    * 
+    */
+  override def moves = Seq(mutation)
+}
+
+object TSPDomain {
+  def apply(numCities: Int)(implicit rng: TRandom) = 
+    new TSPDomain(numCities)(rng)
+}
   
   /*
 

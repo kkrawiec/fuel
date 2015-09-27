@@ -16,7 +16,7 @@ object TestGA0 {
     implicit val (opt, coll) = OptAndColl("--numVars 500  --maxGenerations 1000 --populationSize 1000 ")
     implicit val rng = Rng(opt)
 
-    val ga = new SimpleGA[BitSet,Int](
+    val ga = new SimpleGA[BitSet, Int](
       domain = BitSetDomain(opt.paramInt("numVars", _ > 0)),
       eval = (s: BitSet) => s.size,
       stop = (s: BitSet, e: Int) => e == 0)
@@ -26,7 +26,30 @@ object TestGA0 {
     exp()
   }
 }
-/*
+
+object TestTSP {
+  def main(args: Array[String]) {
+    implicit val (opt, coll) = OptAndColl("--numCities 10  --maxGenerations 1000 --populationSize 1000 ")
+    implicit val rng = Rng(opt)
+
+    val numCities = opt.paramInt("numVars", _ > 0)
+    val size = 10.0
+    val cities = 0.until(numCities).map(i => (size * rng.nextDouble, size * rng.nextDouble))
+    def dist(i: Int, j: Int) = math.sqrt(
+      math.pow(cities(i)._1 - cities(j)._1, 2) + math.pow(cities(i)._2 - cities(j)._2, 2))
+    val distances =
+      for (i <- 0 until numCities) yield for (j <- 0 until numCities) yield dist(i, j)
+
+    val ga = new SimpleGA[Seq[Int], Double](
+      new TSPDomain(numCities)(rng),
+      (s: Seq[Int]) => 0.until(s.size-1).map(i => dist(s(i),s(i+1))).sum + dist(s.size-1,0)
+      )
+
+    // Create the experiment and launch it:
+    val exp = Experiment(ga)
+    exp()
+  }
+}/*
 
 /* Style 1: Candidate solution as a separate class, fitness defined as a member function, parallel evaluation,
  * fast toString (the other one is really slow)

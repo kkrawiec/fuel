@@ -12,20 +12,21 @@ import scevo.tools.TRandom
   * Environment (options and collector) passed automatically as implicit parameters.
   *
   *
-  *
+  * TODO: if stop() is default, it should not be called
   */
 
-class SimpleGA[S, E](domain: GADomain[S], eval: S => E, stop: (S, E) => Boolean)(
-  implicit opt: Options, coll: Collector, rng: TRandom, ordering: Ordering[E])
+class SimpleGA[S, E](domain: Domain[S] with Moves[S],
+                     eval: S => E,
+                     stop: (S, E) => Boolean = ((s: S, e: E) => false))(
+                       implicit opt: Options, coll: Collector, rng: TRandom, ordering: Ordering[E])
     extends Function1[Unit, StatePop[(S, E)]] {
 
   def initialize = RandomStatePop(domain.randomSolution _)
 
   def evaluate = ParallelEval(eval)
 
-  def breed = SimpleBreeder[S, E](
-    TournamentSelection(ordering),
-    RandomMultiOperator(domain.oneBitMutation, domain.onePointCrossover))
+  def breed = SimpleBreeder[S, E](TournamentSelection(ordering),
+    RandomMultiOperator(domain.moves: _*))
 
   def terminate = Termination(stop)
 
