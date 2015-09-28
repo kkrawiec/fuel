@@ -6,6 +6,8 @@ import scevo.tools.Options
 import scevo.tools.Collector
 
 object Experiment {
+  def run[S <: State](alg: Unit => S)(implicit opt: Options, coll: Collector) = 
+    apply(alg)(opt,coll)()
   def apply[S <: State](alg: Unit => S)(implicit opt: Options, coll: Collector) = {
     _: Unit =>
       {

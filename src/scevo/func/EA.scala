@@ -3,6 +3,8 @@ package scevo.func
 import scevo.tools.Options
 import scevo.tools.Collector
 import scevo.tools.TRandom
+import scevo.domain.Moves
+import scevo.domain.Domain
 
 /**
   * Default implementation of Genetic Algorithm (GA).
@@ -15,7 +17,7 @@ import scevo.tools.TRandom
   * TODO: if stop() is default, it should not be called
   */
 
-class SimpleGA[S, E](domain: Domain[S] with Moves[S],
+class SimpleEA[S, E](domain: Domain[S] with Moves[S],
                      eval: S => E,
                      stop: (S, E) => Boolean = ((s: S, e: E) => false))(
                        implicit opt: Options, coll: Collector, rng: TRandom, ordering: Ordering[E])
@@ -38,3 +40,12 @@ class SimpleGA[S, E](domain: Domain[S] with Moves[S],
 
   def apply(x: Unit) = algorithm()
 }
+
+object SimpleEA {
+  def apply[S, E](domain: Domain[S] with Moves[S],
+                  eval: S => E,
+                  stop: (S, E) => Boolean = ((s: S, e: E) => false))(
+                    implicit opt: Options, coll: Collector, rng: TRandom, ordering: Ordering[E]) 
+                    = new SimpleEA(domain, eval, stop)(opt, coll, rng, ordering)
+}
+ 
