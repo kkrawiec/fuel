@@ -10,29 +10,35 @@ import scevo.Preamble.RndApply
 import scevo.evo.Dominance
 import scevo.evo.WorstSelector
 
-class NSGA2Selection(val tournSize: Int, val removeEvalDuplicates: Boolean, val promoteFrontExtremes: Boolean) {
+// Works as a wrapper around the original ES
+case class Rank(val rank: Int, val crowding: Int)
 
-  def this(opt: Options) = this(
+/** 
+ *  NSGA selection is trict
+ */
+class NSGA2Selection[S, E](val tournSize: Int,
+                           val removeEvalDuplicates: Boolean,
+                           val promoteFrontExtremes: Boolean)(implicit rand: TRandom)
+    extends StochasticSelection[S, Rank](rand) {
+
+  def this(opt: Options)(rand: TRandom) = this(
     opt.paramInt("tournamentSize", 7, _ > 1),
     opt.paramString("removeEvalDuplicates").getOrElse("false") == "true",
-    opt.paramString("promoteFrontExtremes").getOrElse("false") == "true")
+    opt.paramString("promoteFrontExtremes").getOrElse("false") == "true")(rand)
 
-  // Works as a wrapper around the original ES
-  case class Wrapper[S, E](val s: (S, E), val rank: Int, val crowding: Int)
-
-  def globalOrdering[S, E] = new Ordering[Wrapper[S, E]] {
-    override def compare(a: Wrapper[S, E], b: Wrapper[S, E]) = {
-      val c = a.rank compare b.rank
-      if (c != 0) c else a.crowding compare b.crowding
+  def globalOrdering = new Ordering[(S, Rank)] {
+    override def compare(a: (S, Rank), b: (S, Rank)) = {
+      val c = a._2.rank compare b._2.rank
+      if (c != 0) c else a._2.crowding compare b._2.crowding
     }
   }
-  def intraLayerOrdering[S, E] = new Ordering[Wrapper[S, E]] {
-    override def compare(a: Wrapper[S, E], b: Wrapper[S, E]) = a.crowding compare b.crowding
+  def intraLayerOrdering = new Ordering[(S, Rank)] {
+    override def compare(a: (S, Rank), b: (S, Rank)) = a._2.crowding compare b._2.crowding
   }
 
   // Phase 1: Build the ranking, calculate crowding, and preserve only top ranks that host the required number of solutions
   // Should be called *once per generation*
-  def rank[S, E](numToSelect : Int, po: Dominance[E]) = {
+  def rank(numToSelect: Int, po: Dominance[E]) = {
     // assumes nonempty pop
     pop: Seq[(S, Seq[E])] =>
       {
@@ -49,19 +55,17 @@ class NSGA2Selection(val tournSize: Int, val removeEvalDuplicates: Boolean, val 
         println(f"NSGA rsizes: ${ranking map (_.size)} }")
         */
         if (capacity <= 0) fullLayers.flatten // flatten preserves ordering 
-        else fullLayers.flatten ++ ranking(fullLayers.size).sorted(intraLayerOrdering[S, Seq[E]]).splitAt(capacity)._1
+        else fullLayers.flatten ++ ranking(fullLayers.size).sorted(intraLayerOrdering).splitAt(capacity)._1
       }
 
   }
 
   // Phase 2: The actual selection, based on the wrapped solutions
   // May be called arbitrarily many times. 
-  def apply[S, E ](implicit rand: TRandom) = {
-    sel: Seq[Wrapper[S, E]] => BestSelector(sel(rand, tournSize), globalOrdering[S, E]).s
-  }
+  override def apply(sel: Seq[(S, Rank)]) = BestSelector[(S, Rank)](sel(rand, tournSize), globalOrdering)
 
   // Builds the ranking top-down. 
-  private def paretoRanking[S, E](solutions: Seq[(S, Seq[E])], po : Dominance[E]): Seq[Seq[Wrapper[S, Seq[E]]]] = {
+  private def paretoRanking[S, E](solutions: Seq[(S, Seq[E])], po: Dominance[E]): Seq[Seq[(S, Rank)]] = {
     @tailrec def pareto(dominating: Map[Int, Set[Int]], layers: List[Seq[Int]] = List()): List[Seq[Int]] = {
       val (lastLayer, rest) = dominating.partition(_._2.isEmpty)
       val ll = lastLayer.keys.toSeq
@@ -72,7 +76,7 @@ class NSGA2Selection(val tournSize: Int, val removeEvalDuplicates: Boolean, val 
     }
     val sols = 0 until solutions.length
     val comparisons = sols.map(i => // i -> outcomesOfComparisonsWith(i)
-      (i -> sols.map(o => po.tryCompare(solutions(i)._2,solutions(o)._2))))
+      (i -> sols.map(o => po.tryCompare(solutions(i)._2, solutions(o)._2))))
     val dominating = comparisons.map({ // i -> dominatedBy(i)
       case (i, cmp) => (i, sols.map(i => (i, cmp(i)))
         .collect({ case (i, Some(1)) => i }).toSet)
@@ -95,7 +99,7 @@ class NSGA2Selection(val tournSize: Int, val removeEvalDuplicates: Boolean, val 
       } else
       * 
       */
-        lay.map(j => new Wrapper[S, Seq[E]](solutions(j), i, identical(j)))
+      lay.map(j => (solutions(j)._1, Rank(i, identical(j))))
     })
   }
 
