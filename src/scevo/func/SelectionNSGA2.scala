@@ -7,7 +7,7 @@ import scala.annotation.tailrec
 import scevo.tools.Random
 import org.junit.Test
 import scevo.Preamble.RndApply
-import scevo.evo.MOrdering
+import scevo.evo.Dominance
 import scevo.evo.WorstSelector
 
 class NSGA2Selection(val tournSize: Int, val removeEvalDuplicates: Boolean, val promoteFrontExtremes: Boolean) {
@@ -32,7 +32,7 @@ class NSGA2Selection(val tournSize: Int, val removeEvalDuplicates: Boolean, val 
 
   // Phase 1: Build the ranking, calculate crowding, and preserve only top ranks that host the required number of solutions
   // Should be called *once per generation*
-  def rank[S, E](numToSelect : Int, po: MOrdering[E]) = {
+  def rank[S, E](numToSelect : Int, po: Dominance[E]) = {
     // assumes nonempty pop
     pop: Seq[(S, Seq[E])] =>
       {
@@ -61,7 +61,7 @@ class NSGA2Selection(val tournSize: Int, val removeEvalDuplicates: Boolean, val 
   }
 
   // Builds the ranking top-down. 
-  private def paretoRanking[S, E](solutions: Seq[(S, Seq[E])], po : MOrdering[E]): Seq[Seq[Wrapper[S, Seq[E]]]] = {
+  private def paretoRanking[S, E](solutions: Seq[(S, Seq[E])], po : Dominance[E]): Seq[Seq[Wrapper[S, Seq[E]]]] = {
     @tailrec def pareto(dominating: Map[Int, Set[Int]], layers: List[Seq[Int]] = List()): List[Seq[Int]] = {
       val (lastLayer, rest) = dominating.partition(_._2.isEmpty)
       val ll = lastLayer.keys.toSeq

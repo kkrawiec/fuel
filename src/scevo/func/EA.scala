@@ -7,7 +7,7 @@ import scevo.domain.Moves
 import scevo.domain.Domain
 
 /**
-  * Default implementation of Genetic Algorithm (GA).
+  * Default implementation of Evolutionary Algorithm (EA).
   *
   * Uses parallel evaluation
   * All solutions are considered feasible.

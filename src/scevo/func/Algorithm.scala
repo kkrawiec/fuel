@@ -5,10 +5,8 @@ import scala.annotation.tailrec
 import scevo.evo.State
 import scevo.tools.Options
 
-/**
-  * Scevo-like functionality in functional programming style
-  *
-  * Component factories
+/** Component factories
+ *  
   * Note that IterativeAlgorithm is in general agnostic about evaluation.
   */
 
@@ -30,8 +28,10 @@ object Iteration {
   */
 }
 
+
 // Must be defined as Unit => State, because ()=> State is not composable (no andThen method)
 trait Initializer[S <: State] extends Function1[Unit, S]
+
 
 class RandomStatePop[S](solutionGenerator: () => S)(implicit opt: Options)
     extends Initializer[StatePop[S]] {

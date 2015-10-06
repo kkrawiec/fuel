@@ -7,7 +7,8 @@ import scevo.func.SimpleEA
 import scevo.domain.PermutationDomain
 
 /**
-  *  Traveling Salesperson problem.
+  * Traveling Salesperson problem.
+  *
   * Minimized fitness function.
   */
 

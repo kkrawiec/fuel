@@ -6,7 +6,7 @@ import scevo.func.SearchOperator1
 import scevo.tools.TRandom
 
 /**
-  *  The domain of permutations. Candidate solutions are permutations of n elements.
+  *  Simple domain of permutations. Candidate solutions are permutations of n elements.
   *
   */
 class PermutationDomain(n: Int)(rng: TRandom)

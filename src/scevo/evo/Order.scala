@@ -1,6 +1,6 @@
 package scevo.evo
 
-trait MOrdering[E] extends PartialOrdering[Seq[E]] {
+trait Dominance[E] extends PartialOrdering[Seq[E]] {
   def ordering(i: Int): Ordering[E]
   /* Not very elegant, but much faster than other method:
    */
@@ -29,11 +29,11 @@ trait MOrdering[E] extends PartialOrdering[Seq[E]] {
   * MulOrdering with the same ordering on all objectives
   *
   */
-class MulOrderingSame[E](o: Ordering[E]) extends MOrdering[E] {
+class MulOrderingSame[E](o: Ordering[E]) extends Dominance[E] {
   override def ordering(i: Int) = o
 }
 
-class MulOrdering[E](val o: Seq[Ordering[E]]) extends MOrdering[E] {
+class MulOrdering[E](val o: Seq[Ordering[E]]) extends Dominance[E] {
   def ordering(i: Int): Ordering[E] = o(i)
   
 }
