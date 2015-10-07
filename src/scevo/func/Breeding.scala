@@ -49,18 +49,37 @@ object SimpleBreeder {
 }
 
 // Can't use implicit domain due to Scala compiler bug. 
-/** Breeding in NSGA is a bit tricky: it requires first ranking, then tournament 
- *  selection.
- *  
- *  Warning: this breeder does not merge parents and children
- */
+/**
+  * Breeding in NSGA is a bit tricky: it requires first ranking, then tournament
+  *  selection.
+  *
+  *  Warning: this breeder does not merge parents and children
+  */
 class NSGABreeder[S, E](domain: Domain[S] with Moves[S])(
   implicit opt: Options, rng: TRandom, ordering: Dominance[E])
     extends Breeder[S, Seq[E]] {
   val nsga = new NSGA2Selection[S, E](opt)(rng)
-  val breeder = SimpleBreeder[S, Rank](nsga, RandomMultiOperator(domain.moves: _*))
-  def apply(s: StatePop[(S, Seq[E])]) = {
-    val ranking = Population[(S, Rank)](nsga.rank(10, ordering)(s.solutions), s.iteration)
-    breeder(ranking)
+  val breeder = SimpleBreeder[S, Rank[E]](nsga, RandomMultiOperator(domain.moves: _*))
+  override def apply(s: StatePop[(S, Seq[E])]) = {
+    val ranking = nsga.rank(s.solutions.size, ordering)(s.solutions)
+    breeder(Population[(S, Rank[E])](ranking, s.iteration))
   }
 }
+
+/** This breeder merges the previous population with parents in the mu+lambda style. 
+ *  
+ */
+class NSGABreederElitist[S, E](domain: Domain[S] with Moves[S])(
+  implicit opt: Options, rng: TRandom, ordering: Dominance[E])
+    extends Breeder[S, Seq[E]] {
+  val nsga = new NSGA2Selection[S, E](opt)(rng)
+  val breeder = SimpleBreeder[S, Rank[E]](nsga, RandomMultiOperator(domain.moves: _*))
+  var previous = Seq[(S, Seq[E])]()
+  override def apply(s: StatePop[(S, Seq[E])]) = {
+    val merged = s.solutions ++ previous
+    val ranking = nsga.rank(s.solutions.size, ordering)(merged)
+    previous = ranking.map(s => (s._1, s._2.eval))
+    breeder(Population[(S, Rank[E])](ranking, s.iteration))
+  }
+}
+ 

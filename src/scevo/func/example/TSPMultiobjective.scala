@@ -1,39 +1,27 @@
 package scevo.func.example
 
-import scevo.func.Experiment
-import scevo.tools.Rng
-import scevo.tools.OptAndColl
-import scevo.func.SimpleEA
+import scala.Range
 import scevo.domain.PermutationDomain
-import scevo.func.NSGA2Selection
-import scevo.tools.Collector
-import scevo.tools.Options
-import scevo.tools.TRandom
-import scevo.domain.Moves
-import scevo.domain.Domain
-import scevo.func.EA
-import scevo.func.RandomMultiOperator
-import scevo.func.SimpleBreeder
-import scevo.func.NSGA2Selection
-import scevo.func.TournamentSelection
-import scevo.func.Rank
-import scevo.func.StatePop
-import scevo.func.StatePop
-import scevo.func.Population
-import scevo.func.Breeder
-import scevo.func.StatePop
-import scevo.func.NSGABreeder
 import scevo.evo.Dominance
+import scevo.func.Experiment
+import scevo.func.NSGABreederElitist
+import scevo.func.StatePop
+import scevo.tools.OptAndColl
+import scevo.tools.Rng
+import scevo.func.EA
+import scevo.func.NSGABreeder
 
 /**
   * Two-objective Traveling Salesperson problem: distance and time.
   *
   * Both objectives minimized.
+  * 
+  * See the single objective TSP example in TSP.scala for reference. 
   */
 
 object TSPMultiobjective {
   def main(args: Array[String]) {
-    implicit val (opt, coll) = OptAndColl("--numCities 20")
+    implicit val (opt, coll) = OptAndColl("--numCities 12 --populationSize 200")
     implicit val rng = Rng(opt)
 
     val numCities = opt.paramInt("numCities", _ > 0)
@@ -53,17 +41,25 @@ object TSPMultiobjective {
     implicit val ordering = Dominance[Double] // or Dominance(Ordering[Double])
     val domain = PermutationDomain(numCities)
 
-    Experiment.run(new EA(domain, eval){
+    // Non-elitist version
+    Experiment.run(new EA(domain, eval) {
       override val breed = new NSGABreeder(domain)
+    })
+
+    // Elitist version (parents and offspring merged in mu+lambda style), 
+    // plus simple reporting. 
+    Experiment.run(new EA(domain, eval) {
+      override val breed = new NSGABreederElitist(domain)
+      override def epilogue = super.epilogue andThen showParetoFront
+      def showParetoFront(s: StatePop[(Seq[Int], Seq[Double])]) = {
+        val ranking = breed.nsga.paretoRanking(s.solutions)
+        println("Pareto front:")
+        println(ranking(0).map(_._2.eval).sortBy(_(0)).mkString("\n"))
+        s
+      }
     })
   }
 }
-/*
-    Experiment.run(new EA[Seq[Int], Seq[Double]](domain, eval){
-      override val breed = new NSGABreeder[Seq[Int], Double](domain)
-    })
-    * 
-    */
  
 
  

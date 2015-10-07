@@ -8,12 +8,12 @@ import scevo.tools.Collector
 object Experiment {
   def run[S <: State](alg: Unit => S)(implicit opt: Options, coll: Collector) = 
     apply(alg)(opt,coll)()
-  def apply[S <: State](alg: Unit => S)(implicit opt: Options, coll: Collector) = {
+  def apply[S <: State](alg: Unit => S)(implicit opt: Options, coll: Collector) 
+  : (Unit => Option[S]) = {
     _: Unit =>
       {
         val startTime = System.currentTimeMillis()
         try {
-          opt.warnNonRetrieved
           val state = alg()
           coll.set("status", "completed")
           if (opt.paramString("saveLastState", "false") == "true")
@@ -28,6 +28,7 @@ object Experiment {
           coll.setResult("totalTimeSystem", System.currentTimeMillis() - startTime)
           coll.setResult("system.endTime", Calendar.getInstance().getTime().toString)
           coll.close
+          opt.warnNonRetrieved
           None
         }
       }

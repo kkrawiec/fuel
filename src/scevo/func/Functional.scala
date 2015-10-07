@@ -6,12 +6,12 @@ import scevo.tools.Options
 
 // Reporting
 class BestSoFar[S, E](opt: Options, coll: Collector, o: PartialOrdering[E])
-    extends Step[(S, E)] {
+    extends Function1[StatePop[(S, E)], StatePop[(S, E)]] {
   protected var best: Option[(S, E)] = None
   def bestSoFar: Option[(S, E)] = best
   val snapFreq = opt.paramInt("snapshot-frequency", 0)
 
-  override def apply(s: StatePop[(S, E)]) = {
+  def apply(s: StatePop[(S, E)]) = {
     val bestOfGen = BestES(s.solutions, o)
     if (bestSoFar.isEmpty || o.lt(bestOfGen._2, best.get._2)) best = Some(bestOfGen)
     println(f"Gen: ${s.iteration}  BestSoFar: ${bestSoFar.get}")
@@ -25,8 +25,8 @@ object BestSoFar {
     new BestSoFar[S,E](opt, coll, o)
 }
 
-class EpilogueBestOfRun[S, E](bsf: BestSoFar[S, E], coll: Collector)
-    extends Step[(S, E)] {
+class EpilogueBestOfRun[S, E](bsf: BestSoFar[S, E], coll: Collector) 
+    extends Function1[StatePop[(S, E)], StatePop[(S, E)]] {
   def apply(state: StatePop[(S, E)]) = {
     coll.setResult("lastGeneration", state.iteration)
     coll.setResult("bestOfRun.fitness", if (bsf.bestSoFar.isDefined) bsf.bestSoFar.get._2 else "NaN")

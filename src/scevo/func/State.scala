@@ -10,8 +10,6 @@ trait StatePop[T] extends State {
   def solutions: Seq[T]
 }
 
-trait Step[T] extends (StatePop[T] => StatePop[T])
-
 class Population[T](override val solutions: Seq[T], override val iteration: Int = 0)
     extends StatePop[T] {
   require(solutions.size > 0, "The set of solutions in a population cannot be empty")

@@ -10,30 +10,33 @@ import scevo.Preamble.RndApply
 import scevo.evo.Dominance
 import scevo.evo.WorstSelector
 
-// Works as a wrapper around the original ES
-case class Rank(val rank: Int, val crowding: Int)
+/**
+  * NSGA Evaluation
+  * Needs to store also the original evaluation
+  */
+case class Rank[E](val rank: Int, val crowding: Int, val eval: Seq[E])
 
-/** 
- *  NSGA selection is trict
- */
+/**
+  *  NSGA selection requires two steps: ranking and selection on ranks 
+  */
 class NSGA2Selection[S, E](val tournSize: Int,
                            val removeEvalDuplicates: Boolean,
                            val promoteFrontExtremes: Boolean)(implicit rand: TRandom)
-    extends StochasticSelection[S, Rank](rand) {
+    extends StochasticSelection[S, Rank[E]](rand) {
 
   def this(opt: Options)(rand: TRandom) = this(
     opt.paramInt("tournamentSize", 7, _ > 1),
     opt.paramString("removeEvalDuplicates").getOrElse("false") == "true",
     opt.paramString("promoteFrontExtremes").getOrElse("false") == "true")(rand)
 
-  def globalOrdering = new Ordering[(S, Rank)] {
-    override def compare(a: (S, Rank), b: (S, Rank)) = {
+  def globalOrdering = new Ordering[(S, Rank[E])] {
+    override def compare(a: (S, Rank[E]), b: (S, Rank[E])) = {
       val c = a._2.rank compare b._2.rank
       if (c != 0) c else a._2.crowding compare b._2.crowding
     }
   }
-  def intraLayerOrdering = new Ordering[(S, Rank)] {
-    override def compare(a: (S, Rank), b: (S, Rank)) = a._2.crowding compare b._2.crowding
+  def intraLayerOrdering = new Ordering[(S, Rank[E])] {
+    override def compare(a: (S, Rank[E]), b: (S, Rank[E])) = a._2.crowding compare b._2.crowding
   }
 
   // Phase 1: Build the ranking, calculate crowding, and preserve only top ranks that host the required number of solutions
@@ -45,7 +48,7 @@ class NSGA2Selection[S, E](val tournSize: Int,
         //require(numToGenerate <= archive.size + solutions.size)
         // eliminate evaluation duplicates
         val toRank = if (removeEvalDuplicates) pop.groupBy(_._2).map(kv => kv._2(0)).toSeq else pop
-        val ranking = paretoRanking(toRank, po)
+        val ranking = paretoRanking(toRank)(po)
         var capacity = math.min(toRank.size, numToSelect)
         val fullLayers = ranking.takeWhile(
           r => if (capacity - r.size < 0) false else { capacity -= r.size; true })
@@ -62,10 +65,10 @@ class NSGA2Selection[S, E](val tournSize: Int,
 
   // Phase 2: The actual selection, based on the wrapped solutions
   // May be called arbitrarily many times. 
-  override def apply(sel: Seq[(S, Rank)]) = BestSelector[(S, Rank)](sel(rand, tournSize), globalOrdering)
+  override def apply(sel: Seq[(S, Rank[E])]) = BestSelector[(S, Rank[E])](sel(rand, tournSize), globalOrdering)
 
   // Builds the ranking top-down. 
-  private def paretoRanking[S, E](solutions: Seq[(S, Seq[E])], po: Dominance[E]): Seq[Seq[(S, Rank)]] = {
+  def paretoRanking[S, E](solutions: Seq[(S, Seq[E])])(implicit po: Dominance[E]): Seq[Seq[(S, Rank[E])]] = {
     @tailrec def pareto(dominating: Map[Int, Set[Int]], layers: List[Seq[Int]] = List()): List[Seq[Int]] = {
       val (lastLayer, rest) = dominating.partition(_._2.isEmpty)
       val ll = lastLayer.keys.toSeq
@@ -99,7 +102,7 @@ class NSGA2Selection[S, E](val tournSize: Int,
       } else
       * 
       */
-      lay.map(j => (solutions(j)._1, Rank(i, identical(j))))
+      lay.map(j => (solutions(j)._1, Rank(i, identical(j), solutions(j)._2)))
     })
   }
 

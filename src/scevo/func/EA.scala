@@ -25,6 +25,8 @@ abstract class EA[S, E](domain: Domain[S] with Moves[S],
                           implicit opt: Options, coll: Collector, rng: TRandom, ordering: PartialOrdering[E])
     extends Function1[Unit, StatePop[(S, E)]] {
 
+  type Step = Function1[StatePop[(S, E)], StatePop[(S, E)]] 
+
   def initialize = RandomStatePop(domain.randomSolution _)
 
   def evaluate = ParallelEval(eval)
@@ -33,9 +35,9 @@ abstract class EA[S, E](domain: Domain[S] with Moves[S],
 
   def terminate = Termination(stop)
 
-  def report = BestSoFar[S, E](ordering)
+  def report  = BestSoFar[S, E](ordering)
 
-  def epilogue = EpilogueBestOfRun(report)
+  def epilogue : Step = EpilogueBestOfRun(report)
 
   def algorithm = initialize andThen evaluate andThen
     Iteration(breed andThen evaluate andThen report)(terminate) andThen epilogue
