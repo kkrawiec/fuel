@@ -2,6 +2,11 @@ package scevo.func
 
 import scala.annotation.tailrec
 import scala.collection.immutable.Stream.consWrapper
+import scevo.tools.Options
+import scevo.tools.TRandom
+import scevo.domain.Moves
+import scevo.domain.Domain
+import scevo.evo.Dominance
 
 /**
   * Performs breeding, i.e., selection followed by application of search operators
@@ -42,4 +47,20 @@ object SimpleBreeder {
                   isFeasible: S => Boolean = (_: S) => true) =
     new SimpleBreeder(sel, searchOperator, isFeasible)
 }
- 
+
+// Can't use implicit domain due to Scala compiler bug. 
+/** Breeding in NSGA is a bit tricky: it requires first ranking, then tournament 
+ *  selection.
+ *  
+ *  Warning: this breeder does not merge parents and children
+ */
+class NSGABreeder[S, E](domain: Domain[S] with Moves[S])(
+  implicit opt: Options, rng: TRandom, ordering: Dominance[E])
+    extends Breeder[S, Seq[E]] {
+  val nsga = new NSGA2Selection[S, E](opt)(rng)
+  val breeder = SimpleBreeder[S, Rank](nsga, RandomMultiOperator(domain.moves: _*))
+  def apply(s: StatePop[(S, Seq[E])]) = {
+    val ranking = Population[(S, Rank)](nsga.rank(10, ordering)(s.solutions), s.iteration)
+    breeder(ranking)
+  }
+}

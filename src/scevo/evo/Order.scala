@@ -4,7 +4,7 @@ trait Dominance[E] extends PartialOrdering[Seq[E]] {
   def ordering(i: Int): Ordering[E]
   /* Not very elegant, but much faster than other method:
    */
-  def lteq(x: Seq[E], y: Seq[E]): Boolean = tryCompare(x,y).getOrElse(0) < 0
+  def lteq(x: Seq[E], y: Seq[E]): Boolean = tryCompare(x, y).getOrElse(0) < 0
   override def tryCompare(x: Seq[E], y: Seq[E]): Option[Int] = {
     require(x.size == y.size)
     var meBetter: Boolean = false
@@ -25,15 +25,17 @@ trait Dominance[E] extends PartialOrdering[Seq[E]] {
   }
 }
 
-/**
-  * MulOrdering with the same ordering on all objectives
-  *
-  */
-class MulOrderingSame[E](o: Ordering[E]) extends Dominance[E] {
-  override def ordering(i: Int) = o
-}
-
-class MulOrdering[E](val o: Seq[Ordering[E]]) extends Dominance[E] {
-  def ordering(i: Int): Ordering[E] = o(i)
-  
+object Dominance {
+  /**
+    * Dominance with the same ordering on all objectives
+    */
+  def apply[E](implicit o: Ordering[E]) = new Dominance[E] {
+    override def ordering(i: Int) = o
+  }
+  /**
+    * Dominance with different orderings on particular objectives
+    */
+  def apply[E](o: Seq[Ordering[E]]) = new Dominance[E] {
+    override def ordering(i: Int): Ordering[E] = o(i)
+  }
 }

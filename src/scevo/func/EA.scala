@@ -5,6 +5,7 @@ import scevo.tools.Collector
 import scevo.tools.TRandom
 import scevo.domain.Moves
 import scevo.domain.Domain
+import scevo.evo.Dominance
 
 /**
   * Default implementation of Evolutionary Algorithm (EA).
@@ -34,12 +35,14 @@ abstract class EA[S, E](domain: Domain[S] with Moves[S],
 
   def report = BestSoFar[S, E](ordering)
 
+  def epilogue = EpilogueBestOfRun(report)
+
   def algorithm = initialize andThen evaluate andThen
-    Iteration(breed andThen evaluate andThen report)(terminate) andThen
-    EpilogueBestOfRun(report)
+    Iteration(breed andThen evaluate andThen report)(terminate) andThen epilogue
 
   def apply(x: Unit) = algorithm()
 }
+
 
 /**
   * For complete Ordering.
