@@ -35,7 +35,7 @@ class CollectorFile(opt: Options) extends Collector {
   rdb.setResult("system.startTime", Calendar.getInstance().getTime().toString)
   rdb.put("mainClass", getClass.getName)
   rdb.put("status", "initialized")
-  rdb.saveWorkingState()
+  rdb.save()
 
   override def set(key: String, v: Any) = rdb.put(key, v)
   override def setResult(key: String, v: Any) = rdb.setResult(key, v)
@@ -47,7 +47,7 @@ class CollectorFile(opt: Options) extends Collector {
   override def close = {
     // Do this again, something may have changed during run:
     opt.retrievedOptions.foreach(t => rdb.put(t._1, t._2))
-    rdb.save
+    rdb.save()
     super.close
   }
 }

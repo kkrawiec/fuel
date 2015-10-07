@@ -1,12 +1,12 @@
 package scevo.func.example
 
 import scala.collection.immutable.BitSet
-
 import scevo.domain.BitSetDomain
 import scevo.func.Experiment
 import scevo.func.SimpleEA
-import scevo.tools.OptAndColl
+import scevo.tools.OptColl
 import scevo.tools.Rng
+import scevo.tools.OptCollRng
 
 /**
   * Use case: MaxOnes with GA.
@@ -14,8 +14,7 @@ import scevo.tools.Rng
   */
 object MaxOnes {
   def main(args: Array[String]) {
-    implicit val (opt, coll) = OptAndColl("--numVars 500  --maxGenerations 1000 --populationSize 1000 ")
-    implicit val rng = Rng(opt)
+    implicit val (opt, coll, rng) = OptCollRng("--numVars 500  --maxGenerations 1000 --populationSize 1000 ")
 
     val ga = new SimpleEA[BitSet, Int](
       domain = BitSetDomain(opt.paramInt("numVars", _ > 0)),

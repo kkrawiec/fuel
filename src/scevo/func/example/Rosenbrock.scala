@@ -2,12 +2,13 @@ package scevo.func.example
 
 import scevo.func.Experiment
 import scevo.tools.Rng
-import scevo.tools.OptAndColl
+import scevo.tools.OptColl
 import scevo.func.SimpleEA
 import scevo.domain.PermutationDomain
 import scevo.func.SearchOperator1
 import scevo.domain.VectorDomain
 import scevo.tools.TRandom
+import scevo.tools.OptCollRng
 
 /**  Continuous optimization: Rosenbrock function. 
  *   
@@ -29,8 +30,7 @@ class DoubleVectorDomain(numVars: Int, sigma: Double)(implicit rng: TRandom)
 
 object Rosenbrock {
   def main(args: Array[String]) {
-    implicit val (opt, coll) = OptAndColl("--n 3 --maxGenerations 300")
-    implicit val rng = Rng(opt)
+    implicit val (opt, coll, rng) = OptCollRng("--n 3 --maxGenerations 300")
 
     val n = opt.paramInt("n", _ > 0)
     def rosenbrock(x : Seq[Double]) = Range(0,n-1).map( i => 

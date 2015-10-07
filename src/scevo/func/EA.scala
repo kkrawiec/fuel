@@ -25,7 +25,7 @@ abstract class EA[S, E](domain: Domain[S] with Moves[S],
                           implicit opt: Options, coll: Collector, rng: TRandom, ordering: PartialOrdering[E])
     extends Function1[Unit, StatePop[(S, E)]] {
 
-  type Step = Function1[StatePop[(S, E)], StatePop[(S, E)]] 
+  type Step = Function1[StatePop[(S, E)], StatePop[(S, E)]]
 
   def initialize = RandomStatePop(domain.randomSolution _)
 
@@ -35,16 +35,16 @@ abstract class EA[S, E](domain: Domain[S] with Moves[S],
 
   def terminate = Termination(stop)
 
-  def report  = BestSoFar[S, E](ordering)
+  val bsf = BestSoFar[S, E](ordering)
+  def report = bsf
 
-  def epilogue : Step = EpilogueBestOfRun(report)
+  def epilogue: Step = EpilogueBestOfRun(bsf.bestSoFar)
 
   def algorithm = initialize andThen evaluate andThen
     Iteration(breed andThen evaluate andThen report)(terminate) andThen epilogue
 
   def apply(x: Unit) = algorithm()
 }
-
 
 /**
   * For complete Ordering.
@@ -57,9 +57,7 @@ class SimpleEA[S, E](domain: Domain[S] with Moves[S],
     extends EA[S, E](domain, eval, stop)(opt, coll, rng, ordering) {
 
   def selection = TournamentSelection[S, E](ordering)
-
   override def breed = SimpleBreeder[S, E](selection, RandomMultiOperator(domain.moves: _*))
-
 }
 
 object SimpleEA {

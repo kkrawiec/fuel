@@ -1,10 +1,10 @@
 package scevo.func.example
 
-import scevo.func.Experiment
-import scevo.tools.Rng
-import scevo.tools.OptAndColl
-import scevo.func.SimpleEA
+import scala.Range
 import scevo.domain.PermutationDomain
+import scevo.func.Experiment
+import scevo.func.SimpleEA
+import scevo.tools.OptCollRng
 
 /**
   * Traveling Salesperson problem.
@@ -14,17 +14,15 @@ import scevo.domain.PermutationDomain
 
 object TSP {
   def main(args: Array[String]) {
-    implicit val (opt, coll) = OptAndColl("--numCities 8")
-    implicit val rng = Rng(opt)
+    implicit val (opt, coll, rng) = OptCollRng("--numCities 8")
 
+    // Generate random distance matrix
     val numCities = opt.paramInt("numCities", _ > 0)
-    val size = 10.0
-    val cities = 0.until(numCities).map(i => (size * rng.nextDouble, size * rng.nextDouble))
-    def dist(i: Int, j: Int) = math.sqrt(
-      math.pow(cities(i)._1 - cities(j)._1, 2) + math.pow(cities(i)._2 - cities(j)._2, 2))
-    val distances =
-      for (i <- 0 until numCities) yield for (j <- 0 until numCities) yield dist(i, j)
+    val cities = for (_ <- 1 to numCities) yield (rng.nextDouble, rng.nextDouble)
+    val distances = for (i <- cities) yield for (j <- cities)
+      yield math.hypot(i._1 - j._1, i._2 - j._2)
 
+    // Fitness function
     def eval(s: Seq[Int]) =
       Range(0, s.size).map(i => distances(s(i))(s((i + 1) % s.size))).sum
 

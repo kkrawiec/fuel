@@ -2,7 +2,6 @@ package scevo.func
 
 import scevo.Distribution
 import scevo.Preamble.RndApply
-import scevo.evo.BestES
 import scevo.evo.BestSelector
 import scevo.tools.Options
 import scevo.tools.TRandom
@@ -10,7 +9,7 @@ import scevo.tools.TRandom
 trait Selection[S, E] extends (Seq[(S, E)] => (S, E))
 
 class GreedyBestSelection[S, E](o: Ordering[E]) extends Selection[S, E] {
-  def apply(pop: Seq[(S, E)]) = BestES(pop, o)
+  def apply(pop: Seq[(S, E)]) = BestSelector(pop, o)
 }
 
 abstract class StochasticSelection[S, E](val rand: TRandom) extends Selection[S, E]
@@ -22,7 +21,7 @@ class RandomSelection[S, E](implicit rand: TRandom) extends StochasticSelection[
 class TournamentSelection[S, E](o: Ordering[E])(implicit opt: Options,rand: TRandom)
     extends StochasticSelection[S, E](rand) {
   val tournamentSize = opt.paramInt("tournamentSize", 7, _ >= 2)
-  def apply(pop: Seq[(S, E)]) = BestES(pop(rand, tournamentSize), o)
+  def apply(pop: Seq[(S, E)]) = BestSelector(pop(rand, tournamentSize), o)
 }
 object TournamentSelection {
   def apply[S, E](o: Ordering[E])(implicit opt: Options,rand: TRandom) =

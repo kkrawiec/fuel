@@ -1,13 +1,13 @@
 package scevo.tools
 
 import java.io.File
-import java.io.IOException
-import java.io.PrintWriter
-import java.io.FileOutputStream
-import java.io.ObjectOutputStream
 import java.io.FileInputStream
-import java.io.ObjectInputStream
+import java.io.FileOutputStream
 import java.io.NotSerializableException
+import java.io.ObjectInputStream
+import java.io.ObjectOutputStream
+import java.io.PrintWriter
+
 
 /**
   * A container for storing intermediate and final results.
@@ -21,28 +21,7 @@ class ResultDatabase(val directory: String) extends scala.collection.mutable.Has
   val filePrefix = "res"
   val fileNumFormat = "%06d"
 
-  /* Sequential creation of result files; downside: must check for existenc eof all the previous files 
-  val (f, fname) = {
-    var i: Int = 0
-    var f: File = null
-    var fname: String = ""
-    try {
-      do {
-        fname = directory + "/" + filePrefix + fileNumFormat.format(i)
-        f = new File(fname + extension)
-        i += 1
-      } while (!f.createNewFile())
-    } catch {
-      case e: IOException =>
-        throw new IOException(s"Error while creating result database file: " +
-          fname + extension + " " + e.getLocalizedMessage());
-    }
-    (f, fname)
-  }
-  * 
-  */
-
-  val (f, fname) = {
+ val (f, fname) = {
     var f: File = null
     try {
       f = File.createTempFile(filePrefix, extension, new File(directory))
@@ -56,19 +35,14 @@ class ResultDatabase(val directory: String) extends scala.collection.mutable.Has
 
   def setResult(key: String, v: Any) = put(resultPrefix + key, v)
 
-  def saveWorkingState(file: File = f): Unit = {
+  def save(file: File = f): Unit = {
     val s = new PrintWriter(file)
     toSeq.sortBy(_._1).foreach(kv => s.println(kv._1 + " = " + kv._2))
     s.close()
   }
 
-  def save: Unit = {
-    saveWorkingState()
-    if (f.canWrite()) f.setReadOnly()
-  }
-
   def saveSnapshot(fnameSuffix: String): Unit =
-    saveWorkingState(new File(fname + "." + fnameSuffix))
+    save(new File(fname + "." + fnameSuffix))
 
   def write(key: String, v: Any) = {
     val fn = fname + "." + key
