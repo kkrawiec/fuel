@@ -10,11 +10,11 @@ import scala.collection.immutable.BitSet
   *
   */
  
-class BitSetDomain(numVars: Int)(rng: TRandom)
-    extends GADomain[BitSet] {
+class BitSetMoves(numVars: Int)(rng: TRandom)
+    extends GAMoves[BitSet] {
   require(numVars > 0)
 
-  override def randomSolution = BitSet.empty ++
+  override def newSolution = BitSet.empty ++
     (for (i <- 0.until(numVars); if (rng.nextBoolean)) yield i)
 
   override def oneBitMutation = SearchOperator1((p: BitSet) => {
@@ -39,7 +39,7 @@ class BitSetDomain(numVars: Int)(rng: TRandom)
     (myHead ++ hisMid ++ myTail, hisHead ++ myMid ++ hisTail)
   })
 }
-object BitSetDomain {
-  def apply(numVars: Int)(implicit rng: TRandom) = new BitSetDomain(numVars)(rng)
+object BitSetMoves {
+  def apply(numVars: Int)(implicit rng: TRandom) = new BitSetMoves(numVars)(rng)
 }
 

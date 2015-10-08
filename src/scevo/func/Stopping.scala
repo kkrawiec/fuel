@@ -2,6 +2,7 @@ package scevo.func
 
 import scevo.evo.State
 import scevo.tools.Options
+import scevo.evo.StatePop
 
 object Termination {
   object MaxIter {

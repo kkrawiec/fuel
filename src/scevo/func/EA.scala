@@ -4,8 +4,8 @@ import scevo.tools.Options
 import scevo.tools.Collector
 import scevo.tools.TRandom
 import scevo.domain.Moves
-import scevo.domain.Domain
 import scevo.evo.Dominance
+import scevo.evo.StatePop
 
 /**
   * Default implementation of Evolutionary Algorithm (EA).
@@ -19,7 +19,7 @@ import scevo.evo.Dominance
   * TODO: if stop() is default, it should not be called
   */
 
-abstract class EA[S, E](domain: Domain[S] with Moves[S],
+abstract class EA[S, E](moves: Moves[S],
                         eval: S => E,
                         stop: (S, E) => Boolean = ((s: S, e: E) => false))(
                           implicit opt: Options, coll: Collector, rng: TRandom, ordering: PartialOrdering[E])
@@ -27,7 +27,7 @@ abstract class EA[S, E](domain: Domain[S] with Moves[S],
 
   type Step = Function1[StatePop[(S, E)], StatePop[(S, E)]]
 
-  def initialize = RandomStatePop(domain.randomSolution _)
+  def initialize = RandomStatePop(moves.newSolution _)
 
   def evaluate = ParallelEval(eval)
 
@@ -50,20 +50,20 @@ abstract class EA[S, E](domain: Domain[S] with Moves[S],
   * For complete Ordering.
   *
   */
-class SimpleEA[S, E](domain: Domain[S] with Moves[S],
+class SimpleEA[S, E](moves: Moves[S],
                      eval: S => E,
                      stop: (S, E) => Boolean = ((s: S, e: E) => false))(
                        implicit opt: Options, coll: Collector, rng: TRandom, ordering: Ordering[E])
-    extends EA[S, E](domain, eval, stop)(opt, coll, rng, ordering) {
+    extends EA[S, E](moves, eval, stop)(opt, coll, rng, ordering) {
 
   def selection = TournamentSelection[S, E](ordering)
-  override def breed = SimpleBreeder[S, E](selection, RandomMultiOperator(domain.moves: _*))
+  override def breed = SimpleBreeder[S, E](selection, RandomMultiOperator(moves.moves: _*))
 }
 
 object SimpleEA {
-  def apply[S, E](domain: Domain[S] with Moves[S],
+  def apply[S, E](moves: Moves[S],
                   eval: S => E,
                   stop: (S, E) => Boolean = ((s: S, e: E) => false))(
-                    implicit opt: Options, coll: Collector, rng: TRandom, ordering: Ordering[E]) = new SimpleEA(domain, eval, stop)(opt, coll, rng, ordering)
+                    implicit opt: Options, coll: Collector, rng: TRandom, ordering: Ordering[E]) = new SimpleEA(moves, eval, stop)(opt, coll, rng, ordering)
 }
  

@@ -20,26 +20,3 @@ object WorstSelector {
     set.reduceLeft((a, b) => if (ord.compare(a, b) > 0) a else b)
 }
 
-object TestBestSelector {
-  def main(args: Array[String]) =
-    println(BestSelector(List(3, 1, 3, 6), Ordering[Int]))
-}
-
-
-/*
-class ExampleSpec extends FlatSpec with Matchers {
-
-  "A BestSelector" should "select the maximal element for maximized evaluation" in {
-    BestSelector(  should be (2)
-    stack.pop() should be (1)
-  }
-
-  it should "throw NoSuchElementException if an empty stack is popped" in {
-    val emptyStack = new Stack[Int]
-    a [NoSuchElementException] should be thrownBy {
-      emptyStack.pop()
-    } 
-  }
-}
-* 
-*/

@@ -2,11 +2,12 @@ package scevo.func
 
 import scala.annotation.tailrec
 import scala.collection.immutable.Stream.consWrapper
+import scevo.domain.Moves
+import scevo.evo.Dominance
 import scevo.tools.Options
 import scevo.tools.TRandom
-import scevo.domain.Moves
-import scevo.domain.Domain
-import scevo.evo.Dominance
+import scevo.evo.StatePop
+import scevo.evo.Population
 
 /**
   * Performs breeding, i.e., selection followed by application of search operators
@@ -55,7 +56,7 @@ object SimpleBreeder {
   *
   *  Warning: this breeder does not merge parents and children
   */
-class NSGABreeder[S, E](domain: Domain[S] with Moves[S])(
+class NSGABreeder[S, E](domain: Moves[S])(
   implicit opt: Options, rng: TRandom, ordering: Dominance[E])
     extends Breeder[S, Seq[E]] {
   val nsga = new NSGA2Selection[S, E](opt)(rng)
@@ -69,7 +70,7 @@ class NSGABreeder[S, E](domain: Domain[S] with Moves[S])(
 /** This breeder merges the previous population with parents in the mu+lambda style. 
  *  
  */
-class NSGABreederElitist[S, E](domain: Domain[S] with Moves[S])(
+class NSGABreederElitist[S, E](domain: Moves[S])(
   implicit opt: Options, rng: TRandom, ordering: Dominance[E])
     extends Breeder[S, Seq[E]] {
   val nsga = new NSGA2Selection[S, E](opt)(rng)

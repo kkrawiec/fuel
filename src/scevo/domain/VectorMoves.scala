@@ -5,8 +5,8 @@ import scevo.func.SearchOperator1
 import scevo.tools.TRandom
 
 
-abstract class VectorDomain[T](numVars: Int)(rng: TRandom)
-    extends GADomain[IndexedSeq[T]] {
+abstract class VectorMoves[T](numVars: Int)(rng: TRandom)
+    extends GAMoves[IndexedSeq[T]] {
   require(numVars > 0)
 
   override def onePointCrossover = SearchOperator2((p1: IndexedSeq[T], p2: IndexedSeq[T]) => {

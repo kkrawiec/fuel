@@ -1,14 +1,14 @@
 package scevo.func.example
 
 import scala.Range
-import scevo.domain.PermutationDomain
+import scevo.domain.PermutationMoves
 import scevo.evo.Dominance
 import scevo.func.Experiment
 import scevo.func.NSGABreeder
 import scevo.func.NSGABreederElitist
-import scevo.func.StatePop
 import scevo.tools.OptCollRng
 import scevo.func.EA
+import scevo.evo.StatePop
 
 /**
   * Two-objective Traveling Salesperson problem: distance and time.
@@ -35,17 +35,17 @@ object TSPMultiobjective {
       Range(0, s.size).map(i => times(s(i))(s((i + 1) % s.size))).sum)
 
     implicit val ordering = Dominance[Double] // or Dominance(Ordering[Double])
-    val domain = PermutationDomain(numCities)
+    val moves = PermutationMoves(numCities)
 
     // Non-elitist version
-    Experiment.run(new EA(domain, eval) {
-      override val breed = new NSGABreeder(domain)
+    Experiment.run(new EA(moves, eval) {
+      override val breed = new NSGABreeder(moves)
     })
 
     // Elitist version (parents and offspring merged in mu+lambda style), 
     // plus simple reporting. 
-    Experiment.run(new EA(domain, eval) {
-      override val breed = new NSGABreederElitist(domain)
+    Experiment.run(new EA(moves, eval) {
+      override val breed = new NSGABreederElitist(moves)
       override def epilogue = super.epilogue andThen showParetoFront
       def showParetoFront(s: StatePop[(Seq[Int], Seq[Double])]) = {
         val ranking = breed.nsga.paretoRanking(s.solutions)

@@ -9,7 +9,7 @@ import scevo.func.SearchOperator2
   *
   */
 
-trait GADomain[S] extends Domain[S] with Moves[S] {
+trait GAMoves[S] extends Moves[S] {
   def oneBitMutation: SearchOperator1[S]
   def onePointCrossover: SearchOperator2[S]
   def twoPointCrossover: SearchOperator2[S]

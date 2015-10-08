@@ -9,11 +9,11 @@ import scevo.tools.TRandom
   *  Simple domain of permutations. Candidate solutions are permutations of n elements.
   *
   */
-class PermutationDomain(n: Int)(rng: TRandom)
-    extends Domain[Seq[Int]] with Moves[Seq[Int]] {
+class PermutationMoves(n: Int)(rng: TRandom)
+    extends Moves[Seq[Int]] {
   require(n > 0)
 
-  override def randomSolution = rng.shuffle(Range(0, n).toIndexedSeq)
+  override def newSolution = rng.shuffle(Range(0, n).toIndexedSeq)
 
   def mutation = SearchOperator1((p: Seq[Int]) => {
     val (c1, c2) = (rng.nextInt(n), rng.nextInt(n))
@@ -23,7 +23,7 @@ class PermutationDomain(n: Int)(rng: TRandom)
   override def moves = Seq(mutation)
 }
 
-object PermutationDomain {
-  def apply(n: Int)(implicit rng: TRandom) = new PermutationDomain(n)(rng)
+object PermutationMoves {
+  def apply(n: Int)(implicit rng: TRandom) = new PermutationMoves(n)(rng)
 }
 

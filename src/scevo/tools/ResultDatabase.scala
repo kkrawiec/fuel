@@ -8,11 +8,11 @@ import java.io.ObjectInputStream
 import java.io.ObjectOutputStream
 import java.io.PrintWriter
 
-
 /**
-  * A container for storing intermediate and final results.
+  * A container for writing intermediate and final results to a file. 
+  * 
   * Intended to be created at the beginning of experiment, when it creates a new result file
-  * with a unique, consecutive name like res000001.txt
+  * with a unique name. 
   */
 class ResultDatabase(val directory: String) extends scala.collection.mutable.HashMap[String, Any] {
 
@@ -21,7 +21,7 @@ class ResultDatabase(val directory: String) extends scala.collection.mutable.Has
   val filePrefix = "res"
   val fileNumFormat = "%06d"
 
- val (f, fname) = {
+  val (f, fname) = {
     var f: File = null
     try {
       f = File.createTempFile(filePrefix, extension, new File(directory))
@@ -75,5 +75,4 @@ class ResultDatabase(val directory: String) extends scala.collection.mutable.Has
     is.close()
     obj
   }
-
 }

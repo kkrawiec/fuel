@@ -10,10 +10,10 @@ import scevo.tools.TRandom
   * would be a bit tricky.
   */
 
-class BoolVectorDomain(numVars: Int)(rng: TRandom)
-    extends VectorDomain[Boolean](numVars)(rng) {
+class BoolVectorMoves(numVars: Int)(rng: TRandom)
+    extends VectorMoves[Boolean](numVars)(rng) {
 
-  override def randomSolution = IndexedSeq.fill(numVars)(rng.nextBoolean)
+  override def newSolution = IndexedSeq.fill(numVars)(rng.nextBoolean)
 
   override def oneBitMutation = SearchOperator1((p: IndexedSeq[Boolean]) => {
     val bitToMutate = rng.nextInt(numVars)
@@ -21,6 +21,6 @@ class BoolVectorDomain(numVars: Int)(rng: TRandom)
   })
 }
 
-object BoolVectorDomain {
-  def apply(numVars: Int)(implicit rng: TRandom) = new BoolVectorDomain(numVars)(rng)
+object BoolVectorMoves {
+  def apply(numVars: Int)(implicit rng: TRandom) = new BoolVectorMoves(numVars)(rng)
 }

@@ -4,9 +4,9 @@ import scevo.func.Experiment
 import scevo.tools.Rng
 import scevo.tools.OptColl
 import scevo.func.SimpleEA
-import scevo.domain.PermutationDomain
+import scevo.domain.PermutationMoves
 import scevo.func.SearchOperator1
-import scevo.domain.VectorDomain
+import scevo.domain.VectorMoves
 import scevo.tools.TRandom
 import scevo.tools.OptCollRng
 
@@ -16,10 +16,10 @@ import scevo.tools.OptCollRng
   */
 
 
-class DoubleVectorDomain(numVars: Int, sigma: Double)(implicit rng: TRandom)
-    extends VectorDomain[Double](numVars)(rng) {
+class DoubleVectorMoves(numVars: Int, sigma: Double)(implicit rng: TRandom)
+    extends VectorMoves[Double](numVars)(rng) {
 
-  override def randomSolution = IndexedSeq.fill(numVars)(rng.nextDouble)
+  override def newSolution = IndexedSeq.fill(numVars)(rng.nextDouble)
 
   override def oneBitMutation = SearchOperator1((p: IndexedSeq[Double]) => {
     val xiToMutate = rng.nextInt(numVars)
@@ -36,7 +36,7 @@ object Rosenbrock {
     def rosenbrock(x : Seq[Double]) = Range(0,n-1).map( i => 
       (1-x(i))*(1-x(i)) + 100 * math.pow(x(i+1)-x(i)*x(i),2) ).sum
 
-    Experiment.run(SimpleEA(new DoubleVectorDomain(n, 0.001), rosenbrock))
+    Experiment.run(SimpleEA(new DoubleVectorMoves(n, 0.001), rosenbrock))
   }
 }
 

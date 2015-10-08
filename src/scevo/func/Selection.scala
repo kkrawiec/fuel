@@ -53,10 +53,8 @@ class LexicaseSelection[S, E](o: Ordering[E])(implicit rand: TRandom)
     extends StochasticSelection[S, Seq[E]](rand) {
   def apply(pop: Seq[(S, Seq[E])]) = {
     def sel(sols: Seq[(S, Seq[E])], cases: List[Int]): (S, Seq[E]) =
-      if (sols.size == 1)
-        sols(0)
-      else if (cases.size == 1)
-        sols(rand)
+      if (sols.size == 1) sols(0)
+      else if (cases.size == 1) sols(rand)
       else {
         val theCase = cases(rand)
         val ord = (a: (S, Seq[E]), b: (S, Seq[E])) => o.compare(a._2(theCase), b._2(theCase))

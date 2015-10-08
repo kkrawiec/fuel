@@ -3,6 +3,7 @@ package scevo.func
 import scevo.evo.BestSelector
 import scevo.tools.Collector
 import scevo.tools.Options
+import scevo.evo.StatePop
 
 // Reporting
 class BestSoFar[S, E](opt: Options, coll: Collector, o: PartialOrdering[E])

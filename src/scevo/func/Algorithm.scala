@@ -1,9 +1,10 @@
 package scevo.func
 
 import scala.annotation.tailrec
-
 import scevo.evo.State
 import scevo.tools.Options
+import scevo.evo.StatePop
+import scevo.evo.Population
 
 /** Component factories
  *  
