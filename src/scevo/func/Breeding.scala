@@ -2,7 +2,7 @@ package scevo.func
 
 import scala.annotation.tailrec
 import scala.collection.immutable.Stream.consWrapper
-import scevo.domain.Moves
+import scevo.moves.Moves
 import scevo.evo.Dominance
 import scevo.tools.Options
 import scevo.tools.TRandom

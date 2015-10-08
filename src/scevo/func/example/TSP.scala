@@ -1,7 +1,7 @@
 package scevo.func.example
 
 import scala.Range
-import scevo.domain.PermutationMoves
+import scevo.moves.PermutationMoves
 import scevo.func.Experiment
 import scevo.func.SimpleEA
 import scevo.tools.OptCollRng
@@ -18,7 +18,7 @@ object TSP {
 
     // Generate random distance matrix
     val numCities = opt.paramInt("numCities", _ > 0)
-    val cities = for (_ <- 1 to numCities) yield (rng.nextDouble, rng.nextDouble)
+    val cities = Seq.fill(numCities)((rng.nextDouble, rng.nextDouble))
     val distances = for (i <- cities) yield for (j <- cities)
       yield math.hypot(i._1 - j._1, i._2 - j._2)
 

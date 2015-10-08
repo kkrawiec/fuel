@@ -22,6 +22,8 @@ object Preamble {
   }
   * 
   */
+  // Iverson's bracket
+  implicit def iverson(b:Boolean) = if (b) 1 else 0
 }
 
 // Histogram is a non-normalized Distribution

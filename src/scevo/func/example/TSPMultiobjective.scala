@@ -1,7 +1,7 @@
 package scevo.func.example
 
 import scala.Range
-import scevo.domain.PermutationMoves
+import scevo.moves.PermutationMoves
 import scevo.evo.Dominance
 import scevo.func.Experiment
 import scevo.func.NSGABreeder
@@ -9,6 +9,7 @@ import scevo.func.NSGABreederElitist
 import scevo.tools.OptCollRng
 import scevo.func.EA
 import scevo.evo.StatePop
+import scevo.func.EACore
 
 /**
   * Two-objective Traveling Salesperson problem: distance and time.
@@ -24,7 +25,7 @@ object TSPMultiobjective {
 
     // Generate random distance matrix
     val numCities = opt.paramInt("numCities", _ > 0)
-    val cities = for (_ <- 1 to numCities) yield (rng.nextDouble, rng.nextDouble)
+    val cities = Seq.fill(numCities)((rng.nextDouble, rng.nextDouble))
     val distances = for (i <- cities) yield for (j <- cities)
       yield math.hypot(i._1 - j._1, i._2 - j._2)
     // Generate random times
@@ -37,14 +38,16 @@ object TSPMultiobjective {
     implicit val ordering = Dominance[Double] // or Dominance(Ordering[Double])
     val moves = PermutationMoves(numCities)
 
+    // We are using EACore because there is only partial order of the candidate solutions, 
+    // so it does not make much sense to report online progress.
     // Non-elitist version
-    Experiment.run(new EA(moves, eval) {
+    Experiment.run(new EACore(moves, eval) {
       override val breed = new NSGABreeder(moves)
     })
 
     // Elitist version (parents and offspring merged in mu+lambda style), 
     // plus simple reporting. 
-    Experiment.run(new EA(moves, eval) {
+    Experiment.run(new EACore(moves, eval) {
       override val breed = new NSGABreederElitist(moves)
       override def epilogue = super.epilogue andThen showParetoFront
       def showParetoFront(s: StatePop[(Seq[Int], Seq[Double])]) = {

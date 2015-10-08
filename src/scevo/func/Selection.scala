@@ -5,6 +5,7 @@ import scevo.Preamble.RndApply
 import scevo.evo.BestSelector
 import scevo.tools.Options
 import scevo.tools.TRandom
+import scala.annotation.tailrec
 
 trait Selection[S, E] extends (Seq[(S, E)] => (S, E))
 
@@ -52,7 +53,7 @@ class FitnessProportionateSelection[S](implicit rand: TRandom) extends Selection
 class LexicaseSelection[S, E](o: Ordering[E])(implicit rand: TRandom)
     extends StochasticSelection[S, Seq[E]](rand) {
   def apply(pop: Seq[(S, Seq[E])]) = {
-    def sel(sols: Seq[(S, Seq[E])], cases: List[Int]): (S, Seq[E]) =
+    @tailrec def sel(sols: Seq[(S, Seq[E])], cases: List[Int]): (S, Seq[E]) =
       if (sols.size == 1) sols(0)
       else if (cases.size == 1) sols(rand)
       else {
@@ -60,7 +61,7 @@ class LexicaseSelection[S, E](o: Ordering[E])(implicit rand: TRandom)
         val ord = (a: (S, Seq[E]), b: (S, Seq[E])) => o.compare(a._2(theCase), b._2(theCase))
         val bestEval = BestSelector(sols, ord)
         //println("Sols:" + sols.size + " Cases: " + cases.size)
-        sel(sols.filter(s => ord(bestEval, s) > 0), cases.diff(List(theCase)))
+        sel(sols.filter(s => ord(s, bestEval) <= 0), cases.diff(List(theCase)))
       }
     // assumes nonempty pop
     sel(pop, 0.until(pop(0)._2.size).toList)
