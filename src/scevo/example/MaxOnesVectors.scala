@@ -1,11 +1,12 @@
 package scevo.example
 
-import scevo.func.Experiment
-import scevo.func.SimpleEA
-import scevo.tools.OptCollRng
-import scevo.moves.BoolVectorMoves
-import scevo.func.SearchOperator1
 import scala.Ordering
+
+import scevo.func.Experiment
+import scevo.func.SearchOperator
+import scevo.func.SimpleEA
+import scevo.moves.BoolVectorMoves
+import scevo.tools.OptCollRng
 
 /**
   * Use case: MaxOnes with Vectors.
@@ -21,16 +22,18 @@ object MaxOnesVectors {
       ++ args)
 
     // Say we want a different setup of search operators than the default one:
-    // just one operator doing 2-bit mutation. We can achieve that by composing two one-bit
-    // mutations
+    // just one operator doing 2-bit mutation. 
+    //  We can achieve that by composing two one-bit mutations:
     object MyMoves extends BoolVectorMoves(opt.paramInt("numVars", _ > 0)) {
-      override def moves = Seq(SearchOperator1(oneBitMutation compose oneBitMutation))
+      override def moves = Seq(SearchOperator(oneBitMutation compose oneBitMutation))
     }
+
+    // Want to maximize the objective:
+    implicit val ord = Ordering[Int].reverse
 
     val ga = SimpleEA(moves = MyMoves,
       eval = (s: IndexedSeq[Boolean]) => s.count(_ == true),
-      stop = (s: IndexedSeq[Boolean], e: Int) => e == MyMoves.numVars)(
-        opt, coll, rng, ordering = Ordering[Int].reverse)
+      stop = (s: IndexedSeq[Boolean], e: Int) => e == MyMoves.numVars)
 
     Experiment.run(ga)
   }

@@ -19,9 +19,6 @@ trait SearchOperator[S] extends (Stream[S] => (List[S], Stream[S]))
 class SearchOperator1[S](body: S => S) extends SearchOperator[S] {
   override def apply(s: Stream[S]) = (List(body(s.head)), s.tail)
 }
-object SearchOperator1 {
-  def apply[S](body: S => S) = new SearchOperator1[S](body)
-}
 
 class SearchOperator2[S](body: Function2[S, S, (S, S)]) extends SearchOperator[S] {
   override def apply(s: Stream[S]) = {
@@ -29,14 +26,14 @@ class SearchOperator2[S](body: Function2[S, S, (S, S)]) extends SearchOperator[S
     (List(r._1, r._2), s.drop(2))
   }
 }
-object SearchOperator2 {
-  def apply[S](body: Function2[S, S, (S, S)]) = new SearchOperator2[S](body)
-}
 
 class SearchOperator2_1[S](body: Function2[S, S, S]) extends SearchOperator[S] {
   override def apply(s: Stream[S]) = (List(body(s(0), s(1))), s.drop(2))
 }
-object SearchOperator2_1 {
+
+object SearchOperator {
+  def apply[S](body: S => S) = new SearchOperator1[S](body)
+  def apply[S](body: Function2[S, S, (S, S)]) = new SearchOperator2[S](body)
   def apply[S](body: Function2[S, S, S]) = new SearchOperator2_1[S](body)
 }
 

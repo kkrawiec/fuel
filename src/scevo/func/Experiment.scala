@@ -28,6 +28,8 @@ object Experiment {
         } finally {
           coll.setResult("totalTimeSystem", System.currentTimeMillis() - startTime)
           coll.setResult("system.endTime", Calendar.getInstance().getTime().toString)
+          if(opt.paramBool("printResults"))
+            println(coll.rdb.toString)
           coll.close
           opt.warnNonRetrieved
           None

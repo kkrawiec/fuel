@@ -40,6 +40,7 @@ class ResultDatabase(val directory: String) extends scala.collection.mutable.Has
     toSeq.sortBy(_._1).foreach(kv => s.println(kv._1 + " = " + kv._2))
     s.close()
   }
+  override def toString = toSeq.sortBy(_._1).map(kv => s"${kv._1} = ${kv._2}").mkString("\n")
 
   def saveSnapshot(fnameSuffix: String): Unit =
     save(new File(fname + "." + fnameSuffix))

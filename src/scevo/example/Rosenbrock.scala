@@ -13,7 +13,7 @@ import scevo.tools.OptCollRng
   */
 object Rosenbrock {
   def main(args: Array[String]) {
-    implicit val (opt, coll, rng) = OptCollRng("--n 3 --maxGenerations 300")
+    implicit val (opt, coll, rng) = OptCollRng("--n 3 --maxGenerations 300 --printResults true")
 
     val n = opt.paramInt("n", _ > 0) // dimensionality of the problem/space
     def rosenbrock(x: Seq[Double]) = Range(0, n - 1).map(i =>

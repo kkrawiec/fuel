@@ -1,12 +1,18 @@
 package scevo.evo
 
+/**
+  * Dominance relation, a special case of PartialOrder, where objects are compared
+  * along a number of objectives.
+  *
+  * Depending on the interpretation of the Some(0) result, can be used as
+  * strong dominance or weak dominance.
+  */
 trait Dominance[E] extends PartialOrdering[Seq[E]] {
   def ordering(i: Int): Ordering[E]
-  /* Not very elegant, but much faster than other method:
-   */
   def lteq(x: Seq[E], y: Seq[E]): Boolean = tryCompare(x, y).getOrElse(0) < 0
   override def tryCompare(x: Seq[E], y: Seq[E]): Option[Int] = {
     require(x.size == y.size)
+    // Not very elegant, but much faster than other method:
     var meBetter: Boolean = false
     var thatBetter: Boolean = false
     for (i <- 0 until x.size) {

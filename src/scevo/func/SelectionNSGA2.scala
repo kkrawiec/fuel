@@ -1,14 +1,12 @@
 package scevo.func
 
+import scala.annotation.tailrec
+
+import scevo.Preamble.RndApply
 import scevo.evo.BestSelector
+import scevo.evo.Dominance
 import scevo.tools.Options
 import scevo.tools.TRandom
-import scala.annotation.tailrec
-import scevo.tools.Random
-import org.junit.Test
-import scevo.Preamble.RndApply
-import scevo.evo.Dominance
-import scevo.evo.WorstSelector
 
 /**
   * NSGA Evaluation
@@ -17,7 +15,7 @@ import scevo.evo.WorstSelector
 case class Rank[E](val rank: Int, val crowding: Int, val eval: Seq[E])
 
 /**
-  *  NSGA selection requires two steps: ranking and selection on ranks 
+  *  NSGA selection requires two steps: ranking and selection on ranks
   */
 class NSGA2Selection[S, E](val tournSize: Int,
                            val removeEvalDuplicates: Boolean,
@@ -26,8 +24,8 @@ class NSGA2Selection[S, E](val tournSize: Int,
 
   def this(opt: Options)(rand: TRandom) = this(
     opt.paramInt("tournamentSize", 7, _ > 1),
-    opt.paramString("removeEvalDuplicates").getOrElse("false") == "true",
-    opt.paramString("promoteFrontExtremes").getOrElse("false") == "true")(rand)
+    opt.paramBool("removeEvalDuplicates"),
+    opt.paramBool("promoteFrontExtremes"))(rand)
 
   def globalOrdering = new Ordering[(S, Rank[E])] {
     override def compare(a: (S, Rank[E]), b: (S, Rank[E])) = {
@@ -41,27 +39,23 @@ class NSGA2Selection[S, E](val tournSize: Int,
 
   // Phase 1: Build the ranking, calculate crowding, and preserve only top ranks that host the required number of solutions
   // Should be called *once per generation*
-  def rank(numToSelect: Int, po: Dominance[E]) = {
-    // assumes nonempty pop
-    pop: Seq[(S, Seq[E])] =>
-      {
-        //require(numToGenerate <= archive.size + solutions.size)
-        // eliminate evaluation duplicates
-        val toRank = if (removeEvalDuplicates) pop.groupBy(_._2).map(kv => kv._2(0)).toSeq else pop
-        val ranking = paretoRanking(toRank)(po)
-        var capacity = math.min(toRank.size, numToSelect)
-        val fullLayers = ranking.takeWhile(
-          r => if (capacity - r.size < 0) false else { capacity -= r.size; true })
-        /*
+  def rank(numToSelect: Int, po: Dominance[E]) =
+    (pop: Seq[(S, Seq[E])]) => {
+      require(numToSelect <= pop.size)
+      // eliminate evaluation duplicates
+      val toRank = if (removeEvalDuplicates) pop.groupBy(_._2).map(kv => kv._2(0)).toSeq else pop
+      val ranking = paretoRanking(toRank)(po)
+      var capacity = math.min(toRank.size, numToSelect)
+      val fullLayers = ranking.takeWhile(
+        r => if (capacity - r.size < 0) false else { capacity -= r.size; true })
+      /*
         val top = ranking(0).map(_.s._2).toSet
         println(f"NSGA ranks: ${ranking.size} Top(${top.size}): ${top}")
         println(f"NSGA rsizes: ${ranking map (_.size)} }")
         */
-        if (capacity <= 0) fullLayers.flatten // flatten preserves ordering 
-        else fullLayers.flatten ++ ranking(fullLayers.size).sorted(intraLayerOrdering).splitAt(capacity)._1
-      }
-
-  }
+      if (capacity <= 0) fullLayers.flatten // flatten preserves ordering 
+      else fullLayers.flatten ++ ranking(fullLayers.size).sorted(intraLayerOrdering).splitAt(capacity)._1
+    }
 
   // Phase 2: The actual selection, based on the wrapped solutions
   // May be called arbitrarily many times. 
@@ -105,31 +99,4 @@ class NSGA2Selection[S, E](val tournSize: Int,
       lay.map(j => (solutions(j)._1, Rank(i, identical(j), solutions(j)._2)))
     })
   }
-
 }
-
-/*
-final class TestNSGA2 {
-  MultiobjectiveEvaluation(List(ScalarEvaluationMax(0),ScalarEvaluationMin(0)))
-  def e(o: Seq[Int]) = MultiobjectiveEvaluation(o.map(v => ScalarEvaluationMax(v)))
-  @Test def test: Unit = {
-    val state = List(
-      ('a, e(Seq(2, 3, 3))),
-      ('b, e(Seq(3, 3, 1))),
-      ('c, e(Seq(2, 2, 1))),
-      ('d, e(Seq(1, 2, 2))), // crowding
-      ('e, e(Seq(1, 2, 2))),
-      ('f, e(Seq(1, 2, 2))),
-      ('g, e(Seq(1, 1, 1))))
-    val nsga = new NSGA2Selection(10, false, false)
-    val ranking = nsga.rank(3)(state) 
-    println("Ranking: " + ranking.mkString("\n"))
-    println("Selections:")
-    val sel = nsga[Symbol, MultiobjectiveEvaluation](new Random)
-    for (i <- 0 until 20)
-      println(sel(ranking))
-  }
-}
-* 
-*/
-

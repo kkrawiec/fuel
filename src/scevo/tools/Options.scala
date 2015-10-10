@@ -62,10 +62,15 @@ trait Options {
     assert(validator(v), s"Parameter $id invalidates $validator")
     v
   }
-  def paramBool(id: String) = getOption(id) match {
+  def paramBoolReq(id: String) = getOption(id) match {
     case Some("true")  => true
     case Some("false") => false
-    case _             => throw new Exception(s"Parameter $id not found")
+    case _             => throw new Exception(s"Boolean value expected for parameter $id")
+  }
+  def paramBool(id: String, default: Boolean = false) = getOption(id, default) match {
+    case "true"  => true
+    case "false" => false
+    case _       => throw new Exception(s"Boolean value expected for parameter $id")
   }
 }
 
@@ -102,8 +107,9 @@ object OptionParser {
     list match {
       case Nil => TreeMap[String, String]()
       case option :: value :: tail =>
-        Map(option.slice(2, option.length) -> value) ++ nextOption(tail)
-      // (slicing to remove the --)
+        if (option.substring(0, 2) == "--")
+          Map(option.slice(2, option.length) -> value) ++ nextOption(tail)
+        else throw new Exception(s"An option should start with '--': $option ")
       case option :: tail => throw new Exception(f"Unknown option: '$option'")
     }
   }

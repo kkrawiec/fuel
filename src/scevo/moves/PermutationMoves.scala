@@ -1,9 +1,8 @@
 package scevo.moves
 
 import scala.Range
-
-import scevo.func.SearchOperator1
 import scevo.tools.TRandom
+import scevo.func.SearchOperator
 
 /**
   *  Simple domain of permutations. Candidate solutions are permutations of n elements.
@@ -15,7 +14,7 @@ class PermutationMoves(n: Int)(rng: TRandom)
 
   override def newSolution = rng.shuffle(Range(0, n).toIndexedSeq)
 
-  def mutation = SearchOperator1((p: Seq[Int]) => {
+  def mutation = SearchOperator((p: Seq[Int]) => {
     val (c1, c2) = (rng.nextInt(n), rng.nextInt(n))
     val h = p(c1)
     p.updated(c1, p(c2)).updated(c2, h)

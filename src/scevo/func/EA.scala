@@ -50,7 +50,7 @@ abstract class EA[S, E](moves: Moves[S],
 
   val bsf = BestSoFar[S, E](ordering)
   override def report = bsf
-  override def epilogue: Function1[StatePop[(S, E)], StatePop[(S, E)]] = EpilogueBestOfRun(bsf.bestSoFar)
+  override def epilogue: Function1[StatePop[(S, E)], StatePop[(S, E)]] = EpilogueBestOfRun(bsf)
 }
 
 /**
