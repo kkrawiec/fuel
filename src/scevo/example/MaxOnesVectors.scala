@@ -1,13 +1,11 @@
-package scevo.func.example
+package scevo.example
 
-import scala.collection.immutable.BitSet
 import scevo.func.Experiment
 import scevo.func.SimpleEA
-import scevo.moves.BitSetMoves
 import scevo.tools.OptCollRng
 import scevo.moves.BoolVectorMoves
-import scevo.func.SearchOperator2
 import scevo.func.SearchOperator1
+import scala.Ordering
 
 /**
   * Use case: MaxOnes with Vectors.

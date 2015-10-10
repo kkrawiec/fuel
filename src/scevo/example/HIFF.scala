@@ -1,10 +1,12 @@
-package scevo.func.example
+package scevo.example
 
 import scevo.func.Experiment
 import scevo.func.SimpleEA
 import scevo.tools.OptCollRng
 import scevo.moves.BoolVectorMoves
 import scevo.Preamble._
+import scala.Ordering
+import scala.Range
 
 /**
   * Use case: Hierarchical If and only If

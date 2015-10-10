@@ -1,4 +1,4 @@
-package scevo.func.example
+package scevo.example
 
 import scala.Range
 import scevo.moves.PermutationMoves
@@ -7,7 +7,6 @@ import scevo.func.Experiment
 import scevo.func.NSGABreeder
 import scevo.func.NSGABreederElitist
 import scevo.tools.OptCollRng
-import scevo.func.EA
 import scevo.evo.StatePop
 import scevo.func.EACore
 

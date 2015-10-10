@@ -1,4 +1,4 @@
-package scevo.func.example
+package scevo.example
 
 import scala.Range
 import scevo.moves.PermutationMoves

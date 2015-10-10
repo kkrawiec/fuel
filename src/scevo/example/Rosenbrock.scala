@@ -1,7 +1,6 @@
-package scevo.func.example
+package scevo.example
 
 import scala.Range
-
 import scevo.func.Experiment
 import scevo.func.SimpleEA
 import scevo.moves.DoubleVectorMoves
