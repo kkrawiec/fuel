@@ -4,15 +4,16 @@ import scevo.func.SearchOperator1
 import scevo.func.SearchOperator2
 
 /**
-  * Bitstring domain implemented as BitSets
-  * solutions represented as BitSets (TreeSet much slower)
-  *
+  * The default set of operators for vector representations
   */
 
 trait GAMoves[S] extends Moves[S] {
-  def oneBitMutation: SearchOperator1[S]
-  def onePointCrossover: SearchOperator2[S]
-  def twoPointCrossover: SearchOperator2[S]
-  override def moves = Seq(oneBitMutation, onePointCrossover, twoPointCrossover)
+  def oneBitMutation: Function1[S,S]
+  def onePointCrossover: Function2[S, S, (S, S)]
+  def twoPointCrossover: Function2[S, S, (S, S)]
+  override def moves = Seq(
+    SearchOperator1(oneBitMutation),
+    SearchOperator2(onePointCrossover),
+    SearchOperator2(twoPointCrossover))
 }
 

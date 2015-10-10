@@ -24,6 +24,7 @@ object Experiment {
             coll.set("status", "error: " + e.getLocalizedMessage + e.getStackTrace().mkString(" ")) // .toString.replace('\n', ' '))
             throw e
           }
+          None
         } finally {
           coll.setResult("totalTimeSystem", System.currentTimeMillis() - startTime)
           coll.setResult("system.endTime", Calendar.getInstance().getTime().toString)

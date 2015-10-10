@@ -10,15 +10,16 @@ trait Options {
   protected def options: String => Option[String]
 
   def allOptions: Map[String, String]
+  override def toString = allOptions.toString
 
   // Stores the values of retrieved options, *including the default values*
   lazy val retrievedOptions = scala.collection.mutable.Map[String, String]()
-  
+
   def warnNonRetrieved = {
     val nonRetrieved = allOptions.toList.diff(retrievedOptions.toList)
-    if( nonRetrieved.nonEmpty )
-      println("WARNING: The following options have been set but not retrievied:\n" + 
-          nonRetrieved.mkString("\n"))
+    if (nonRetrieved.nonEmpty)
+      println("WARNING: The following options have been set but not retrievied:\n" +
+        nonRetrieved.mkString("\n"))
   }
 
   protected def getOption(id: String) = {
@@ -61,10 +62,10 @@ trait Options {
     assert(validator(v), s"Parameter $id invalidates $validator")
     v
   }
-  def paramBool(id: String) = getOption(id) match { 
-    case Some("true") => true
+  def paramBool(id: String) = getOption(id) match {
+    case Some("true")  => true
     case Some("false") => false
-    case _ => throw new Exception(s"Parameter $id not found")
+    case _             => throw new Exception(s"Parameter $id not found")
   }
 }
 
@@ -74,7 +75,7 @@ abstract class OptionsC(opt: Map[String, String]) extends Options {
 }
 
 class OptionsFromArgs(args: Array[String])
-  extends OptionsC(OptionParser(args)) {
+    extends OptionsC(OptionParser(args)) {
   def this(params: String) =
     this(if (params.trim == "") Array[String]() else params.trim.split("\\s+"))
 }
@@ -92,7 +93,10 @@ object NoOptions {
  */
 
 object OptionParser {
-  def apply(list: Array[String]) = nextOption(list.toList)
+  // Convenience hack: if only one arg, then check if it's a one string with params.
+  def apply(arr: Array[String]) = nextOption(
+    if (arr.size == 1) arr(0).split("\\s+").toList
+    else arr.toList)
   def apply(list: List[String]) = nextOption(list)
   private def nextOption(list: List[String]): Map[String, String] = {
     list match {

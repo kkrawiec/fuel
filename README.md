@@ -2,7 +2,7 @@ ScEvo = Evolutionary Computation framework in Scala
 ===================================================
 Krzysztof Krawiec
 krawiec@cs.put.poznan.pl
-June 2014 - May 2015
+June 2014 - Oct 2015
 
 General philosophy
 ===================

@@ -1,6 +1,5 @@
 package scevo.moves
 
-import scevo.func.SearchOperator1
 import scevo.tools.TRandom
 
 /**
@@ -10,15 +9,15 @@ import scevo.tools.TRandom
   * would be a bit tricky.
   */
 
-class BoolVectorMoves(numVars: Int)(rng: TRandom)
+class BoolVectorMoves(numVars: Int)(implicit rng: TRandom)
     extends VectorMoves[Boolean](numVars)(rng) {
 
   override def newSolution = IndexedSeq.fill(numVars)(rng.nextBoolean)
 
-  override def oneBitMutation = SearchOperator1((p: IndexedSeq[Boolean]) => {
+  override def oneBitMutation = (p: IndexedSeq[Boolean]) => {
     val bitToMutate = rng.nextInt(numVars)
     p.updated(bitToMutate, !p(bitToMutate))
-  })
+  }
 }
 
 object BoolVectorMoves {

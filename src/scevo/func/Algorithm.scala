@@ -19,14 +19,6 @@ object Iteration {
     }
     iterate
   }
-  // Version for population-based algorithms, 
-  /*
-  def apply[S, E](step: StatePop[(S, E)] => StatePop[(S, E)])(
-        stop: Seq[StatePop[(S, E)] => Boolean]) : StatePop[(S,E)] => StatePop[(S,E)] = {
-    apply(step)(stop) 
-  }
-  * 
-  */
 }
 
 
