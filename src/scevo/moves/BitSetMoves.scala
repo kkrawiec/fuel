@@ -9,13 +9,13 @@ import scala.collection.immutable.BitSet
   */
  
 class BitSetMoves(numVars: Int)(rng: TRandom)
-    extends GAMoves[BitSet] {
+    extends AbstractVectorMoves[BitSet] {
   require(numVars > 0)
 
   override def newSolution = BitSet.empty ++
     (for (i <- 0.until(numVars); if (rng.nextBoolean)) yield i)
 
-  override def oneBitMutation = (p: BitSet) => {
+  override def onePointMutation = (p: BitSet) => {
     val bitToMutate = rng.nextInt(numVars)
     if (p(bitToMutate)) p - bitToMutate else p + bitToMutate
   }

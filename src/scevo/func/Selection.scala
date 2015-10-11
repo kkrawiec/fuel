@@ -2,7 +2,7 @@ package scevo.func
 
 import scevo.Distribution
 import scevo.Preamble.RndApply
-import scevo.evo.BestSelector
+import scevo.core.BestSelector
 import scevo.tools.Options
 import scevo.tools.TRandom
 import scala.annotation.tailrec
@@ -19,13 +19,16 @@ class RandomSelection[S, E](implicit rand: TRandom) extends StochasticSelection[
   override def apply(pop: Seq[(S, E)]) = pop(rand)
 }
 
-class TournamentSelection[S, E](o: Ordering[E])(implicit opt: Options,rand: TRandom)
+class TournamentSelection[S, E](ordering: Ordering[E], val tournamentSize: Int)(implicit rand: TRandom)
     extends StochasticSelection[S, E](rand) {
-  val tournamentSize = opt.paramInt("tournamentSize", 7, _ >= 2)
-  def apply(pop: Seq[(S, E)]) = BestSelector(pop(rand, tournamentSize), o)
+
+  def this(o: Ordering[E])(implicit opt: Options, rand: TRandom) =
+    this(o, opt("tournamentSize", 7, (_: Int) >= 2))(rand)
+
+  def apply(pop: Seq[(S, E)]) = BestSelector(pop(rand, tournamentSize), ordering)
 }
 object TournamentSelection {
-  def apply[S, E](o: Ordering[E])(implicit opt: Options,rand: TRandom) =
+  def apply[S, E](o: Ordering[E])(implicit opt: Options, rand: TRandom) =
     new TournamentSelection[S, E](o)(opt, rand)
   def apply[S, E](opt: Options)(rand: TRandom)(o: Ordering[E]) =
     new TournamentSelection[S, E](o)(opt, rand)

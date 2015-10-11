@@ -4,8 +4,8 @@ import scevo.tools.Options
 import scevo.tools.Collector
 import scevo.tools.TRandom
 import scevo.moves.Moves
-import scevo.evo.Dominance
-import scevo.evo.StatePop
+import scevo.core.Dominance
+import scevo.core.StatePop
 
 /** Core implementation of iterative parallel (i.e., population-based) search. 
  *  

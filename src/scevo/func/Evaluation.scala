@@ -1,8 +1,8 @@
 package scevo.func
 
 import scala.collection.parallel.ForkJoinTaskSupport
-import scevo.evo.StatePop
-import scevo.evo.Population
+import scevo.core.StatePop
+import scevo.core.Population
 
 /** Evaluates population solution by solution.
  *  

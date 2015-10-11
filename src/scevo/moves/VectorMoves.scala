@@ -3,7 +3,7 @@ package scevo.moves
 import scevo.tools.TRandom
 
 abstract class VectorMoves[T](val numVars: Int)(rng: TRandom)
-    extends GAMoves[IndexedSeq[T]] {
+    extends AbstractVectorMoves[IndexedSeq[T]] {
   require(numVars > 0)
 
   override def onePointCrossover = (p1: IndexedSeq[T], p2: IndexedSeq[T]) => {

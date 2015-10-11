@@ -3,11 +3,11 @@ package scevo.func
 import scala.annotation.tailrec
 import scala.collection.immutable.Stream.consWrapper
 import scevo.moves.Moves
-import scevo.evo.Dominance
+import scevo.core.Dominance
 import scevo.tools.Options
 import scevo.tools.TRandom
-import scevo.evo.StatePop
-import scevo.evo.Population
+import scevo.core.StatePop
+import scevo.core.Population
 
 /**
   * Performs breeding, i.e., selection followed by application of search operators

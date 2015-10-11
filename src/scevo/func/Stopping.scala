@@ -1,8 +1,8 @@
 package scevo.func
 
-import scevo.evo.State
+import scevo.core.State
 import scevo.tools.Options
-import scevo.evo.StatePop
+import scevo.core.StatePop
 
 object Termination {
   object MaxIter {

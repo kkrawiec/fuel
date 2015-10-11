@@ -1,4 +1,4 @@
-package scevo.evo
+package scevo.core
 
 /** Search state. 
  */

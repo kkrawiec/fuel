@@ -1,4 +1,4 @@
-package scevo.evo
+package scevo.core
 
 // Interaction outcomes are always Doubles
 trait InteractionFunction[A, B] extends Function2[A, B, Double] {

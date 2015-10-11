@@ -12,15 +12,18 @@ import scevo.tools.OptCollRng
   * Use case: Hierarchical If and only If
   *
   * Maximized fitness function
+  * 
+  *`This example shows also more succint way of fetching parameter values. 
+  * 
   */
 object Hiff {
   def main(args: Array[String]) {
     implicit val (opt, coll, rng) = OptCollRng("--n 32 --trivial false --maxGenerations 1000")
-    val n = opt.paramInt("n", _ > 0)
+    val n = opt("n", (_ : Int) > 0)
     require((n & (n - 1)) == 0, "The number of variables must be a power of 2.")
 
     val blocks =
-      if (opt.paramBool("trivial")) Range(0, n).toVector
+      if (opt("trivial")) Range(0, n).toVector
       else rng.shuffle(Range(0, n).toVector)
     println(s"Block definition: $blocks")
 

@@ -3,7 +3,7 @@ package scevo.tests
 import org.junit.Test
 import org.scalatest._
 import org.scalatest.Matchers
-import scevo.evo.BestSelector
+import scevo.core.BestSelector
 
 object TestBestSelector {
   def main(args: Array[String]) =

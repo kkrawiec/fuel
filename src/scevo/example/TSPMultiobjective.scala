@@ -1,8 +1,8 @@
 package scevo.example
 
 import scala.Range
-import scevo.evo.Dominance
-import scevo.evo.StatePop
+import scevo.core.Dominance
+import scevo.core.StatePop
 import scevo.func.NSGABreeder
 import scevo.func.NSGABreederElitist
 import scevo.func.RunExperiment

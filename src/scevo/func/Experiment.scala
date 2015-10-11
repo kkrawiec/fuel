@@ -1,7 +1,7 @@
 package scevo.func
 
 import java.util.Calendar
-import scevo.evo.State
+import scevo.core.State
 import scevo.tools.Options
 import scevo.tools.Collector
 import scevo.tools.TRandom

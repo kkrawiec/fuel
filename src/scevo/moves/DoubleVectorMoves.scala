@@ -7,7 +7,7 @@ class DoubleVectorMoves(numVars: Int, sigma: Double)(implicit rng: TRandom)
 
   override def newSolution = IndexedSeq.fill(numVars)(rng.nextDouble)
 
-  override def oneBitMutation = (p: IndexedSeq[Double]) => {
+  override def onePointMutation = (p: IndexedSeq[Double]) => {
     val xiToMutate = rng.nextInt(numVars)
     p.updated(xiToMutate, p(xiToMutate) + sigma * (rng.nextDouble - 0.5))
   }

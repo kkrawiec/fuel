@@ -1,9 +1,9 @@
 package scevo.func
 
-import scevo.evo.BestSelector
+import scevo.core.BestSelector
 import scevo.tools.Collector
 import scevo.tools.Options
-import scevo.evo.StatePop
+import scevo.core.StatePop
 
 // Reporting
 class BestSoFar[S, E](opt: Options, coll: Collector, o: PartialOrdering[E])

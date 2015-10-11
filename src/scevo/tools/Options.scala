@@ -38,30 +38,49 @@ trait Options {
   def paramString(id: String) = getOption(id)
   def paramString(id: String, default: String) = getOption(id, default)
 
-  def paramInt(id: String) = getOption(id).getOrElse({ throw new Exception(s"Parameter $id not found"); "" }).toInt
+  // Int
+  def paramInt(id: String): Int = getOption(id).getOrElse({ throw new Exception(s"Parameter $id not found"); "" }).toInt
+  def apply(id: String) = paramInt(id)
+
   def paramInt(id: String, default: Int) = getOption(id, default).toInt
+  def apply(id: String, default: Int) = paramInt(id, default)
+
   def paramInt(id: String, validator: Int => Boolean): Int = {
     val v = paramInt(id)
     assert(validator(v), s"Parameter $id invalidates $validator")
     v
   }
+  def apply(id: String, validator: Int => Boolean) = paramInt(id, validator)
+
   def paramInt(id: String, default: Int, validator: Int => Boolean): Int = {
     val v = paramInt(id, default)
     assert(validator(v), s"Parameter $id invalidates $validator")
     v
   }
+  def apply(id: String, default: Int, validator: Int => Boolean): Int =
+    paramInt(id, default, validator)
+
+  // Double
   def paramDouble(id: String) = options(id).get.toDouble
   def paramDouble(id: String, default: Double) = getOption(id, default).toDouble
+  def apply(id: String, default: Double) = getOption(id, default).toDouble
+
   def paramDouble(id: String, validator: Double => Boolean): Double = {
     val v = paramDouble(id)
     assert(validator(v), s"Parameter $id invalidates $validator")
     v
   }
+  def apply(id: String, validator: Double => Boolean): Double = paramDouble(id, validator)
+
   def paramDouble(id: String, default: Double, validator: Double => Boolean): Double = {
     val v = paramDouble(id, default)
     assert(validator(v), s"Parameter $id invalidates $validator")
     v
   }
+  def apply(id: String, default: Double, validator: Double => Boolean): Double =
+    paramDouble(id, default, validator)
+
+  // Boolean
   def paramBoolReq(id: String) = getOption(id) match {
     case Some("true")  => true
     case Some("false") => false
@@ -72,6 +91,7 @@ trait Options {
     case "false" => false
     case _       => throw new Exception(s"Boolean value expected for parameter $id")
   }
+  def apply(id: String, default: Boolean = false) = paramBool(id, default)
 }
 
 abstract class OptionsC(opt: Map[String, String]) extends Options {
@@ -93,12 +113,8 @@ object NoOptions {
   def apply = new NoOptions
 }
 
-/*
- * TODO: Make the parsing more robust
- */
-
 object OptionParser {
-  // Convenience hack: if only one arg, then check if it's a one string with params.
+  // Convenience hack: if only one arg, then check if it's single string with params.
   def apply(arr: Array[String]) = nextOption(
     if (arr.size == 1) arr(0).split("\\s+").toList
     else arr.toList)

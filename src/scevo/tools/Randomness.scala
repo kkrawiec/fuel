@@ -57,6 +57,6 @@ class Random(override val self: java.util.Random) extends scala.util.Random with
 }
 
 object Rng {
-  def apply(implicit conf: Options) = new Random(conf.paramInt("seed", 1))
+  def apply(implicit conf: Options) = new Random(conf("seed", 1))
 }
 

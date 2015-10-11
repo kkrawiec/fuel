@@ -4,29 +4,43 @@ Krzysztof Krawiec
 krawiec@cs.put.poznan.pl
 June 2014 - Oct 2015
 
+Introduction
+===================
+
+ScEvo is a succinct framework for implementing metaheuristic algorithms, in particular evolutionary algorithms, in Scala. It is largely written in the functional style, using object-oriented approach mainly on the top level. The library is organized as a collection of components, which in general are allowed to be stateful. 
+
+A metaheuristic algorithm is a (usually compound) function. ScEvo's role is to help a user to build such a function using the components available in the library, facilitate running such algorithms, and provide convenient ways of parameterizing them and collecting results. 
+
+This is a one-page description of the basic components and the relations between them. The names of components are capitalized. 
+
 General philosophy
 ===================
 
-The library is organized as a collection of components, which in general are allowed to be stateful. A particular configuration is obtained by mixing multiple traits that implement the particular components. 
+Metaheuristics are iterative algorithms that iterate over States. A single step of such iteration is a function State => State. The object Iteration constructs an iterative algorithm (a function State => State) with a given step function (also a function State => State) and stopping/termination condition(s) (functions State => Boolean). 
 
-This is a one-page description of the basic components and the relations between them. The names of components are capitalized. Most of them are in the scevo.evo package. 
+State can be basically anything - we only require it to hold the iteration number. Most commonly, a State will hold a candidate solution or a population of candidate solutions. For the latter case, we provide StatePop trait and Population class; technically, population holds a *list* of solutions, so duplicates are permitted. If there is need of storing some form of history of search process (like e.g. in Tabu search), this should also be done in State.  
 
-We consider a space of Solutions (candidate solutions). 
-A Solution can undergo an evaluation, the result of which is an Evaluation. 
-A Solution accompanied with its Evaluation is an EvaluatedSolution (the default implementation of EvaluatedSolution is ESol). 
-Evaluation can be anything that implements partial order, in particular ScalarEvaluation (e.g., fitness) or MultiobjectiveEvaluation. 
+Solutions can be anything and in ScEvo they are used as parameters of generic types/classes, typically denoted by S. So Population[Vector[Int]] is a population of solutions being vectors of Ints. 
 
-A space of Solutions can be searched using an Algorithm. 
-A particular form of Algorithm is IterativeAlgorithm. 
+A solution can undergo an evaluation, the outcome of which can be anything (though in practice evaluations are usually Doubles, Ints, in general types implementing complete orders). Evaluation is another parameter of many generics in ScEvo, denoted by E. We often need to store solutions with their evaluations; the convention we use for that purpose is Scala's Tuple2 type. So for instance Population[Tuple2[Seq[Int],Double]] (or more succinctly Population[(Seq[Int],Double)]) is a population of solutions evaluated by Doubles. 
+
+New solutions are built from the existing ones using search operators, i.e. in general functions of signature S x S x ... x S => S x ... x S. For instance a typical mutation operator is S => S. Such an operator is 'wrapped' using the SearchOperator trait. This trait is extended with convenience classes SearchOperator1, SearchOperator2, etc. for search operators of different arity.  
+
+To use search operator in 
+
+---
+The recommended order looking at examples is: MaxOnes, MaxOnesVectors, Hiff, Rosenbrock, TSP, TSPMultiobjective. 
+
+TODO: there should be a possibility to modify an option (?)
+
+
+Most components have both 'regular' constructors (parameter passed explicitly via constructor argument) and constructors that fetch parameters from Options. 
+
+A generic search algorithm is composed by the EA class. It is simply initialization followed by evaluation, and then followed by multiple iterations of breeding followed by evaluation. The class also decorates this workflow with per-iteration and final reporting. 
+
+Quite often there is need for using multiple search operators (in parallel), 
+
 An IterativeAlgorithm executes a Prologue (which provides an InitialState), zero or more Steps, and Epilogue.  
-
-At any given moment, the search process realized by an IterativeAlgorithm is in a certain State.
-A State can be anything, but most frequently it is a PopulationState, which is a list of one or more EvaluatedSolutions (note: a *list*, so duplicates are permitted). 
-An IterativeAlgorithm can use one or more StoppingCondition to decide whether search should be terminated. 
-
-To move from one State to another, IterativeAlgorithm uses a Steep.
-SearchStep takes the previous history of States (composed of at least the last State), and produces a new State. 
-A SearchStep can (but does not have to) refer to solutions' Evaluation.
 
 When the considered states are PopulationStates, we usually use SearchStepStochastic.
 SearchStepStochastic selects a (nonempty) subset of EvaluatedSolutions; call them parents. 
@@ -35,6 +49,8 @@ A search operator is a function that accepts one or more EvaluatedSolution as ar
 Every application of a search operator results in one or more Solution (not evaluated anymore). 
 The set of created Solutions ('children') undergoes evaluation, which results in a set of EvaluatedSolutions, i.e., new search State. 
 Note that a Solution may not pass the evaluation stage (e.g., because it violates some constraint). 
+
+Evaluation can be anything that implements partial order, in particular ScalarEvaluation (e.g., fitness) or MultiobjectiveEvaluation. 
 
 The trait scevo.evo.EA implements a 'vanilla' generational Evolutionary Algorithm. 
 Apart from the above components, it requires:

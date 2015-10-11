@@ -25,7 +25,7 @@ object MaxOnesVectors {
     // just one operator doing 2-bit mutation. 
     //  We can achieve that by composing two one-bit mutations:
     object MyMoves extends BoolVectorMoves(opt.paramInt("numVars", _ > 0)) {
-      override def moves = Seq(SearchOperator(oneBitMutation compose oneBitMutation))
+      override def moves = Seq(SearchOperator(onePointMutation compose onePointMutation))
     }
 
     // Want to maximize the objective:

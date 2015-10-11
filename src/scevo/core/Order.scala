@@ -1,4 +1,4 @@
-package scevo.evo
+package scevo.core
 
 /**
   * Dominance relation, a special case of PartialOrder, where objects are compared

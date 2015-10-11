@@ -3,8 +3,8 @@ package scevo.func
 import scala.annotation.tailrec
 
 import scevo.Preamble.RndApply
-import scevo.evo.BestSelector
-import scevo.evo.Dominance
+import scevo.core.BestSelector
+import scevo.core.Dominance
 import scevo.tools.Options
 import scevo.tools.TRandom
 
@@ -23,9 +23,9 @@ class NSGA2Selection[S, E](val tournSize: Int,
     extends StochasticSelection[S, Rank[E]](rand) {
 
   def this(opt: Options)(rand: TRandom) = this(
-    opt.paramInt("tournamentSize", 7, _ > 1),
-    opt.paramBool("removeEvalDuplicates"),
-    opt.paramBool("promoteFrontExtremes"))(rand)
+    opt("tournamentSize", 7, _ > 1),
+    opt("removeEvalDuplicates"),
+    opt("promoteFrontExtremes"))(rand)
 
   def globalOrdering = new Ordering[(S, Rank[E])] {
     override def compare(a: (S, Rank[E]), b: (S, Rank[E])) = {

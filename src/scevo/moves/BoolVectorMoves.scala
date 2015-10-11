@@ -14,7 +14,7 @@ class BoolVectorMoves(numVars: Int)(implicit rng: TRandom)
 
   override def newSolution = IndexedSeq.fill(numVars)(rng.nextBoolean)
 
-  override def oneBitMutation = (p: IndexedSeq[Boolean]) => {
+  override def onePointMutation = (p: IndexedSeq[Boolean]) => {
     val bitToMutate = rng.nextInt(numVars)
     p.updated(bitToMutate, !p(bitToMutate))
   }
