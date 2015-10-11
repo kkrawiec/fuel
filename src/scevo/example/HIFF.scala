@@ -1,12 +1,12 @@
 package scevo.example
 
-import scevo.func.Experiment
-import scevo.func.SimpleEA
-import scevo.tools.OptCollRng
-import scevo.moves.BoolVectorMoves
-import scevo.Preamble._
 import scala.Ordering
 import scala.Range
+
+import scevo.func.RunExperiment
+import scevo.func.SimpleEA
+import scevo.moves.BoolVectorMoves
+import scevo.tools.OptCollRng
 
 /**
   * Use case: Hierarchical If and only If
@@ -40,6 +40,6 @@ object Hiff {
       stop = (s: Seq[Boolean], e: Int) => e == maxEval)(opt, coll, rng,
         ordering = Ordering[Int].reverse)
 
-    Experiment.run(ga)
+    RunExperiment(ga)
   }
 }

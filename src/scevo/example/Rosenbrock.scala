@@ -1,7 +1,8 @@
 package scevo.example
 
 import scala.Range
-import scevo.func.Experiment
+
+import scevo.func.RunExperiment
 import scevo.func.SimpleEA
 import scevo.moves.DoubleVectorMoves
 import scevo.tools.OptCollRng
@@ -19,7 +20,7 @@ object Rosenbrock {
     def rosenbrock(x: Seq[Double]) = Range(0, n - 1).map(i =>
       (1 - x(i)) * (1 - x(i)) + 100 * math.pow(x(i + 1) - x(i) * x(i), 2)).sum
 
-    Experiment.run(SimpleEA(new DoubleVectorMoves(n, 0.001), rosenbrock))
+    RunExperiment(SimpleEA(new DoubleVectorMoves(n, 0.001), rosenbrock))
   }
 }
 

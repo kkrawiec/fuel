@@ -1,12 +1,12 @@
 package scevo.example
 
 import scala.Ordering
-
 import scevo.func.Experiment
 import scevo.func.SearchOperator
 import scevo.func.SimpleEA
 import scevo.moves.BoolVectorMoves
 import scevo.tools.OptCollRng
+import scevo.func.RunExperiment
 
 /**
   * Use case: MaxOnes with Vectors.
@@ -35,6 +35,6 @@ object MaxOnesVectors {
       eval = (s: IndexedSeq[Boolean]) => s.count(_ == true),
       stop = (s: IndexedSeq[Boolean], e: Int) => e == MyMoves.numVars)
 
-    Experiment.run(ga)
+    RunExperiment(ga)
   }
 }

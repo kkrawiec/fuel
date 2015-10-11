@@ -1,9 +1,10 @@
 package scevo.example
 
 import scala.Range
-import scevo.moves.PermutationMoves
-import scevo.func.Experiment
+
+import scevo.func.RunExperiment
 import scevo.func.SimpleEA
+import scevo.moves.PermutationMoves
 import scevo.tools.OptCollRng
 
 /**
@@ -26,7 +27,7 @@ object TSP {
     def eval(s: Seq[Int]) =
       Range(0, s.size).map(i => distances(s(i))(s((i + 1) % s.size))).sum
 
-    Experiment.run(SimpleEA(PermutationMoves(numCities), eval))
+    RunExperiment(SimpleEA(PermutationMoves(numCities), eval))
   }
 }
 

@@ -1,13 +1,13 @@
 package scevo.example
 
 import scala.Range
-import scevo.moves.PermutationMoves
 import scevo.evo.Dominance
-import scevo.func.Experiment
+import scevo.evo.StatePop
 import scevo.func.NSGABreeder
 import scevo.func.NSGABreederElitist
+import scevo.func.RunExperiment
+import scevo.moves.PermutationMoves
 import scevo.tools.OptCollRng
-import scevo.evo.StatePop
 import scevo.func.EACore
 
 /**
@@ -40,13 +40,13 @@ object TSPMultiobjective {
     // We are using EACore because there is only partial order of the candidate solutions, 
     // so it does not make much sense to report online progress.
     // Non-elitist version
-    Experiment.run(new EACore(moves, eval) {
+    RunExperiment(new EACore(moves, eval) {
       override val breed = new NSGABreeder(moves)
     })
 
     // Elitist version (parents and offspring merged in mu+lambda style), 
     // plus simple reporting. 
-    Experiment.run(new EACore(moves, eval) {
+    RunExperiment(new EACore(moves, eval) {
       override val breed = new NSGABreederElitist(moves)
       override def epilogue = super.epilogue andThen showParetoFront
       def showParetoFront(s: StatePop[(Seq[Int], Seq[Double])]) = {

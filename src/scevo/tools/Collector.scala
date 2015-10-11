@@ -1,14 +1,16 @@
 package scevo.tools
 
-import java.util.Calendar
 import java.lang.management.ManagementFactory
 import java.net.InetAddress
 import java.net.UnknownHostException
 
-/* Result collector
+/** Collector of results. Each entry is a pair (key,value). 
+ *  
+ * setResult() should be used for the actual results for experiment, i.e., the
+ * 'essential' reporting. set() is more for technical reporting (e.g., timing, 
+ * location, files, etc.) 
  * 
  */
-
 trait Collector extends Closeable {
   def rdb: ResultDatabase
   def set(key: String, v: Any):Unit
@@ -23,6 +25,7 @@ class CollectorFile(opt: Options) extends Collector {
   // Prepare result database and fill it with the technical parameters 
   override val rdb = new ResultDatabase(opt.paramString("outputDir", "./"))
   println("Result file: " + rdb.fname)
+  rdb.put("thisFileName", rdb.fname)
 
   opt.allOptions.foreach(t => rdb.put(t._1, t._2))
   opt.retrievedOptions.foreach(t => rdb.put(t._1, t._2))
@@ -32,7 +35,6 @@ class CollectorFile(opt: Options) extends Collector {
   } catch { case e: UnknownHostException => "could-not-determine" })
   rdb.setResult("system.java-version", System.getProperty("java.version"));
   rdb.setResult("system.pid", ManagementFactory.getRuntimeMXBean().getName());
-  rdb.setResult("system.startTime", Calendar.getInstance().getTime().toString)
   rdb.put("mainClass", getClass.getName)
   rdb.put("status", "initialized")
   rdb.save()
