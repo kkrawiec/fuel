@@ -2,7 +2,7 @@ package scevo.core
 
 // Interaction outcomes are always Doubles
 trait InteractionFunction[A, B] extends Function2[A, B, Double] {
-  def interact(a: A, b: B) = apply(a, b) // alias
+//  def interact(a: A, b: B) = apply(a, b) // alias
 }
 
 trait AdditiveInteractionF[A, B] extends InteractionFunction[A, B] {

@@ -1,8 +1,8 @@
 package scevo.func
 
 import scevo.core.BestSelector
-import scevo.tools.Collector
-import scevo.tools.Options
+import scevo.util.Collector
+import scevo.util.Options
 import scevo.core.StatePop
 
 // Reporting

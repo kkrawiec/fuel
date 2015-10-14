@@ -5,7 +5,7 @@ import scala.Range
 import scevo.func.RunExperiment
 import scevo.func.SimpleEA
 import scevo.moves.PermutationMoves
-import scevo.tools.OptCollRng
+import scevo.util.OptCollRng
 
 /**
   * Traveling Salesperson problem.

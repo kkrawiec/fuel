@@ -1,4 +1,4 @@
-package scevo.tools
+package scevo.util
 
 trait Environment{
   implicit def opt: Options 

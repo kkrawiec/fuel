@@ -1,7 +1,7 @@
 package scevo.func
 
 import scevo.core.State
-import scevo.tools.Options
+import scevo.util.Options
 import scevo.core.StatePop
 
 object Termination {

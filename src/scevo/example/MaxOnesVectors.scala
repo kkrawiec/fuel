@@ -5,7 +5,7 @@ import scevo.func.Experiment
 import scevo.func.SearchOperator
 import scevo.func.SimpleEA
 import scevo.moves.BoolVectorMoves
-import scevo.tools.OptCollRng
+import scevo.util.OptCollRng
 import scevo.func.RunExperiment
 
 /**
@@ -24,7 +24,7 @@ object MaxOnesVectors {
     // Say we want a different setup of search operators than the default one:
     // just one operator doing 2-bit mutation. 
     //  We can achieve that by composing two one-bit mutations:
-    object MyMoves extends BoolVectorMoves(opt.paramInt("numVars", _ > 0)) {
+    object MyMoves extends BoolVectorMoves(opt("numVars", _ > 0)) {
       override def moves = Seq(SearchOperator(onePointMutation compose onePointMutation))
     }
 

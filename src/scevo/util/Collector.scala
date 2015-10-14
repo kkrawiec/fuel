@@ -1,4 +1,4 @@
-package scevo.tools
+package scevo.util
 
 import java.lang.management.ManagementFactory
 import java.net.InetAddress
@@ -23,7 +23,8 @@ trait Collector extends Closeable {
 
 class CollectorFile(opt: Options) extends Collector {
   // Prepare result database and fill it with the technical parameters 
-  override val rdb = new ResultDatabase(opt.paramString("outputDir", "./"))
+  override val rdb = 
+    new ResultDatabase(opt.paramString("outDir", "./"),opt.paramString("outFile", ""))
   println("Result file: " + rdb.fname)
   rdb.put("thisFileName", rdb.fname)
 

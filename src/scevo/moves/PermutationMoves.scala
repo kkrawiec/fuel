@@ -1,7 +1,7 @@
 package scevo.moves
 
 import scala.Range
-import scevo.tools.TRandom
+import scevo.util.TRandom
 import scevo.func.SearchOperator
 
 /**

@@ -2,7 +2,7 @@ package scevo.func
 
 import scala.annotation.tailrec
 import scevo.core.State
-import scevo.tools.Options
+import scevo.util.Options
 import scevo.core.StatePop
 import scevo.core.Population
 

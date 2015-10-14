@@ -3,10 +3,18 @@ package scevo.func
 import scevo.Distribution
 import scevo.Preamble.RndApply
 import scevo.core.BestSelector
-import scevo.tools.Options
-import scevo.tools.TRandom
+import scevo.util.Options
+import scevo.util.TRandom
 import scala.annotation.tailrec
+import scevo.core.StatePop
+import scala.collection.SeqLike
+import scala.collection.generic.SeqForwarder
+import scala.collection.IndexedSeqLike
+import scala.collection.mutable.Builder
 
+/** Selection can be applied to any set of solutions, not only populations, hence
+ *  the signature. 
+ */
 trait Selection[S, E] extends (Seq[(S, E)] => (S, E))
 
 class GreedyBestSelection[S, E](o: Ordering[E]) extends Selection[S, E] {
@@ -34,8 +42,42 @@ object TournamentSelection {
     new TournamentSelection[S, E](o)(opt, rand)
 }
 
-class FitnessProportionateSelection[S](implicit rand: TRandom) extends Selection[S, Double] {
+
+class FitnessPropSelSlow[S](implicit rand: TRandom) extends Selection[S, Double] {
   // Inefficient version: recalculates distribution in every selection act. 
+  def apply(pop: Seq[(S, Double)]) = {
+    val distribution = Distribution.fromAnything(pop.map(_._2))
+    pop(distribution(rand))
+  }
+}
+
+
+/** Efficient version: applicable only to NormalizedPop
+ *  
+ */
+class FitnessPropSel[S](implicit rand: TRandom) extends Selection[S, Double] {
+  
+  /*
+  class N(val values: Vector[Int])
+    extends IndexedSeq[Int] with IndexedSeqLike[Int, N] {
+  override def newBuilder: Builder[Int, N] = N.newBuilder(values)
+  protected override def underlying = values
+}
+  class NormalizedSeq(override val seq: Seq[(S,Double)]) 
+  extends SeqLike[(S,Double), NormalizedSeq] {
+    override def iterator = seq.iterator
+    override def apply(i: Int) = seq(i)
+    override def length = seq.length
+    override def newBuilder = new Builder
+  }
+    
+
+  case class NormalizedPop(val pop :StatePop[(S,Double)]) extends StatePop[(S, Double)]{
+    val distribution = Distribution.fromAnything(pop.solutions.map(_._2))
+    override val solutions = pop.solutions
+  }
+  * 
+  */
   def apply(pop: Seq[(S, Double)]) = {
     val distribution = Distribution.fromAnything(pop.map(_._2))
     pop(distribution(rand))

@@ -1,4 +1,4 @@
-package scevo.tools
+package scevo.util
 
 import scala.collection.immutable.TreeMap
 

@@ -7,11 +7,11 @@ import scevo.func.NSGABreeder
 import scevo.func.NSGABreederElitist
 import scevo.func.RunExperiment
 import scevo.moves.PermutationMoves
-import scevo.tools.OptCollRng
+import scevo.util.OptCollRng
 import scevo.func.EACore
 
 /**
-  * Two-objective Traveling Salesperson problem: distance and time.
+  * Two-objective Traveling Salesperson problem: distance and cost.
   *
   * Both objectives minimized.
   *
@@ -27,12 +27,12 @@ object TSPMultiobjective {
     val cities = Seq.fill(numCities)((rng.nextDouble, rng.nextDouble))
     val distances = for (i <- cities) yield for (j <- cities)
       yield math.hypot(i._1 - j._1, i._2 - j._2)
-    // Generate random times
-    val times = distances.map(_.map(_ * (0.5 + rng.nextDouble)))
+    // Generate random costs
+    val costs = distances.map(_.map(_ * (0.5 + rng.nextDouble)))
 
     def eval(s: Seq[Int]) = Seq(
       Range(0, s.size).map(i => distances(s(i))(s((i + 1) % s.size))).sum,
-      Range(0, s.size).map(i => times(s(i))(s((i + 1) % s.size))).sum)
+      Range(0, s.size).map(i => costs(s(i))(s((i + 1) % s.size))).sum)
 
     implicit val ordering = Dominance[Double] // or Dominance(Ordering[Double])
     val moves = PermutationMoves(numCities)
@@ -48,7 +48,7 @@ object TSPMultiobjective {
     // plus simple reporting. 
     RunExperiment(new EACore(moves, eval) {
       override val breed = new NSGABreederElitist(moves)
-      override def epilogue = super.epilogue andThen showParetoFront
+      override def algorithm = super.algorithm andThen showParetoFront
       def showParetoFront(s: StatePop[(Seq[Int], Seq[Double])]) = {
         val ranking = breed.nsga.paretoRanking(s.solutions)
         println("Pareto front:")

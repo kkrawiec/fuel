@@ -1,6 +1,6 @@
 package scevo.moves
 
-import scevo.tools.TRandom
+import scevo.util.TRandom
 
 class DoubleVectorMoves(numVars: Int, sigma: Double)(implicit rng: TRandom)
     extends VectorMoves[Double](numVars)(rng) {

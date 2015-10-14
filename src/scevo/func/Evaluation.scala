@@ -15,7 +15,8 @@ object SequentialEval {
 /** Evaluates population in parallel. 
  *  The second version allows controlling the number of threads.
  *  
- */object ParallelEval {
+ */
+object ParallelEval {
   def apply[S, E](f: S => E) =
     (s: StatePop[S]) => Population(s.solutions.par.map(x => (x, f(x))).to, s.iteration)
 

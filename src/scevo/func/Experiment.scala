@@ -1,11 +1,10 @@
 package scevo.func
 
 import java.util.Calendar
+
 import scevo.core.State
-import scevo.tools.Options
-import scevo.tools.Collector
-import scevo.tools.TRandom
-import scevo.tools.OptCollRng
+import scevo.util.Collector
+import scevo.util.Options
 
 /**
   * Deploys an algorithm and does the associated reporting.
@@ -20,7 +19,7 @@ object Experiment {
         try {
           val state = alg()
           coll.set("status", "completed")
-          if (opt.paramString("saveLastState", "false") == "true")
+          if (opt("saveLastState"))
             coll.write("lastState", state)
           Some(state)
         } catch {
@@ -33,7 +32,7 @@ object Experiment {
         } finally {
           coll.setResult("totalTimeSystem", System.currentTimeMillis() - startTime)
           coll.setResult("system.endTime", Calendar.getInstance().getTime().toString)
-          if (opt.paramBool("printResults"))
+          if (opt("printResults"))
             println(coll.rdb.toString)
           coll.close
           opt.warnNonRetrieved

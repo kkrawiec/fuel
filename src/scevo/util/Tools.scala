@@ -1,6 +1,7 @@
-package scevo.tools
+package scevo.util
 
 import scala.tools.reflect.ToolBox
+import scala.reflect.runtime.{currentMirror => cm}
 
 object Combinations {
   // Generates all n-ary combinations with replacement of elements from elems

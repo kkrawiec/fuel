@@ -1,4 +1,4 @@
-package scevo.tools
+package scevo.util
 
 import java.io.File
 import java.io.FileInputStream
@@ -9,19 +9,23 @@ import java.io.ObjectOutputStream
 import java.io.PrintWriter
 
 /**
-  * A container for writing intermediate and final results to a file. 
-  * 
+  * A container for writing intermediate and final results to a file.
+  *
   * Intended to be created at the beginning of experiment, when it creates a new result file
-  * with a unique name. 
+  * with a unique name.
   */
-class ResultDatabase(val directory: String) extends scala.collection.mutable.HashMap[String, Any] {
+class ResultDatabase(val directory: String, defaultFName: String = "")
+    extends scala.collection.mutable.HashMap[String, Any] {
 
   val extension = ".txt"
   val resultPrefix = "result."
   val filePrefix = "res"
   val fileNumFormat = "%06d"
 
-  val (f, fname) = {
+  val (f, fname) = if (defaultFName != "") {
+    val fullName = directory + File.separator + defaultFName
+    (new File(fullName), fullName)
+  } else {
     var f: File = null
     try {
       f = File.createTempFile(filePrefix, extension, new File(directory))

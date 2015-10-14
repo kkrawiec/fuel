@@ -1,9 +1,10 @@
 package scevo
 
-import scevo.tools.TRandom
+import scevo.util.TRandom
 import scala.annotation.tailrec
 
 object Preamble {
+  /** Draws uniformly a single element from the sequence */
   implicit class RndApply[T](s: Seq[T]) {
     require(s.nonEmpty)
     def apply(rnd: TRandom) = s(rnd.nextInt(s.size))
@@ -16,41 +17,24 @@ object Preamble {
     val it = s.iterator
     def apply(rnd: TRandom) = it.drop(rnd.nextInt(s.size)).next
   }
-  /*
-  implicit class RndApplyI[T](i: Iterable[T]) {
-    def apply(rnd: TRandom) = i.drop( rnd.nextInt(i.size) ).next
-  }
-  * 
-  */
-  // Iverson's bracket
+  /** Iverson's bracket */
   implicit def iverson(b:Boolean) = if (b) 1 else 0
 }
 
 // Histogram is a non-normalized Distribution
-class Histogram(val d: Seq[Double]) {
+class Histogram[T](val d: Seq[T])(implicit num: Numeric[T]) {
   require(d.nonEmpty, "Histogram should contain at least one element")
-  require(d.forall(_ >= 0), "Histogram elements should be non-negative")
+  require(d.forall(e => num.gteq(e, num.zero)), "Histogram elements should be non-negative")
   val sum = d.sum
+  require(num.gt(sum, num.zero), "At least one histogram element must be non-zero")
+  /** Draws a random index according to histogram */
   def apply(rng: TRandom): Int = {
-    val r = sum * rng.nextDouble
+    val r = num.toDouble( sum) * rng.nextDouble
     var theSum: Double = 0
-    d.indexWhere(e => { theSum += e; theSum >= r })
+    d.indexWhere(e => { theSum += num.toDouble(e); theSum >= r })
   }
-  // Multiple draws *without replacement*
-  def applyOld(rng: TRandom, n: Int): Seq[Int] = {
-    require(n <= d.size)
-    @tailrec def draw(k: Int, dist: Histogram, remaining: Seq[Int], selected: List[Int]): Seq[Int] = k match {
-      case 1 => remaining(dist(rng)) :: selected
-      case _ => {
-        val s = dist.apply(rng)
-        val index = remaining(s)
-        draw(k - 1, Histogram(dist.d.dropRight(dist.d.size - s) ++ dist.d.drop(s + 1)),
-          remaining.dropRight(dist.d.size - s) ++ remaining.drop(s + 1), index :: selected)
-      }
-    }
-    draw(n, this, 0.until(d.size).toSeq, List[Int]())
-  }
-  def apply(rng: TRandom, n: Int): Seq[Int] = {
+  /** Draws multiple indices *without replacement* */
+ def apply(rng: TRandom, n: Int): Seq[Int] = {
     require(n <= d.size)
     @tailrec def draw(k: Int, s: Double, remaining: Set[Int], selected: List[Int]): Seq[Int] = k match {
       case 0 => selected
@@ -61,17 +45,18 @@ class Histogram(val d: Seq[Double]) {
         val iter = rem.iterator
         var last = -1
         do {
-          theSum += d(iter.next)
+          theSum += num.toDouble(d(iter.next))
           last = last + 1
         } while (iter.hasNext && theSum < r)
-        draw(k - 1, s - d(last), remaining.take(last) ++ iter.toSet, rem(last) :: selected)
+        draw(k - 1, s - num.toDouble(d(last)), remaining.take(last) ++ iter.toSet, 
+            rem(last) :: selected)
       }
     }
-    draw(n, sum, 0.until(d.size).toSet, List[Int]())
+    draw(n,num.toDouble( sum), 0.until(d.size).toSet, List[Int]())
   }
 }
 object Histogram {
-  def apply(d: Seq[Double]) = new Histogram(d)
+  def apply[T](d: Seq[T])(implicit num: Numeric[T]) = new Histogram(d)(num)
 }
 
 class Distribution(d: Seq[Double]) extends Histogram(d) {
@@ -84,13 +69,3 @@ object Distribution {
   def fromAnything(d: Seq[Double]) = new Distribution(d.map(_ / d.sum))
 }
 
-/*
-  def fromAnything(d: Seq[Double]) = {
-    // need this to circumvent numerical problems:
-    val normalized = d.map(_ / d.sum).toList
-    normalized.take(normalized.size-1)
-    val last = 1.0 - normalized.take(normalized.size-1).sum
-    new Distribution(normalized.tail)
-  }
-  * 
-  */

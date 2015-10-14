@@ -5,8 +5,8 @@ import scala.annotation.tailrec
 import scevo.Preamble.RndApply
 import scevo.core.BestSelector
 import scevo.core.Dominance
-import scevo.tools.Options
-import scevo.tools.TRandom
+import scevo.util.Options
+import scevo.util.TRandom
 
 /**
   * NSGA Evaluation

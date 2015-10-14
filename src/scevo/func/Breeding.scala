@@ -4,8 +4,8 @@ import scala.annotation.tailrec
 import scala.collection.immutable.Stream.consWrapper
 import scevo.moves.Moves
 import scevo.core.Dominance
-import scevo.tools.Options
-import scevo.tools.TRandom
+import scevo.util.Options
+import scevo.util.TRandom
 import scevo.core.StatePop
 import scevo.core.Population
 
@@ -49,7 +49,7 @@ object SimpleBreeder {
     new SimpleBreeder(sel, searchOperator, isFeasible)
 }
 
-// Can't use implicit domain due to Scala compiler bug. 
+// Can't use implicit domain due to Scala compiler bug (?). 
 /**
   * Breeding in NSGA is a bit tricky: it requires first ranking, then tournament
   *  selection.

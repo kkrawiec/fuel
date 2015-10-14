@@ -1,4 +1,4 @@
-package scevo.tools
+package scevo.util
 
 /**
   * Convenience functions for simultaneous construction of most common

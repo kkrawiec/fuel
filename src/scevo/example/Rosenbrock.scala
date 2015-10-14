@@ -5,7 +5,7 @@ import scala.Range
 import scevo.func.RunExperiment
 import scevo.func.SimpleEA
 import scevo.moves.DoubleVectorMoves
-import scevo.tools.OptCollRng
+import scevo.util.OptCollRng
 
 /**
   * Continuous optimization: Rosenbrock function.

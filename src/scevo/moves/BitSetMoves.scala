@@ -1,6 +1,6 @@
 package scevo.moves
 
-import scevo.tools.TRandom
+import scevo.util.TRandom
 import scala.collection.immutable.BitSet
 
 /**

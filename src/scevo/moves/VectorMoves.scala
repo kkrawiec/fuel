@@ -1,6 +1,6 @@
 package scevo.moves
 
-import scevo.tools.TRandom
+import scevo.util.TRandom
 
 abstract class VectorMoves[T](val numVars: Int)(rng: TRandom)
     extends AbstractVectorMoves[IndexedSeq[T]] {

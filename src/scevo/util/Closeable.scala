@@ -1,4 +1,4 @@
-package scevo.tools
+package scevo.util
 
 /* To be implemented by the components that need to be closed before program termination
  * 

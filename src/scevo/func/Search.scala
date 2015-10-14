@@ -1,8 +1,8 @@
 package scevo.func
 
-import scevo.tools.Options
+import scevo.util.Options
 import scevo.Distribution
-import scevo.tools.TRandom
+import scevo.util.TRandom
 
 /**
   * Search operator is any function that generates new solutions from existing solutions.

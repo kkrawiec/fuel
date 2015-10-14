@@ -1,6 +1,6 @@
 package scevo.moves
 
-import scevo.tools.TRandom
+import scevo.util.TRandom
 
 /**
   * Bitstring domain implemented as vectors of Booleans.
