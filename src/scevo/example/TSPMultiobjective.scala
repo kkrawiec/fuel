@@ -23,7 +23,7 @@ object TSPMultiobjective {
     implicit val (opt, coll, rng) = OptCollRng("--numCities 12 --populationSize 200")
 
     // Generate random distance matrix
-    val numCities = opt.paramInt("numCities", _ > 0)
+    val numCities = opt.paramInt('numCities, (_:Int) > 0)
     val cities = Seq.fill(numCities)((rng.nextDouble, rng.nextDouble))
     val distances = for (i <- cities) yield for (j <- cities)
       yield math.hypot(i._1 - j._1, i._2 - j._2)

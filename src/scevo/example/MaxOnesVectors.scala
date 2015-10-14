@@ -13,6 +13,7 @@ import scevo.func.RunExperiment
   *
   * Maximized fitness function.
   *
+  * The parameters passed to main() override the ones specified in the Array.
   *
   */
 object MaxOnesVectors {
@@ -24,7 +25,7 @@ object MaxOnesVectors {
     // Say we want a different setup of search operators than the default one:
     // just one operator doing 2-bit mutation. 
     //  We can achieve that by composing two one-bit mutations:
-    object MyMoves extends BoolVectorMoves(opt("numVars", _ > 0)) {
+    object MyMoves extends BoolVectorMoves(opt('numVars, (_:Int) > 0)) {
       override def moves = Seq(SearchOperator(onePointMutation compose onePointMutation))
     }
 

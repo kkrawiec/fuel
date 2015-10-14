@@ -21,7 +21,7 @@ object Preamble {
   implicit def iverson(b:Boolean) = if (b) 1 else 0
 }
 
-// Histogram is a non-normalized Distribution
+/** Histogram is basically a non-normalized Distribution */
 class Histogram[T](val d: Seq[T])(implicit num: Numeric[T]) {
   require(d.nonEmpty, "Histogram should contain at least one element")
   require(d.forall(e => num.gteq(e, num.zero)), "Histogram elements should be non-negative")

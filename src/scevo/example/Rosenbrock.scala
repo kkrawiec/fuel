@@ -16,7 +16,7 @@ object Rosenbrock {
   def main(args: Array[String]) {
     implicit val (opt, coll, rng) = OptCollRng("--n 3 --maxGenerations 300 --printResults true")
 
-    val n = opt.paramInt("n", _ > 0) // dimensionality of the problem/space
+    val n = opt.paramInt('n, (_:Int) > 0) // dimensionality of the problem/space
     def rosenbrock(x: Seq[Double]) = Range(0, n - 1).map(i =>
       (1 - x(i)) * (1 - x(i)) + 100 * math.pow(x(i + 1) - x(i) * x(i), 2)).sum
 

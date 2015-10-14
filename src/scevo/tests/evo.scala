@@ -7,9 +7,8 @@ import scevo.core.BestSelector
 
 object TestBestSelector {
   def main(args: Array[String]) =
-    println(BestSelector(List(3, 1, 3, 6), Ordering[Int]))
+    println(BestSelector(List(3, 1, 3, 6))(Ordering[Int]))
 }
-
 
 /*
 class ExampleSpec extends FlatSpec with Matchers {

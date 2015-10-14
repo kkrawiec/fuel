@@ -19,7 +19,7 @@ object Experiment {
         try {
           val state = alg()
           coll.set("status", "completed")
-          if (opt("saveLastState"))
+          if (opt('saveLastState, false))
             coll.write("lastState", state)
           Some(state)
         } catch {
@@ -32,7 +32,7 @@ object Experiment {
         } finally {
           coll.setResult("totalTimeSystem", System.currentTimeMillis() - startTime)
           coll.setResult("system.endTime", Calendar.getInstance().getTime().toString)
-          if (opt("printResults"))
+          if (opt('printResults, false))
             println(coll.rdb.toString)
           coll.close
           opt.warnNonRetrieved

@@ -23,9 +23,9 @@ class NSGA2Selection[S, E](val tournSize: Int,
     extends StochasticSelection[S, Rank[E]](rand) {
 
   def this(opt: Options)(rand: TRandom) = this(
-    opt("tournamentSize", 7, _ > 1),
-    opt("removeEvalDuplicates"),
-    opt("promoteFrontExtremes"))(rand)
+    opt('tournamentSize, 7, (_:Int) > 1),
+    opt('removeEvalDuplicates,false),
+    opt('promoteFrontExtremes,false))(rand)
 
   def globalOrdering = new Ordering[(S, Rank[E])] {
     override def compare(a: (S, Rank[E]), b: (S, Rank[E])) = {
@@ -59,7 +59,7 @@ class NSGA2Selection[S, E](val tournSize: Int,
 
   // Phase 2: The actual selection, based on the wrapped solutions
   // May be called arbitrarily many times. 
-  override def apply(sel: Seq[(S, Rank[E])]) = BestSelector[(S, Rank[E])](sel(rand, tournSize), globalOrdering)
+  override def apply(sel: Seq[(S, Rank[E])]) = BestSelector[(S, Rank[E])](sel(rand, tournSize))(globalOrdering)
 
   // Builds the ranking top-down. 
   def paretoRanking[S, E](solutions: Seq[(S, Seq[E])])(implicit po: Dominance[E]): Seq[Seq[(S, Rank[E])]] = {

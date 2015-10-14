@@ -44,65 +44,81 @@ trait Options {
 
   def paramInt(id: String, default: Int) = getOption(id, default).toInt
   def apply(id: String, default: Int) = paramInt(id, default)
+  def apply(id: Symbol, default: Int) = paramInt(id.name, default)
 
   def paramInt(id: String, validator: Int => Boolean): Int = {
     val v = paramInt(id)
-    assert(validator(v), s"Parameter $id invalidates $validator")
+    assert(validator(v), s"Parameter $id invalidates validator")
     v
   }
+  def paramInt(id: Symbol, validator: Int => Boolean) : Int = paramInt(id.name,validator)
   def apply(id: String, validator: Int => Boolean) = paramInt(id, validator)
+  def apply(id: Symbol, validator: Int => Boolean) = paramInt(id.name, validator)
 
   def paramInt(id: String, default: Int, validator: Int => Boolean): Int = {
     val v = paramInt(id, default)
-    assert(validator(v), s"Parameter $id invalidates $validator")
+    assert(validator(v), s"Parameter $id invalidates validator")
     v
   }
   def apply(id: String, default: Int, validator: Int => Boolean): Int =
     paramInt(id, default, validator)
+  def apply(id: Symbol, default: Int, validator: Int => Boolean): Int =
+    paramInt(id.name, default, validator)
 
   // Double
   def paramDouble(id: String) = options(id).get.toDouble
+  def paramDouble(id: Symbol) = options(id.name).get.toDouble
   def paramDouble(id: String, default: Double) = getOption(id, default).toDouble
+  def paramDouble(id: Symbol, default: Double) = getOption(id.name, default).toDouble
   def apply(id: String, default: Double) = getOption(id, default).toDouble
+  def apply(id: Symbol, default: Double) = getOption(id.name, default).toDouble
 
   def paramDouble(id: String, validator: Double => Boolean): Double = {
     val v = paramDouble(id)
-    assert(validator(v), s"Parameter $id invalidates $validator")
+    assert(validator(v), s"Parameter $id invalidates validator")
     v
   }
+  def paramDouble(id: Symbol, validator: Double => Boolean): Double = paramDouble(id.name,validator)
   def apply(id: String, validator: Double => Boolean): Double = paramDouble(id, validator)
+  def apply(id: Symbol, validator: Double => Boolean): Double = paramDouble(id.name, validator)
 
   def paramDouble(id: String, default: Double, validator: Double => Boolean): Double = {
     val v = paramDouble(id, default)
-    assert(validator(v), s"Parameter $id invalidates $validator")
+    assert(validator(v), s"Parameter $id invalidates validator")
     v
   }
   def apply(id: String, default: Double, validator: Double => Boolean): Double =
     paramDouble(id, default, validator)
+  def apply(id: Symbol, default: Double, validator: Double => Boolean): Double =
+    paramDouble(id.name, default, validator)
 
   // Boolean
-  def paramBoolReq(id: String) = getOption(id) match {
+  def paramBoolReq(id: String) : Boolean = getOption(id) match {
     case Some("true")  => true
     case Some("false") => false
     case _             => throw new Exception(s"Boolean value expected for parameter $id")
   }
-  def paramBool(id: String, default: Boolean = false) = getOption(id, default) match {
+  def paramBoolReq(id: Symbol) : Boolean = paramBoolReq(id.name)
+  def paramBool(id: String, default: Boolean = false) : Boolean = getOption(id, default) match {
     case "true"  => true
     case "false" => false
     case _       => throw new Exception(s"Boolean value expected for parameter $id")
   }
-  def apply(id: String, default: Boolean = false) = paramBool(id, default)
+  def paramBool(id: Symbol)  : Boolean= paramBool(id.name)
+  def apply(id: String, default: Boolean) = paramBool(id, default)
+  def apply(id: Symbol, default: Boolean) = paramBool(id.name, default)
 }
 
-abstract class OptionsC(opt: Map[String, String]) extends Options {
+class OptionsMap(opt: Map[String, String]) extends Options {
   override def allOptions = opt
   override protected def options = (id: String) => opt.get(id)
-}
 
-class OptionsFromArgs(args: Array[String])
-    extends OptionsC(OptionParser(args)) {
-  def this(params: String) =
-    this(if (params.trim == "") Array[String]() else params.trim.split("\\s+"))
+}
+object OptionsMap {
+  def apply(m: Map[Symbol, Any]) = new OptionsMap(m.map(e => (e._1.name, e._2.toString)))
+  def apply(args: Array[String]) = new OptionsMap(OptionParser(args))
+  def apply(params: String): OptionsMap = apply(
+    if (params.trim == "") Array[String]() else params.trim.split("\\s+"))
 }
 
 class NoOptions extends Options {
