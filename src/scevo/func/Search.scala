@@ -10,33 +10,49 @@ import scevo.util.TRandom
   * Pulling parents from the previous population is implemented with streams (could be alternatively
   * done with iterators, but iterators are mutable). A search operator fetches parents from the stream and
   * returns the offspring(s) (as a List), *and* the tail of the parent stream (typically; if required
-  * the input stream may remain intact). 
+  * the input stream may remain intact).
   *
   */
 
 trait SearchOperator[S] extends (Stream[S] => (List[S], Stream[S]))
 
-class SearchOperator1[S](body: S => S) extends SearchOperator[S] {
-  override def apply(s: Stream[S]) = (List(body(s.head)), s.tail)
+class SearchOperator1[S](body: S => S,
+                         isFeasible: S => Boolean = (_: S) => true)
+    extends SearchOperator[S] {
+  override def apply(s: Stream[S]) = (List(body(s.head)).filter(isFeasible(_)), s.tail)
 }
 
-class SearchOperator2[S](body: Function2[S, S, (S, S)]) extends SearchOperator[S] {
+class SearchOperator2[S](body: Function2[S, S, (S, S)],
+                         isFeasible: S => Boolean = (_: S) => true)
+    extends SearchOperator[S] {
   override def apply(s: Stream[S]) = {
     val r = body(s(0), s(1))
-    (List(r._1, r._2), s.drop(2))
+    (List(r._1, r._2).filter(isFeasible(_)), s.drop(2))
   }
 }
 
-class SearchOperator2_1[S](body: Function2[S, S, S]) extends SearchOperator[S] {
-  override def apply(s: Stream[S]) = (List(body(s(0), s(1))), s.drop(2))
+class SearchOperator2_1[S](body: Function2[S, S, S],
+                           isFeasible: S => Boolean = (_: S) => true)
+    extends SearchOperator[S] {
+  override def apply(s: Stream[S]) = (List(body(s(0), s(1))).filter(isFeasible(_)), s.drop(2))
 }
 
+/* A bit verbose because of compiler's complaint "multiple overloaded alternatives of method apply define default arguments. "
+ * 
+ */
 object SearchOperator {
   def apply[S](body: S => S) = new SearchOperator1[S](body)
-  def apply[S](body: Function2[S, S, (S, S)]) = new SearchOperator2[S](body)
-  def apply[S](body: Function2[S, S, S]) = new SearchOperator2_1[S](body)
-}
+   def apply[S](body: S => S, isFeasible: S => Boolean ) =
+    new SearchOperator1[S](body, isFeasible)
 
+  def apply[S](body: Function2[S, S, (S, S)]) = new SearchOperator2[S](body )
+   def apply[S](body: Function2[S, S, (S, S)], isFeasible: S => Boolean ) =
+    new SearchOperator2[S](body, isFeasible)
+
+  def apply[S](body: Function2[S, S, S]) = new SearchOperator2_1[S](body )
+  def apply[S](body: Function2[S, S, S], isFeasible: S => Boolean ) =
+    new SearchOperator2_1[S](body, isFeasible)
+}
 
 // Picks one of the functions (pipes) at random to 
 object RandomMultiOperator {

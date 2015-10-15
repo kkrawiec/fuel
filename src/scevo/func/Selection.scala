@@ -17,7 +17,7 @@ import scala.collection.mutable.Builder
  */
 trait Selection[S, E] extends (Seq[(S, E)] => (S, E))
 
-class GreedyBestSelection[S, E](o: Ordering[E]) extends Selection[S, E] {
+class GreedySelection[S, E](o: Ordering[E]) extends Selection[S, E] {
   def apply(pop: Seq[(S, E)]) = BestSelector(pop, o)
 }
 

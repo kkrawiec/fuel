@@ -12,15 +12,14 @@ import scevo.core.StatePop
   * Generic trait for population-based iterative (parallel) search
   *
   */
-trait IterativeSearch[S, E] extends Function1[Unit, StatePop[(S, E)]] {
+trait IterativeSearch[S, E] extends Function1[StatePop[S], StatePop[(S, E)]] {
   type ST = StatePop[S] // Population/State of non-evaluated solutions
   type SE = StatePop[(S, E)] // Population/State of evaluated solutions
-  def initialize: Unit => ST
   def evaluate: ST => SE
   def breed: SE => ST
   def terminate: Seq[SE => Boolean]
-  def algorithm = initialize andThen evaluate andThen Iteration(breed andThen evaluate)(terminate) 
-  def apply(x: Unit) = algorithm()
+  def algorithm = evaluate andThen Iteration(breed andThen evaluate)(terminate)
+  def apply(s: ST) = algorithm(s)
 }
 
 /**
@@ -30,9 +29,13 @@ trait IterativeSearch[S, E] extends Function1[Unit, StatePop[(S, E)]] {
   *  Because of that, it is in general impossible to monitor progress, hence report and
   *  epilogue are stubs.
   *
-  * Uses parallel evaluation (number of threads set automatically). 
+  * Uses parallel evaluation (number of threads set automatically).
   * All solutions are considered feasible.
   * Environment (options and collector) passed automatically as implicit parameters.
+  *
+  * Technically, EACore is both Function0[State] as well as Function1[State,State], so
+  * it may be used to either start from scratch (in the former case) or be applied
+  * to some already existing State.
   *
   * TODO: if stop() is default, it should not be called
   */
@@ -40,9 +43,10 @@ abstract class EACore[S, E](moves: Moves[S],
                             eval: S => E,
                             stop: (S, E) => Boolean = ((s: S, e: E) => false))(
                               implicit opt: Options)
-    extends IterativeSearch[S, E] {
+    extends IterativeSearch[S, E] with Function0[StatePop[(S, E)]] {
+  def initialize: Unit => ST = RandomStatePop(moves.newSolution _)
+  def apply() = (initialize andThen algorithm)()
 
-  override def initialize = RandomStatePop(moves.newSolution _)
   override def evaluate = ParallelEval(eval) andThen report
   override def terminate = Termination(stop)
   def report = (s: SE) => { println(f"Gen: ${s.iteration}"); s }

@@ -42,7 +42,7 @@ object MaxOnes1 {
   */
 object MaxOnes2 {
   def main(args: Array[String]) {
-    new Env(Map('numVars -> -500, 'maxGenerations -> 200)) {
+    new Env(Map('numVars -> 500, 'maxGenerations -> 200)) {
       RunExperiment(SimpleEA(
         moves = BitSetMoves(opt('numVars, (_:Int) > 0)),
         eval = (s: BitSet) => s.size,

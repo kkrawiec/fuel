@@ -11,7 +11,7 @@ import scevo.util.Options
   *
   */
 object Experiment {
-  def apply[S <: State](alg: Unit => S)(implicit opt: Options, coll: Collector): (Unit => Option[S]) = {
+  def apply[S <: State](alg: () => S)(implicit opt: Options, coll: Collector): (Unit => Option[S]) = {
     _: Unit =>
       {
         coll.setResult("system.startTime", Calendar.getInstance().getTime().toString)
@@ -43,7 +43,7 @@ object Experiment {
 }
 
 object RunExperiment {
-  def apply[S <: State](alg: Unit => S)(implicit opt: Options, coll: Collector) =
+  def apply[S <: State](alg: () => S)(implicit opt: Options, coll: Collector) =
     Experiment(alg)(opt, coll)()
 }
 

@@ -10,43 +10,64 @@ import scevo.core.StatePop
 import scevo.core.Population
 
 /**
-  * Performs breeding, i.e., selection followed by application of search operators
-  *  followed by feasibility check.
+  * Performs breeding, i.e., selection followed by application of search operators 
+  * (feasibility check is assumed to be done within SearchOperators). 
   *
-  * Breeder combines these three actions because (i) the number of solutions returned
-  * by search operators may vary (even between calls of the same operator), and
-  * (ii) some of the produced solutions may turn out to be infeasible. Therefore, it
+  * Breeder combines these three actions because the number of solutions returned
+  * by search operators may vary (even between the calls of the same operator). Therefore, it
   * is in general impossible to determine in advance how many selection acts and
   * applications of search operators may be needed to populate next population.
   *
   */
-trait Breeder[S, E] extends (StatePop[(S, E)] => StatePop[S])
-
-class SimpleBreeder[S, E](val sel: Selection[S, E],
-                          val searchOperator: () => SearchOperator[S],
-                          val isFeasible: S => Boolean = (_: S) => true)
-    extends Breeder[S, E] {
+class Breeder[S, E](val sel: Selection[S, E],
+                    val searchOperator: () => SearchOperator[S]) {
 
   def selStream(src: Seq[(S, E)]): Stream[S] = sel(src)._1 #:: selStream(src)
 
-  override def apply(current: StatePop[(S, E)]) = {
-    @tailrec def breed(offspring: List[S], parStream: Stream[S]): Seq[S] =
-      if (offspring.size >= current.solutions.size)
-        offspring.take(current.solutions.size)
-      else {
-        val (off, parentTail) = searchOperator()(parStream)
-        breed(offspring ++ off.filter(isFeasible), parentTail)
-      }
-    val parentStream = selStream(current.solutions)
-    Population(breed(List[S](), parentStream), current.iteration + 1)
+  @tailrec final def breed(n: Int, parStream: Stream[S], offspring: List[S] = List()): Seq[S] =
+    if (offspring.size >= n)
+      offspring.take(n)
+    else {
+      val (off, parentTail) = searchOperator()(parStream)
+      breed(n - off.size, parentTail, offspring ++ off)
+    }
+
+  def breedn(n: Int, s: Seq[(S, E)]) = {
+    val parentStream = selStream(s)
+    breed(n, parentStream)
   }
 }
 
+trait GenerationalBreeder[S, E] extends (StatePop[(S, E)] => StatePop[S])
+
+class SimpleBreeder[S, E](override val sel: Selection[S, E],
+                          override val searchOperator: () => SearchOperator[S])
+    extends Breeder[S, E](sel, searchOperator) with GenerationalBreeder[S, E] {
+
+  override def apply(s: StatePop[(S, E)]) =
+    Population(breedn(s.solutions.size, s.solutions), s.iteration + 1)
+}
 object SimpleBreeder {
   def apply[S, E](sel: Selection[S, E],
-                  searchOperator: () => SearchOperator[S],
-                  isFeasible: S => Boolean = (_: S) => true) =
-    new SimpleBreeder(sel, searchOperator, isFeasible)
+                  searchOperator: () => SearchOperator[S]) = new SimpleBreeder[S, E](sel,searchOperator)
+
+}
+
+trait SteadyStateBreeder[S, E] extends (StatePop[(S, E)] => StatePop[(S, E)])
+
+class SimpleSteadyStateBreeder[S, E](override val sel: Selection[S, E],
+                                     override val searchOperator: () => SearchOperator[S],
+                                     val desel: Selection[S, E],
+                                     val eval: S => E)
+    extends Breeder[S, E](sel, searchOperator) with SteadyStateBreeder[S, E] {
+
+  override def apply(s: StatePop[(S, E)]) = {
+    val b = breedn(1, s.solutions).head
+    val r = (b, eval(b))
+    val toRemove = desel(s.solutions)
+    val pos = s.solutions.indexOf(toRemove)
+    Population(s.solutions.take(pos) ++ s.solutions.drop(pos + 1) ++ Seq(r), s.iteration + 1)
+  }
 }
 
 // Can't use implicit domain due to Scala compiler bug (?). 
@@ -58,7 +79,7 @@ object SimpleBreeder {
   */
 class NSGABreeder[S, E](domain: Moves[S])(
   implicit opt: Options, rng: TRandom, ordering: Dominance[E])
-    extends Breeder[S, Seq[E]] {
+    extends GenerationalBreeder[S, Seq[E]] {
   val nsga = new NSGA2Selection[S, E](opt)(rng)
   val breeder = SimpleBreeder[S, Rank[E]](nsga, RandomMultiOperator(domain.moves: _*))
   override def apply(s: StatePop[(S, Seq[E])]) = {
@@ -67,12 +88,13 @@ class NSGABreeder[S, E](domain: Moves[S])(
   }
 }
 
-/** This breeder merges the previous population with parents in the mu+lambda style. 
- *  
- */
+/**
+  * This breeder merges the previous population with parents in the mu+lambda style.
+  *
+  */
 class NSGABreederElitist[S, E](domain: Moves[S])(
   implicit opt: Options, rng: TRandom, ordering: Dominance[E])
-    extends Breeder[S, Seq[E]] {
+    extends GenerationalBreeder[S, Seq[E]] {
   val nsga = new NSGA2Selection[S, E](opt)(rng)
   val breeder = SimpleBreeder[S, Rank[E]](nsga, RandomMultiOperator(domain.moves: _*))
   var previous = Seq[(S, Seq[E])]()
