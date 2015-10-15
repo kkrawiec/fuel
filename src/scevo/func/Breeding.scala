@@ -10,8 +10,8 @@ import scevo.core.StatePop
 import scevo.core.Population
 
 /**
-  * Performs breeding, i.e., selection followed by application of search operators 
-  * (feasibility check is assumed to be done within SearchOperators). 
+  * Performs breeding, i.e., selection followed by application of search operators
+  * (feasibility check is assumed to be done within SearchOperators).
   *
   * Breeder combines these three actions because the number of solutions returned
   * by search operators may vary (even between the calls of the same operator). Therefore, it
@@ -24,17 +24,16 @@ class Breeder[S, E](val sel: Selection[S, E],
 
   def selStream(src: Seq[(S, E)]): Stream[S] = sel(src)._1 #:: selStream(src)
 
-  @tailrec final def breed(n: Int, parStream: Stream[S], offspring: List[S] = List()): Seq[S] =
-    if (offspring.size >= n)
-      offspring.take(n)
-    else {
-      val (off, parentTail) = searchOperator()(parStream)
-      breed(n - off.size, parentTail, offspring ++ off)
-    }
-
   def breedn(n: Int, s: Seq[(S, E)]) = {
-    val parentStream = selStream(s)
-    breed(n, parentStream)
+    @tailrec def breed(parStream: Stream[S], offspring: List[S] = List()): Seq[S] =
+      if (offspring.size >= n)
+        offspring.take(n)
+      else {
+        val (off, parentTail) = searchOperator()(parStream)
+        breed(parentTail, offspring ++ off)
+      }
+
+    breed(selStream(s))
   }
 }
 
@@ -49,7 +48,7 @@ class SimpleBreeder[S, E](override val sel: Selection[S, E],
 }
 object SimpleBreeder {
   def apply[S, E](sel: Selection[S, E],
-                  searchOperator: () => SearchOperator[S]) = new SimpleBreeder[S, E](sel,searchOperator)
+                  searchOperator: () => SearchOperator[S]) = new SimpleBreeder[S, E](sel, searchOperator)
 
 }
 
@@ -66,7 +65,8 @@ class SimpleSteadyStateBreeder[S, E](override val sel: Selection[S, E],
     val r = (b, eval(b))
     val toRemove = desel(s.solutions)
     val pos = s.solutions.indexOf(toRemove)
-    Population(s.solutions.take(pos) ++ s.solutions.drop(pos + 1) ++ Seq(r), s.iteration + 1)
+    val (h, t) = s.solutions.splitAt(pos)
+    Population(h ++ Seq(r) ++ t.tail, s.iteration + 1)
   }
 }
 

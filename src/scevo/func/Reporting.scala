@@ -22,22 +22,34 @@ class BestSoFar[S, E](opt: Options, coll: Collector, o: PartialOrdering[E])
   }
 }
 object BestSoFar {
-  def apply[S, E](o: PartialOrdering[E])(implicit opt: Options, coll: Collector)  =
-    new BestSoFar[S,E](opt, coll, o)
+  def apply[S, E](o: PartialOrdering[E])(implicit opt: Options, coll: Collector) =
+    new BestSoFar[S, E](opt, coll, o)
 }
 
-class EpilogueBestOfRun[S, E](bsf: BestSoFar[S, E], coll: Collector) 
+class CallEvery[S](n: Int, f: S => S) extends (S => S) {
+  var i = 0
+  def apply(s: S) = {
+    val r = if (i % n == 0) f(s) else s
+    i = i + 1
+    r
+  }
+}
+object CallEvery {
+  def apply[S](n: Int, f: S => S) = new CallEvery(n, f)
+}
+
+class EpilogueBestOfRun[S, E](bsf: BestSoFar[S, E], coll: Collector)
     extends Function1[StatePop[(S, E)], StatePop[(S, E)]] {
   def apply(state: StatePop[(S, E)]) = {
     coll.setResult("lastGeneration", state.iteration)
-    coll.setResult("bestOfRun.eval", 
-        if (bsf.bestSoFar.isDefined) bsf.bestSoFar.get._2 else "NaN")
+    coll.setResult("bestOfRun.eval",
+      if (bsf.bestSoFar.isDefined) bsf.bestSoFar.get._2 else "NaN")
     coll.setResult("bestOfRun", bsf.bestSoFar.toString)
     coll.write("bestOfRun", bsf)
     state
   }
 }
 object EpilogueBestOfRun {
-  def apply[S, E](bsf: BestSoFar[S, E])(implicit coll: Collector) = 
-    new EpilogueBestOfRun[S,E](bsf, coll)
+  def apply[S, E](bsf: BestSoFar[S, E])(implicit coll: Collector) =
+    new EpilogueBestOfRun[S, E](bsf, coll)
 }

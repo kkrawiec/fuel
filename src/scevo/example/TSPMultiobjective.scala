@@ -42,16 +42,17 @@ object TSPMultiobjective {
     // so it does not make much sense to report online progress.
     // Non-elitist version
     RunExperiment(new EACore(moves, eval) {
-      override val breed = new NSGABreeder(moves)
+      override val iter = new NSGABreeder(moves) andThen evaluate
     })
 
     // Elitist version (parents and offspring merged in mu+lambda style), 
     // plus simple reporting. 
     RunExperiment(new EACore(moves, eval) {
-      override val breed = new NSGABreederElitist(moves)
+      val breeder = new NSGABreederElitist(moves)
+      override val iter = breeder andThen evaluate
       override def algorithm = super.algorithm andThen showParetoFront
       def showParetoFront(s: StatePop[(Seq[Int], Seq[Double])]) = {
-        val ranking = breed.nsga.paretoRanking(s.solutions)
+        val ranking = breeder.nsga.paretoRanking(s.solutions)
         println("Pareto front:")
         println(ranking(0).map(_._2.eval).sortBy(_(0)).mkString("\n"))
         s

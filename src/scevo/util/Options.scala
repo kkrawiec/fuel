@@ -40,6 +40,7 @@ trait Options {
 
   // Int
   def paramInt(id: String): Int = getOption(id).getOrElse({ throw new Exception(s"Parameter $id not found"); "" }).toInt
+  def paramInt(id: Symbol): Int = paramInt(id.name)
   def apply(id: String) = paramInt(id)
 
   def paramInt(id: String, default: Int) = getOption(id, default).toInt
