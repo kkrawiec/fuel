@@ -1,12 +1,10 @@
 package scevo.func
 
-import scevo.util.Options
-import scevo.util.Collector
-import scevo.util.TRandom
-import scevo.moves.Moves
-import scevo.core.Dominance
 import scevo.core.StatePop
-import scevo.func.SteadyStateBreeder
+import scevo.moves.Moves
+import scevo.util.Collector
+import scevo.util.Options
+import scevo.util.TRandom
 
 /**
   * Generic trait for population-based iterative (parallel) search

@@ -27,7 +27,7 @@ object BestSoFar {
 }
 
 class CallEvery[S](n: Int, f: S => S) extends (S => S) {
-  var i = 0
+  var i = 0L
   def apply(s: S) = {
     val r = if (i % n == 0) f(s) else s
     i = i + 1

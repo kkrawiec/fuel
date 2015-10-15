@@ -6,8 +6,9 @@ import scevo.util.Options
 import scevo.core.StatePop
 import scevo.core.Population
 
-/** Component factories
- *  
+/**
+  * Component factories
+  *
   * Note that IterativeAlgorithm is in general agnostic about evaluation.
   */
 
@@ -21,10 +22,8 @@ object Iteration {
   }
 }
 
-
 // Must be defined as Unit => State, because ()=> State is not composable (no andThen method)
 trait Initializer[S <: State] extends Function1[Unit, S]
-
 
 class RandomStatePop[S](solutionGenerator: () => S)(implicit opt: Options)
     extends Initializer[StatePop[S]] {
@@ -35,4 +34,7 @@ class RandomStatePop[S](solutionGenerator: () => S)(implicit opt: Options)
 object RandomStatePop {
   def apply[S](solutionGenerator: () => S)(implicit opt: Options) =
     new RandomStatePop(solutionGenerator)(opt)
+}
+object RemoveEvals {
+  def apply[S, E] = (s: StatePop[(S, E)]) => Population(s.solutions.unzip._1, s.iteration)
 }
