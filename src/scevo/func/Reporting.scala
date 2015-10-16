@@ -6,6 +6,7 @@ import scevo.core.StatePop
 
 /** Simple helper function for maintaining the best-so-far solutions 
  *  
+ *  Can be plugged anywhere in the algorithm workflow. 
  * Does also simple snapshots, i.e., saves the current state of Collector.   
  */
 
@@ -40,6 +41,11 @@ object BestSoFar {
 }
 
 
+/** Calls the underlying function f every n calls. 
+ *  
+ *  Can be used to make reporting less frequent (e.g., in steady-state EA)
+ *  
+ */
 class CallEvery[S](n: Int, f: S => S) extends (S => S) {
   require(n > 0)
   var i = 0L
@@ -52,5 +58,3 @@ class CallEvery[S](n: Int, f: S => S) extends (S => S) {
 object CallEvery {
   def apply[S](n: Int, f: S => S) = new CallEvery(n, f)
 }
-
-

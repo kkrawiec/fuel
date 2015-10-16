@@ -8,7 +8,7 @@ import scevo.util.TRandom
 import scevo.core.State
 
 /**
-  * Generic trait for population-based iterative (parallel) search
+  * Generic trait for iterative search.
   *
   */
 trait IterativeSearch[S <: State] extends Function1[S, S] {
@@ -19,7 +19,7 @@ trait IterativeSearch[S <: State] extends Function1[S, S] {
 }
 
 /**
-  * Core implementation of evolutionary algorithm.
+  * Core implementation of evolutionary algorithm, i.e. iterative population-based search.
   *
   *  Note: there is no assumption of any ordering of solutions (complete nor partial).
   *  Because of that, it is in general impossible to monitor progress, hence report and
@@ -65,7 +65,7 @@ class SimpleEA[S, E](moves: Moves[S],
   override def iter = SimpleBreeder[S, E](selection, RandomMultiOperator(moves.moves: _*)) andThen evaluate
 
   val bsf = BestSoFar[S, E](ordering)
-  override def report = bsf
+  override def report: Function1[StatePop[(S, E)], StatePop[(S, E)]] = bsf
 }
 
 object SimpleEA {
@@ -77,20 +77,15 @@ object SimpleEA {
     implicit opt: Options, coll: Collector, rng: TRandom, ordering: Ordering[E]) =
     new SimpleEA(moves, eval, stop)(opt, coll, rng, ordering)
 
-/*
-  def apply[S, E](moves: Moves[S], eval: S => E, opt: Options)(
-    implicit coll: Collector, rng: TRandom, ordering: Ordering[E]) =
-    new SimpleEA(moves, eval)(opt, coll, rng, ordering)
-
-  def apply[S, E](moves: Moves[S], eval: S => E, stop: (S, E) => Boolean, opt: Options)(
-    implicit coll: Collector, rng: TRandom, ordering: Ordering[E]) =
-    new SimpleEA(moves, eval, stop)(opt, coll, rng, ordering)
-    * 
-    */
+  /** Creates EA that should stop when evaluation reaches certain value */
+  def apply[S, E](moves: Moves[S], eval: S => E, optimalValue: E)(
+    implicit opt: Options, coll: Collector, rng: TRandom, ordering: Ordering[E]) =
+    new SimpleEA(moves, eval, ((_: S, e: E) => e == optimalValue))(opt, coll, rng, ordering)
 }
 
 /**
-  * Simple steady-state EA, with reverse tournament selection for deselection of bad solutions.
+  * Simple steady-state EA, with reverse tournament selection
+  * for deselection of bad solutions.
   *
   */
 class SimpleSteadyStateEA[S, E](moves: Moves[S],
@@ -113,36 +108,4 @@ object SimpleSteadyStateEA {
   def apply[S, E](moves: Moves[S], eval: S => E)(
     implicit opt: Options, coll: Collector, rng: TRandom, ordering: Ordering[E]) =
     new SimpleSteadyStateEA(moves, eval)(opt, coll, rng, ordering)
-
-    /*
-  def apply[S, E](moves: Moves[S], eval: S => E, stop: (S, E) => Boolean, opt: Options)(
-    implicit coll: Collector, rng: TRandom, ordering: Ordering[E]) =
-    new SimpleSteadyStateEA(moves, eval, stop)(opt, coll, rng, ordering)
-
-  def apply[S, E](moves: Moves[S], eval: S => E, opt: Options)(
-    implicit coll: Collector, rng: TRandom, ordering: Ordering[E]) =
-    new SimpleSteadyStateEA(moves, eval)(opt, coll, rng, ordering)
-    * 
-    */
 }
-/*
-/**
-  * Generic trait for population-based iterative (parallel) search
-  *
-  */
-trait GenerationalSearch[S, E] extends IterativeSearch[S,E] {
-  def breed: SE => ST
-  override def iter = breed andThen evaluate
-}
-
- /**
-  * Generic trait steady-state search
-  *
-  */
-trait SteadyStateSearch[S, E] extends IterativeSearch[S,E]{
-  def breed: SE => SE
-  override def iter = breed 
-}
-* 
-*/
-

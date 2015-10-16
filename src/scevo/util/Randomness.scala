@@ -2,32 +2,8 @@ package scevo.util
 
 import scala.collection.generic.CanBuildFrom
 
-/*
- * Generic randomness provider. 
- */
-/*
-trait Randomness {
-  def rng: TRandom
-}
-
- * Randomness providers based on java.util.Random
-trait DefaultRng extends Randomness {
-  override lazy val rng = new Random
-}
-trait DefaultRngDet extends Randomness {
-  override lazy val rng = new Random(1)
-}
-trait Rng extends Randomness {
-  this: Options =>
-  val seed = paramInt("seed", 1)
-  override lazy val rng = new Random(seed)
-}
- */
-
-//class RngWrapper(override val rng: TRandom) extends Randomness
-
-/*
- * This trait is intended to enable elegant use of different random number generators
+/**
+ * Trait intended to enable elegant use of different random number generators
  */
 trait TRandom {
   def nextBoolean(): Boolean
@@ -42,8 +18,9 @@ trait TRandom {
   def shuffle[T, CC[X] <: TraversableOnce[X]](xs: CC[T])(implicit bf: CanBuildFrom[CC[T], T, CC[T]]): CC[T]
 }
 
-/*
- * Copied from scala source code 
+/** Default random number generator - a wrapper on java.util.Random. 
+ *  
+ * (copied from scala source code)
  */
 class Random(override val self: java.util.Random) extends scala.util.Random with TRandom {
   /** Creates a new random number generator using a single long seed. */

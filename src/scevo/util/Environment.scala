@@ -14,5 +14,8 @@ class EnvArgs(args: Array[String]) extends Environment {
 
 class Env(args: Map[Symbol, Any]) extends Environment {
   override implicit val (opt, coll, rng) = OptCollRng(args)
+  
+  def this(args: (Symbol,Any)*) = this(Map(args:_*))
 }
+ 
  

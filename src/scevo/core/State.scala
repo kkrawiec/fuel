@@ -21,6 +21,10 @@ class Population[T](override val solutions: Seq[T], override val iteration: Int 
     math.max(s1.iteration, s2.iteration))
 }
 
+/** The implicit parameter facilitates creating a population with the same iteration 
+ *  number. 
+ */
 object Population {
   def apply[T](sols: Seq[T], iter: Int = 0) = new Population[T](sols, iter) 
+  def apply[T](sols: Seq[T])(implicit s: StatePop[T]) = new Population[T](sols, s.iteration) 
 }

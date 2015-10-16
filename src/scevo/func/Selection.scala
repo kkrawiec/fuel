@@ -1,19 +1,15 @@
 package scevo.func
 
+import scala.annotation.tailrec
+
 import scevo.Distribution
 import scevo.Preamble.RndApply
 import scevo.util.Options
 import scevo.util.TRandom
-import scala.annotation.tailrec
-import scevo.core.StatePop
-import scala.collection.SeqLike
-import scala.collection.generic.SeqForwarder
-import scala.collection.IndexedSeqLike
-import scala.collection.mutable.Builder
 
 /**
-  * Selection can be applied to any set of solutions, not only populations, hence
-  *  the signature.
+  * Selection can be applied to any set (Seq, so duplicates are OK) of solutions,
+  * not only populations, hence the signature.
   */
 trait Selection[S, E] extends (Seq[(S, E)] => (S, E))
 
@@ -42,8 +38,16 @@ object TournamentSelection {
     new TournamentSelection[S, E](o)(opt, rand)
 }
 
+/**
+  * Fitness-proportionate selection: draws a solution proportionally to its fitness.
+  *
+  *  This is a rather inefficient implementation, as it recalculates the distribution in every
+  *  act of selection. This could be sped up by first normalizing the fitness in the entire
+  *  population and then drawing a number from [0,1]. However, fitness-proportionate selection
+  *  has its issues and is not in particularly wide use today, so this simple implementation
+  *  should be sufficient.
+  */
 class FitnessPropSelSlow[S](implicit rand: TRandom) extends Selection[S, Double] {
-  // Inefficient version: recalculates distribution in every selection act. 
   def apply(pop: Seq[(S, Double)]) = {
     val distribution = Distribution.fromAnything(pop.map(_._2))
     pop(distribution(rand))
@@ -51,49 +55,13 @@ class FitnessPropSelSlow[S](implicit rand: TRandom) extends Selection[S, Double]
 }
 
 /**
-  * Efficient version: applicable only to NormalizedPop
+  * Lexicase selection by Spector et al. Applicable to test-based problems.
   *
+  * Iteratively selects a random test and keeps only the solutions that pass it.
+  * It does so until only one solution is left, and that solution is the outcome of selection.
+  *
+  * Note: Here E stands for one objective, not entire evaluation.
   */
-class FitnessPropSel[S](implicit rand: TRandom) extends Selection[S, Double] {
-
-  /*
-  class N(val values: Vector[Int])
-    extends IndexedSeq[Int] with IndexedSeqLike[Int, N] {
-  override def newBuilder: Builder[Int, N] = N.newBuilder(values)
-  protected override def underlying = values
-}
-  class NormalizedSeq(override val seq: Seq[(S,Double)]) 
-  extends SeqLike[(S,Double), NormalizedSeq] {
-    override def iterator = seq.iterator
-    override def apply(i: Int) = seq(i)
-    override def length = seq.length
-    override def newBuilder = new Builder
-  }
-    
-
-  case class NormalizedPop(val pop :StatePop[(S,Double)]) extends StatePop[(S, Double)]{
-    val distribution = Distribution.fromAnything(pop.solutions.map(_._2))
-    override val solutions = pop.solutions
-  }
-  * 
-  */
-  def apply(pop: Seq[(S, Double)]) = {
-    val distribution = Distribution.fromAnything(pop.map(_._2))
-    pop(distribution(rand))
-  }
-  // Efficient version: Distribution calculated only once. 
-  /*
-  def apply[S] =
-    (pop: Seq[(S, Double)]) =>
-      {
-        val distribution = Distribution.fromAnything(pop.map(_._2))
-        (rand: TRandom) => pop(distribution(rand))
-      }
-      * 
-      */
-}
-
-// Note: Here E stands for one objective, not entire evaluation. 
 class LexicaseSelection[S, E](o: Ordering[E])(implicit rand: TRandom)
     extends StochasticSelection[S, Seq[E]](rand) {
   def apply(pop: Seq[(S, Seq[E])]) = {

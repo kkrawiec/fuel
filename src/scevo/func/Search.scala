@@ -15,7 +15,6 @@ import scevo.util.TRandom
   * the input stream may remain intact).
   *
   */
-
 trait SearchOperator[S] extends (Stream[S] => (List[S], Stream[S]))
 
 class SearchOperator1[S](body: S => S,
@@ -56,7 +55,10 @@ object SearchOperator {
     new SearchOperator2_1[S](body, isFeasible)
 }
 
-// Picks one of the functions (pipes) at random to 
+/** Picks one of the search operators at random, according to the provided
+ *  probability distribution (or uniform distribution if no distribution was provided). 
+ *  
+ */
 object RandomMultiOperator {
   def apply[S](pipes: SearchOperator[S]*)(implicit config: Options, rng: TRandom) = {
     val prob = config.paramString("operatorProbs")

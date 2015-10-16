@@ -1,10 +1,10 @@
 package scevo.util
 
 import scala.tools.reflect.ToolBox
-import scala.reflect.runtime.{currentMirror => cm}
+import scala.reflect.runtime.{ currentMirror => cm }
 
 object Combinations {
-  // Generates all n-ary combinations with replacement of elements from elems
+  // Generates all nonempty n-ary combinations with replacement of elements from elems
   def apply[T](elems: Seq[T], n: Int): Seq[Seq[T]] = {
     require(n > 0)
     n match {
@@ -12,6 +12,9 @@ object Combinations {
       case _ => elems.flatMap(e => apply(elems, n - 1).map(g => List(e) ++ g))
     }
   }
+  // all nonempty combinations
+  def apply[T](elems: Seq[T]): Seq[Seq[T]] =
+    for (i <- 1 to elems.size) yield apply(elems, i).flatten
   def apply(m: Int, n: Int): Seq[Seq[Int]] = apply(Seq.range(0, m), n)
 }
 

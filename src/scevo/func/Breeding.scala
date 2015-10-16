@@ -27,6 +27,7 @@ class Breeder[S, E](val sel: Selection[S, E],
   def selStream(src: Seq[(S, E)]): Stream[S] = sel(src)._1 #:: selStream(src)
 
   def breedn(n: Int, s: Seq[(S, E)]) = {
+
     @tailrec def breed(parStream: Stream[S], offspring: List[S] = List()): Seq[S] =
       if (offspring.size >= n)
         offspring.take(n)
@@ -39,6 +40,12 @@ class Breeder[S, E](val sel: Selection[S, E],
   }
 }
 
+/** In generational breeding, all bred solutions are new, and none of them has 
+ *  an evaluation. 
+ * 
+ *  Note that in this setup, even if a new child solution is a clone of its parent, 
+ *  we lose its evaluation anyway. 
+ */
 trait GenerationalBreeder[S, E] extends (StatePop[(S, E)] => StatePop[S])
 
 class SimpleBreeder[S, E](override val sel: Selection[S, E],
@@ -54,6 +61,10 @@ object SimpleBreeder {
 
 }
 
+/** For steady-state EA, only one solution is added in each generation (and one
+ *  removed). The other solutions remain intact, so the signature of the breeder
+ *  must be different. 
+ */
 trait SteadyStateBreeder[S, E] extends (StatePop[(S, E)] => StatePop[(S, E)])
 
 class SimpleSteadyStateBreeder[S, E](override val sel: Selection[S, E],
@@ -72,7 +83,6 @@ class SimpleSteadyStateBreeder[S, E](override val sel: Selection[S, E],
   }
 }
 
-// Can't use implicit domain due to Scala compiler bug (?). 
 /**
   * Breeding in NSGA is a bit tricky: it requires first ranking, then tournament
   *  selection.

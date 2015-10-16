@@ -8,18 +8,31 @@ import scevo.func.SearchOperator
   *  Simple domain of permutations. Candidate solutions are permutations of n elements.
   *
   */
-class PermutationMoves(n: Int)(rng: TRandom)
-    extends Moves[Seq[Int]] {
+abstract class AbstractPermutationMoves[T](n: Int)(rng: TRandom)
+    extends Moves[Seq[T]] {
   require(n > 0)
 
-  override def newSolution = rng.shuffle(Range(0, n).toIndexedSeq)
-
-  def mutation = SearchOperator((p: Seq[Int]) => {
+  // Naive mutation: just swap two cities. 
+  def mutation = (p: Seq[T]) => {
     val (c1, c2) = (rng.nextInt(n), rng.nextInt(n))
     val h = p(c1)
     p.updated(c1, p(c2)).updated(c2, h)
-  })
-  override def moves = Seq(mutation)
+  }
+
+  // Arc-swapping mutation
+  def mutationArcSwapping = (p: Seq[T]) => {
+    val t = (rng.nextInt(n), rng.nextInt(n))
+    val (s, e) = if(t._1 < t._2) t else t.swap
+    p.take(s) ++ p.slice(s, e).reverse ++ p.drop(e) 
+  }
+
+  override def moves = Seq(SearchOperator(mutationArcSwapping))
+}
+
+class PermutationMoves(n: Int)(rng: TRandom)
+    extends AbstractPermutationMoves[Int](n)(rng) {
+
+  override def newSolution = rng.shuffle(Range(0, n).toIndexedSeq)
 }
 
 object PermutationMoves {
