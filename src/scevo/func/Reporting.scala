@@ -1,19 +1,18 @@
 package scevo.func
 
-import scevo.core.BestSelector
 import scevo.util.Collector
 import scevo.util.Options
 import scevo.core.StatePop
 
 // Reporting
-class BestSoFar[S, E](opt: Options, coll: Collector, o: PartialOrdering[E])
+class BestSoFar[S, E](opt: Options, coll: Collector, o: Ordering[E])
     extends Function1[StatePop[(S, E)], StatePop[(S, E)]] {
   protected var best: Option[(S, E)] = None
   def bestSoFar: Option[(S, E)] = best
   val snapFreq = opt.paramInt("snapshot-frequency", 0)
 
   def apply(s: StatePop[(S, E)]) = {
-    val bestOfGen = BestSelector(s.solutions, o)
+    val bestOfGen = s.solutions.minBy(_._2)(o)
     if (bestSoFar.isEmpty || o.lt(bestOfGen._2, best.get._2)) best = Some(bestOfGen)
     println(f"Gen: ${s.iteration}  BestSoFar: ${bestSoFar.get}")
     if (snapFreq > 0 && s.iteration % snapFreq == 0)
@@ -22,7 +21,7 @@ class BestSoFar[S, E](opt: Options, coll: Collector, o: PartialOrdering[E])
   }
 }
 object BestSoFar {
-  def apply[S, E](o: PartialOrdering[E])(implicit opt: Options, coll: Collector) =
+  def apply[S, E](o: Ordering[E])(implicit opt: Options, coll: Collector) =
     new BestSoFar[S, E](opt, coll, o)
 }
 

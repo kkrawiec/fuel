@@ -6,8 +6,8 @@ import org.scalatest.Matchers
 import scevo.core.BestSelector
 
 object TestBestSelector {
-  def main(args: Array[String]) =
-    println(BestSelector(List(3, 1, 3, 6))(Ordering[Int]))
+//  def main(args: Array[String]) =
+//    println(BestSelector(List(3, 1, 3, 6))(Ordering[Int]))
 }
 
 /*

@@ -108,13 +108,18 @@ trait Options {
   def paramBool(id: Symbol)  : Boolean= paramBool(id.name)
   def apply(id: String, default: Boolean) = paramBool(id, default)
   def apply(id: Symbol, default: Boolean) = paramBool(id.name, default)
+  
+  def ++ (other : Options) : Options
 }
 
 class OptionsMap(opt: Map[String, String]) extends Options {
   override def allOptions = opt
   override protected def options = (id: String) => opt.get(id)
-
+  override def ++ (other : Options) : Options = new OptionsMap( allOptions ++ other.allOptions)
+  def ++ (other : Map[Symbol,Any]) : Options = this ++ OptionsMap(other)
+  def + (entry : (Symbol,Any)) : Options = this ++ OptionsMap(Map(entry))
 }
+
 object OptionsMap {
   def apply(m: Map[Symbol, Any]) = new OptionsMap(m.map(e => (e._1.name, e._2.toString)))
   def apply(args: Array[String]) = new OptionsMap(OptionParser(args))
@@ -125,6 +130,7 @@ object OptionsMap {
 class NoOptions extends Options {
   override def allOptions = Map[String, String]()
   override protected def options = (_: String) => None
+  override def ++ (other : Options) : Options = this
 }
 object NoOptions {
   def apply = new NoOptions

@@ -5,41 +5,18 @@ import scevo.moves.Moves
 import scevo.util.Collector
 import scevo.util.Options
 import scevo.util.TRandom
+import scevo.core.State
 
 /**
   * Generic trait for population-based iterative (parallel) search
   *
   */
-trait IterativeSearch[S, E] extends Function1[StatePop[S], StatePop[(S, E)]] {
-  type ST = StatePop[S] // Population/State of non-evaluated solutions
-  type SE = StatePop[(S, E)] // Population/State of evaluated solutions
-  def evaluate: ST => SE
-  def iter: SE => SE
-  def terminate: Seq[SE => Boolean]
-  def algorithm = evaluate andThen Iteration(iter)(terminate)
-  def apply(s: ST) = algorithm(s)
+trait IterativeSearch[S <: State] extends Function1[S, S] {
+  def iter: S => S
+  def terminate: Seq[S => Boolean]
+  def algorithm = Iteration(iter)(terminate)
+  def apply(s: S) = algorithm(s)
 }
-
-/*
-/**
-  * Generic trait for population-based iterative (parallel) search
-  *
-  */
-trait GenerationalSearch[S, E] extends IterativeSearch[S,E] {
-  def breed: SE => ST
-  override def iter = breed andThen evaluate
-}
-
- /**
-  * Generic trait steady-state search
-  *
-  */
-trait SteadyStateSearch[S, E] extends IterativeSearch[S,E]{
-  def breed: SE => SE
-  override def iter = breed 
-}
-* 
-*/
 
 /**
   * Core implementation of evolutionary algorithm.
@@ -62,13 +39,13 @@ abstract class EACore[S, E](moves: Moves[S],
                             eval: S => E,
                             stop: (S, E) => Boolean = ((s: S, e: E) => false))(
                               implicit opt: Options)
-    extends IterativeSearch[S, E] with Function0[StatePop[(S, E)]] {
-  def initialize: Unit => ST = RandomStatePop(moves.newSolution _)
-  def apply() = (initialize andThen algorithm)()
-
-  override def evaluate = ParallelEval(eval) andThen report
+    extends IterativeSearch[StatePop[(S, E)]] with Function0[StatePop[(S, E)]] {
+  def initialize: Unit => StatePop[(S, E)] = RandomStatePop(moves.newSolution _) andThen evaluate
+  def evaluate = ParallelEval(eval) andThen report
   override def terminate = Termination(stop)
-  def report = (s: SE) => { println(f"Gen: ${s.iteration}"); s }
+  def report = (s: StatePop[(S, E)]) => { println(f"Gen: ${s.iteration}"); s }
+
+  def apply() = (initialize andThen algorithm)()
 }
 
 /**
@@ -93,10 +70,24 @@ class SimpleEA[S, E](moves: Moves[S],
 }
 
 object SimpleEA {
-  def apply[S, E](moves: Moves[S],
-                  eval: S => E,
-                  stop: (S, E) => Boolean = ((s: S, e: E) => false))(
-                    implicit opt: Options, coll: Collector, rng: TRandom, ordering: Ordering[E]) = new SimpleEA(moves, eval, stop)(opt, coll, rng, ordering)
+  def apply[S, E](moves: Moves[S], eval: S => E)(
+    implicit opt: Options, coll: Collector, rng: TRandom, ordering: Ordering[E]) =
+    new SimpleEA(moves, eval)(opt, coll, rng, ordering)
+
+  def apply[S, E](moves: Moves[S], eval: S => E, stop: (S, E) => Boolean)(
+    implicit opt: Options, coll: Collector, rng: TRandom, ordering: Ordering[E]) =
+    new SimpleEA(moves, eval, stop)(opt, coll, rng, ordering)
+
+/*
+  def apply[S, E](moves: Moves[S], eval: S => E, opt: Options)(
+    implicit coll: Collector, rng: TRandom, ordering: Ordering[E]) =
+    new SimpleEA(moves, eval)(opt, coll, rng, ordering)
+
+  def apply[S, E](moves: Moves[S], eval: S => E, stop: (S, E) => Boolean, opt: Options)(
+    implicit coll: Collector, rng: TRandom, ordering: Ordering[E]) =
+    new SimpleEA(moves, eval, stop)(opt, coll, rng, ordering)
+    * 
+    */
 }
 
 /**
@@ -116,8 +107,43 @@ class SimpleSteadyStateEA[S, E](moves: Moves[S],
 }
 
 object SimpleSteadyStateEA {
-  def apply[S, E](moves: Moves[S],
-                  eval: S => E,
-                  stop: (S, E) => Boolean = ((s: S, e: E) => false))(
-                    implicit opt: Options, coll: Collector, rng: TRandom, ordering: Ordering[E]) = new SimpleSteadyStateEA(moves, eval, stop)(opt, coll, rng, ordering)
+  def apply[S, E](moves: Moves[S], eval: S => E, stop: (S, E) => Boolean)(
+    implicit opt: Options, coll: Collector, rng: TRandom, ordering: Ordering[E]) =
+    new SimpleSteadyStateEA(moves, eval, stop)(opt, coll, rng, ordering)
+
+  def apply[S, E](moves: Moves[S], eval: S => E)(
+    implicit opt: Options, coll: Collector, rng: TRandom, ordering: Ordering[E]) =
+    new SimpleSteadyStateEA(moves, eval)(opt, coll, rng, ordering)
+
+    /*
+  def apply[S, E](moves: Moves[S], eval: S => E, stop: (S, E) => Boolean, opt: Options)(
+    implicit coll: Collector, rng: TRandom, ordering: Ordering[E]) =
+    new SimpleSteadyStateEA(moves, eval, stop)(opt, coll, rng, ordering)
+
+  def apply[S, E](moves: Moves[S], eval: S => E, opt: Options)(
+    implicit coll: Collector, rng: TRandom, ordering: Ordering[E]) =
+    new SimpleSteadyStateEA(moves, eval)(opt, coll, rng, ordering)
+    * 
+    */
 }
+/*
+/**
+  * Generic trait for population-based iterative (parallel) search
+  *
+  */
+trait GenerationalSearch[S, E] extends IterativeSearch[S,E] {
+  def breed: SE => ST
+  override def iter = breed andThen evaluate
+}
+
+ /**
+  * Generic trait steady-state search
+  *
+  */
+trait SteadyStateSearch[S, E] extends IterativeSearch[S,E]{
+  def breed: SE => SE
+  override def iter = breed 
+}
+* 
+*/
+

@@ -3,7 +3,6 @@ package scevo.func
 import scala.annotation.tailrec
 
 import scevo.Preamble.RndApply
-import scevo.core.BestSelector
 import scevo.core.Dominance
 import scevo.util.Options
 import scevo.util.TRandom
@@ -59,7 +58,7 @@ class NSGA2Selection[S, E](val tournSize: Int,
 
   // Phase 2: The actual selection, based on the wrapped solutions
   // May be called arbitrarily many times. 
-  override def apply(sel: Seq[(S, Rank[E])]) = BestSelector[(S, Rank[E])](sel(rand, tournSize))(globalOrdering)
+  override def apply(sel: Seq[(S, Rank[E])]) = sel(rand, tournSize).min(globalOrdering)
 
   // Builds the ranking top-down. 
   def paretoRanking[S, E](solutions: Seq[(S, Seq[E])])(implicit po: Dominance[E]): Seq[Seq[(S, Rank[E])]] = {

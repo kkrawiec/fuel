@@ -11,13 +11,13 @@ import scevo.util.Options
   *
   */
 object Experiment {
-  def apply[S <: State](alg: () => S)(implicit opt: Options, coll: Collector): (Unit => Option[S]) = {
+  def apply[S <: State](alg: => S)(implicit opt: Options, coll: Collector): (Unit => Option[S]) = {
     _: Unit =>
       {
         coll.setResult("system.startTime", Calendar.getInstance().getTime().toString)
         val startTime = System.currentTimeMillis()
         try {
-          val state = alg()
+          val state = alg
           coll.set("status", "completed")
           if (opt('saveLastState, false))
             coll.write("lastState", state)
@@ -43,7 +43,9 @@ object Experiment {
 }
 
 object RunExperiment {
+  def apply[S <: State](alg: Unit => S)(implicit opt: Options, coll: Collector) =
+    Experiment(alg())(opt, coll)()
   def apply[S <: State](alg: () => S)(implicit opt: Options, coll: Collector) =
-    Experiment(alg)(opt, coll)()
+    Experiment(alg())(opt, coll)()
 }
 
