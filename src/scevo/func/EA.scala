@@ -66,7 +66,6 @@ class SimpleEA[S, E](moves: Moves[S],
 
   val bsf = BestSoFar[S, E](ordering)
   override def report = bsf
-  override def algorithm = super.algorithm andThen EpilogueBestOfRun(bsf)
 }
 
 object SimpleEA {

@@ -13,8 +13,10 @@ import scevo.core.Population
   * Performs breeding, i.e., selection followed by application of search operators
   * (feasibility check is assumed to be done within SearchOperators).
   *
-  * Breeder combines these three actions because the number of solutions returned
-  * by search operators may vary (even between the calls of the same operator). Therefore, it
+  * Breeder combines these two actions because the number of solutions returned
+  * by search operators may vary (even between the calls of the same operator), among
+  * others because some of the produced solutions may not pass faeasibility check. 
+  * Therefore, it
   * is in general impossible to determine in advance how many selection acts and
   * applications of search operators may be needed to populate next population.
   *
