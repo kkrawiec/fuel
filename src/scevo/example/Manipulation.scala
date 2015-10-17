@@ -1,8 +1,8 @@
 package scevo.example
 
 import scevo.moves.BoolVectorMoves
-import scevo.util.Env
 import scevo.func.SimpleEA
+import scevo.util.OptColl
 
 /**
   * Example of programmatic manipulation of components.
@@ -12,7 +12,7 @@ import scevo.func.SimpleEA
   *
   */
 object Programmatic extends App {
-  new Env('n -> 32, 'trivial -> false, 'maxGenerations -> 300) {
+  new OptColl('n -> 32, 'trivial -> false, 'maxGenerations -> 300) {
     val n = opt('n, (_: Int) > 0)
 
     val prob = new HiffProblem(n, opt('trivial, false))

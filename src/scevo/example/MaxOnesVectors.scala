@@ -5,7 +5,7 @@ import scevo.func.Experiment
 import scevo.func.SearchOperator
 import scevo.func.SimpleEA
 import scevo.moves.BoolVectorMoves
-import scevo.util.OptCollRng
+import scevo.util.GetOptCollRng
 import scevo.func.RunExperiment
 
 /**
@@ -18,7 +18,7 @@ import scevo.func.RunExperiment
   */
 object MaxOnesVectors extends App {
   // Allow the command-line arguments overwrite the default ones:
-  implicit val (opt, coll, rng) = OptCollRng(Array("--numVars", "20", "--maxGenerations", "200")
+  implicit val (opt, coll, rng) = GetOptCollRng(Array("--numVars", "20", "--maxGenerations", "200")
     ++ args)
 
   // Say we want a different setup of search operators than the default one:

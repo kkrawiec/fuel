@@ -6,7 +6,7 @@ import scala.Range
 import scevo.func.RunExperiment
 import scevo.func.SimpleEA
 import scevo.moves.BoolVectorMoves
-import scevo.util.OptCollRng
+import scevo.util.GetOptCollRng
 import scevo.util.TRandom
 
 /**
@@ -18,7 +18,7 @@ import scevo.util.TRandom
   */
 object Hiff {
   def main(args: Array[String]) {
-    implicit val (opt, coll, rng) = OptCollRng("--n 32 --trivial false --maxGenerations 1000")
+    implicit val (opt, coll, rng) = GetOptCollRng("--n 32 --trivial false --maxGenerations 1000")
     val n = opt('n, (_: Int) > 0)
 
     val prob = new HiffProblem(n, opt('trivial, false))

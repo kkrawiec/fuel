@@ -1,11 +1,11 @@
 package scevo.example
 
 import scala.collection.immutable.BitSet
+
 import scevo.func.RunExperiment
 import scevo.func.SimpleEA
 import scevo.moves.BitSetMoves
-import scevo.util.Env
-import scevo.util.EnvArgs
+import scevo.util.OptColl
 
 /**
   * MaxOnes with genetic algorithm (GA), using default parameter settings.
@@ -29,7 +29,7 @@ import scevo.util.EnvArgs
   *
   */
 object MaxOnes1 extends App {
-  new EnvArgs {
+  new OptColl {
     RunExperiment(SimpleEA(moves = BitSetMoves(100),
       eval = (s: BitSet) => s.size,
       stop = (s: BitSet, e: Int) => e == 0))
@@ -37,11 +37,11 @@ object MaxOnes1 extends App {
 }
 
 /**
-  * A variant with some parameters set using Options object (opt).
+  * A variant with some parameters set manually.
   *
   */
 object MaxOnes2 extends App {
-  new Env('numVars -> 500, 'maxGenerations -> 200) {
+  new OptColl('numVars -> 500, 'maxGenerations -> 200) {
     RunExperiment(SimpleEA(
       moves = BitSetMoves(opt('numVars, (_: Int) > 0)),
       eval = (s: BitSet) => s.size,

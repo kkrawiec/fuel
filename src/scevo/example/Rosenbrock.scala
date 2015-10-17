@@ -1,20 +1,20 @@
 package scevo.example
 
 import scala.Range
+
 import scevo.func.RunExperiment
 import scevo.func.SimpleEA
-import scevo.moves.DoubleVectorMoves
-import scevo.util.OptCollRng
 import scevo.func.SimpleSteadyStateEA
+import scevo.moves.DoubleVectorMoves
+import scevo.util.OptColl
 
 /**
   * Continuous optimization: Rosenbrock function.
   *
   * Minimized fitness function.
   */
-object Rosenbrock {
-  def main(args: Array[String]) {
-    implicit val (opt, coll, rng) = OptCollRng("--n 3 --maxGenerations 300 --printResults true")
+object Rosenbrock extends App {
+  new OptColl('n -> 3, 'maxGenerations -> 300, 'printResults -> true) {
 
     val n = opt.paramInt('n, (_:Int) > 0) // dimensionality of the problem/space
     def rosenbrock(x: Seq[Double]) = Range(0, n - 1).map(i =>
@@ -28,9 +28,8 @@ object Rosenbrock {
 /** Steady-state variant 
  *  
  */
-object Rosenbrock2 {
-  def main(args: Array[String]) {
-    implicit val (opt, coll, rng) = OptCollRng("--n 3 --maxGenerations 300000 --printResults true")
+object Rosenbrock2 extends App {
+  new OptColl('n -> 3, 'maxGenerations -> 300000, 'printResults -> true) {
 
     val n = opt.paramInt('n, (_:Int) > 0) // dimensionality of the problem/space
     def rosenbrock(x: Seq[Double]) = Range(0, n - 1).map(i =>
@@ -39,5 +38,3 @@ object Rosenbrock2 {
     RunExperiment(SimpleSteadyStateEA(new DoubleVectorMoves(n, 0.001), rosenbrock))
   }
 }
-
-

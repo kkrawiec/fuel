@@ -1,10 +1,10 @@
 package scevo.func
 
 import java.util.Calendar
-
 import scevo.core.State
 import scevo.util.Collector
 import scevo.util.Options
+import scevo.util.CollectorFile
 
 /**
   * Deploys an algorithm and does the associated reporting.
@@ -41,6 +41,7 @@ object Experiment {
       }
   }
 }
+
 
 object RunExperiment {
   def apply[S <: State](alg: Unit => S)(implicit opt: Options, coll: Collector) =

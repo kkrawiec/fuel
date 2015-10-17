@@ -5,7 +5,7 @@ import scala.Range
 import scevo.func.RunExperiment
 import scevo.func.SimpleEA
 import scevo.moves.PermutationMoves
-import scevo.util.OptCollRng
+import scevo.util.OptColl
 
 /**
   * Traveling Salesperson problem.
@@ -13,12 +13,11 @@ import scevo.util.OptCollRng
   * Minimized fitness function.
   */
 
-object TSP {
-  def main(args: Array[String]) {
-    implicit val (opt, coll, rng) = OptCollRng("--numCities 30 --maxGenerations 300")
+object TSP extends App {
+  new OptColl('numCities -> 30, 'maxGenerations -> 300) {
 
     // Generate random distance matrix
-    val numCities = opt('numCities, (_:Int) > 0)
+    val numCities = opt('numCities, (_: Int) > 0)
     val cities = Seq.fill(numCities)((rng.nextDouble, rng.nextDouble))
     val distances = for (i <- cities) yield for (j <- cities)
       yield math.hypot(i._1 - j._1, i._2 - j._2)

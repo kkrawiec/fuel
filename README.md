@@ -6,13 +6,15 @@ June 2014 - Oct 2015
 Introduction
 ===================
 
-ScEvo is a succinct framework for implementing metaheuristic algorithms, in particular evolutionary algorithms, in Scala. It is written primarily in functional style, with most objects implemented as immutable, and using object-oriented flavor mainly on the top level. The library is organized as a collection of components, which in general are allowed to be stateful. 
+ScEvo is a succinct framework for implementing metaheuristic algorithms, in particular evolutionary algorithms, in Scala. It is written primarily in functional style, with most objects implemented as immutable, and using object-oriented style rather sparingly. The library is organized as a collection of components, which in general are allowed to be stateful. 
 
 A metaheuristic algorithm is a compound function. ScEvo's role is to
 
 * help a user to build such a function using the components available in the library, 
 * facilitate running such algorithms/experiments, and 
 * provide convenient ways of parameterizing the algorithms and collecting results. 
+
+TODO minimalistic
 
 ScEvo provides relatively few top-level components (complete algorithms), because composing them from the pieces described below is really easy in functional programming paradigm. For this reason, it can be particularly useful for using metaheuristics in innovative ways, e.g., for hybridizing them with other algorithms, devising 'homebrew' algorithms, or playing with hyperheuristics. 
 
@@ -98,6 +100,11 @@ Credits
 -------
 
 Much of inspiration for this library comes from chats with Jerry Swan. 
+
+How to cite 
+===================
+
+:w
 
 
 Some justifications 

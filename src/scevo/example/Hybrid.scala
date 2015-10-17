@@ -3,18 +3,18 @@ package scevo.example
 import scevo.func.RunExperiment
 import scevo.func.SimpleEA
 import scevo.func.SimpleSteadyStateEA
-import scevo.util.OptCollRng
+import scevo.util.GetOptCollRng
 import scevo.moves.DoubleVectorMoves
 import scevo.func.RemoveEvals
+import scevo.util.OptColl
 
 /** A simple example of creating a hybrid algorithm: generational EA followed by steady-state EA. 
  *  
  */
-object Hybrid {
-  def main(args: Array[String]) {
-    implicit val (opt, coll, rng) = OptCollRng("--n 3 --maxGenerations 300 --printResults true")
+object Hybrid extends App {
+  new OptColl('n -> 3, 'maxGenerations -> 300, 'printResults -> true) {
 
-    val n = opt.paramInt('n, (_: Int) > 0) // dimensionality of the problem/space
+    val n = opt('n, (_: Int) > 0) // dimensionality of the problem/space
     def rosenbrock(x: Seq[Double]) = Range(0, n - 1).map(i =>
       (1 - x(i)) * (1 - x(i)) + 100 * math.pow(x(i + 1) - x(i) * x(i), 2)).sum
 
