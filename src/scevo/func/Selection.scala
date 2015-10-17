@@ -1,11 +1,11 @@
 package scevo.func
 
 import scala.annotation.tailrec
-
 import scevo.Distribution
 import scevo.Preamble.RndApply
 import scevo.util.Options
 import scevo.util.TRandom
+import scevo.core.Best
 
 /**
   * Selection can be applied to any set (Seq, so duplicates are OK) of solutions,
@@ -23,11 +23,11 @@ class RandomSelection[S, E](implicit rand: TRandom) extends StochasticSelection[
   override def apply(pop: Seq[(S, E)]) = pop(rand)
 }
 
-class TournamentSelection[S, E](ordering: Ordering[E], val tournamentSize: Int)(implicit rand: TRandom)
-    extends StochasticSelection[S, E](rand) {
+class TournamentSelection[S, E](ordering: Ordering[E], val tournamentSize: Int)(implicit rng: TRandom)
+    extends StochasticSelection[S, E](rng) {
 
-  def this(o: Ordering[E])(implicit opt: Options, rand: TRandom) =
-    this(o, opt("tournamentSize", 7, (_: Int) >= 2))(rand)
+  def this(o: Ordering[E])(implicit opt: Options, rng: TRandom) =
+    this(o, opt('tournamentSize, 7, (_: Int) >= 2))(rng)
 
   def apply(pop: Seq[(S, E)]) = pop(rand, tournamentSize).minBy(_._2)(ordering)
 }
@@ -38,10 +38,34 @@ object TournamentSelection {
     new TournamentSelection[S, E](o)(opt, rand)
 }
 
+
+/** Partial tournament: the winner is the solution that dominates all the remaining in
+ *  the pool, or if no such solution exists then a randomly picked solution. 
+ *  
+ *  Also known as dominance tournament. 
+ */
+class PartialTournament[S, E](val tournamentSize: Int)(implicit ordering: PartialOrdering[E], rng: TRandom)
+    extends StochasticSelection[S, E](rng) {
+
+  implicit val ord = new PartialOrdering[(S,E)]{
+    override def tryCompare(a: (S,E), b:(S,E)) = ordering.tryCompare(a._2, b._2)
+    override def lteq(a: (S,E), b:(S,E)) = ordering.lteq(a._2, b._2)
+  }
+//  def this(o: Ordering[E])(implicit opt: Options, rand: TRandom) =
+//    this(opt('tournamentSize, 2, (_: Int) >= 2))(o, rand)
+
+  def apply(pop: Seq[(S, E)]) = {
+    val sample = pop(rand, tournamentSize)
+    Best(sample).getOrElse(sample(rng))
+  }
+}
+
+
 /**
   * Fitness-proportionate selection: draws a solution proportionally to its fitness.
   *
-  *  This is a rather inefficient implementation, as it recalculates the distribution in every
+  *  This is a rather inefficient implementation, as it recalculates the distribution of
+  *  fitness for entire population in every
   *  act of selection. This could be sped up by first normalizing the fitness in the entire
   *  population and then drawing a number from [0,1]. However, fitness-proportionate selection
   *  has its issues and is not in particularly wide use today, so this simple implementation

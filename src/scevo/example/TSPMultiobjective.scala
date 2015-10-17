@@ -10,6 +10,12 @@ import scevo.moves.PermutationMoves
 import scevo.util.OptCollRng
 import scevo.func.EACore
 import scevo.func.RandomStatePop
+import scevo.util.TRandom
+import scevo.func.PartialTournament
+import scevo.func.RandomMultiOperator
+import scevo.func.SimpleBreeder
+import scevo.func.PartialTournament
+import scevo.func.PartialTournament
 
 /**
   * Two-objective Traveling Salesperson problem: distance and cost.
@@ -19,47 +25,54 @@ import scevo.func.RandomStatePop
   * See the single objective TSP example in TSP.scala for reference.
   */
 
-object TSPMultiobjective {
-  def main(args: Array[String]) {
-    implicit val (opt, coll, rng) = OptCollRng("--numCities 12 --populationSize 200")
+object TSPMultiobjective extends App {
+  implicit val (opt, coll, rng) = OptCollRng("--numCities 12 --populationSize 200")
 
-    // Generate random distance matrix
-    val numCities = opt.paramInt('numCities, (_: Int) > 0)
-    val cities = Seq.fill(numCities)((rng.nextDouble, rng.nextDouble))
-    val distances = for (i <- cities) yield for (j <- cities)
-      yield math.hypot(i._1 - j._1, i._2 - j._2)
-    // Generate random costs
-    val costs = distances.map(_.map(_ * (0.5 + rng.nextDouble)))
+  val numCities = opt.paramInt('numCities, (_: Int) > 0)
+  implicit val ordering = Dominance[Double] // or Dominance(Ordering[Double])
 
-    def eval(s: Seq[Int]) = Seq(
-      Range(0, s.size).map(i => distances(s(i))(s((i + 1) % s.size))).sum,
-      Range(0, s.size).map(i => costs(s(i))(s((i + 1) % s.size))).sum)
+  val moves = PermutationMoves(numCities)
+  val problem = new TSPMOProblem(numCities)
 
-    implicit val ordering = Dominance[Double] // or Dominance(Ordering[Double])
-    val moves = PermutationMoves(numCities)
+  // We are using EACore because there is only partial order of the candidate solutions, 
+  // so it does not make much sense to report online progress.
 
-    // We are using EACore because there is only partial order of the candidate solutions, 
-    // so it does not make much sense to report online progress.
-    // Non-elitist version
-    RunExperiment(new EACore(moves, eval) {
-      override val iter = new NSGABreeder(moves) andThen evaluate
-    })
+  // Naive algorithm using partial tournament
+  RunExperiment(new EACore(moves, problem.eval) {
+    def selection = new PartialTournament[Seq[Int], Seq[Double]](2)(ordering, rng)
+    override def iter = SimpleBreeder(selection, RandomMultiOperator(moves.moves: _*)) andThen evaluate
+  })
 
-    // Elitist version (parents and offspring merged in mu+lambda style), 
-    // plus simple reporting. 
-    RunExperiment(new EACore(moves, eval) {
-      val breeder = new NSGABreederElitist(moves)
-      override val iter = breeder andThen evaluate
-      override def algorithm = super.algorithm andThen showParetoFront
-      def showParetoFront(s: StatePop[(Seq[Int], Seq[Double])]) = {
-        val ranking = breeder.nsga.paretoRanking(s.solutions)
-        println("Pareto front:")
-        println(ranking(0).map(_._2.eval).sortBy(_(0)).mkString("\n"))
-        s
-      }
-    })
-  }
+  // NSGAII Non-elitist version
+  RunExperiment(new EACore(moves, problem.eval) {
+    override val iter = new NSGABreeder(moves) andThen evaluate
+  })
+
+  // NSGAII Elitist version (parents and offspring merged in mu+lambda style), 
+  // plus simple reporting. 
+  RunExperiment(new EACore(moves, problem.eval) {
+    val breeder = new NSGABreederElitist(moves)
+    override val iter = breeder andThen evaluate
+    override def algorithm = super.algorithm andThen showParetoFront
+    def showParetoFront(s: StatePop[(Seq[Int], Seq[Double])]) = {
+      val ranking = breeder.nsga.paretoRanking(s.solutions)
+      println("Pareto front:")
+      println(ranking(0).map(_._2.eval).sortBy(_(0)).mkString("\n"))
+      s
+    }
+  })
 }
- 
 
+class TSPMOProblem(val n: Int)(implicit rng: TRandom) {
+  // Generate random locations of cities on 2D unitary plane
+  val cities = Seq.fill(n)((rng.nextDouble, rng.nextDouble))
+  val distances = for (i <- cities) yield for (j <- cities)
+    yield math.hypot(i._1 - j._1, i._2 - j._2)
+  // Generate random costs
+  val costs = distances.map(_.map(_ * (0.5 + rng.nextDouble)))
+
+  def eval(s: Seq[Int]) = Seq(
+    Range(0, s.size).map(i => distances(s(i))(s((i + 1) % s.size))).sum,
+    Range(0, s.size).map(i => costs(s(i))(s((i + 1) % s.size))).sum)
+}
  

@@ -22,10 +22,8 @@ object Hiff {
     val n = opt('n, (_: Int) > 0)
 
     val prob = new HiffProblem(n, opt('trivial, false))
-    val ga = SimpleEA(moves = BoolVectorMoves(n),
-      eval = prob.hiff _,
-      stop = (s: Seq[Boolean], e: Int) => e == prob.maxEval)(opt, coll, rng,
-        ordering = Ordering[Int].reverse)
+    val ga = SimpleEA(BoolVectorMoves(n), prob.hiff _, prob.maxEval)(opt, coll, rng,
+      ordering = Ordering[Int].reverse)
 
     RunExperiment(ga)
   }

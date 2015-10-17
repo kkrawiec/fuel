@@ -8,7 +8,7 @@ import scevo.util.Env
 import scevo.util.EnvArgs
 
 /**
-  * Use case: MaxOnes with genetic algorithm (GA), using default parameter settings.
+  * MaxOnes with genetic algorithm (GA), using default parameter settings.
   *
   * Actually implemented as MinOnes (i.e., all bits should be zeroed).
   *
@@ -28,7 +28,7 @@ import scevo.util.EnvArgs
   * $ scala -cp ./bin -e scevo.example.MaxOnes1
   *
   */
-object MaxOnes1 {
+object MaxOnes1 extends App {
   new EnvArgs {
     RunExperiment(SimpleEA(moves = BitSetMoves(100),
       eval = (s: BitSet) => s.size,
@@ -40,13 +40,11 @@ object MaxOnes1 {
   * A variant with some parameters set using Options object (opt).
   *
   */
-object MaxOnes2 {
-  def main(args: Array[String]) {
-    new Env('numVars -> 500, 'maxGenerations -> 200) {
-      RunExperiment(SimpleEA(
-        moves = BitSetMoves(opt('numVars, (_:Int) > 0)),
-        eval = (s: BitSet) => s.size, 
-        optimalValue = 0))
-    }
+object MaxOnes2 extends App {
+  new Env('numVars -> 500, 'maxGenerations -> 200) {
+    RunExperiment(SimpleEA(
+      moves = BitSetMoves(opt('numVars, (_: Int) > 0)),
+      eval = (s: BitSet) => s.size,
+      optimalValue = 0))
   }
 }

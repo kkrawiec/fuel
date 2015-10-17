@@ -45,3 +45,56 @@ object Dominance {
     override def ordering(i: Int): Ordering[E] = o(i)
   }
 }
+
+object Best {
+  def apply[T](s: Seq[T])(implicit o: PartialOrdering[T]) = {
+    if (s.isEmpty) None
+    else {
+      // First pass: find the element (l) that is <= than all elements 
+      // at the subsequent positions
+      var b = s.head
+      var l = 0
+      for (i <- 1 until s.size) {
+        val c = o.tryCompare(s(i), b)
+        if (c.nonEmpty) {
+          if (c.get < 0) {
+            b = s(i)
+            l = i
+          }
+        } else l = -1
+      }
+      // Second pass: check if that element is also <= than all elements
+      // at positions from 0 to l
+      if (l < 0) None
+      else {
+        var i = -1
+        var r: Option[Int] = None
+        do {
+          i = i + 1
+          r = o.tryCompare(s(i), b)
+        } while (i < l && r.nonEmpty && r.get >= 0)
+        if (i == l) Some(b)
+        else None
+      }
+    }
+  }
+}
+
+object TestBest extends App {
+  val a = Seq(1, 1)
+  val b = Seq(2, 2)
+  val c = Seq(1, 3)
+  val d = Seq(3, 1)
+  val e = Seq(2, 2)
+
+  implicit val o = Dominance[Int]
+
+  for (p <- Seq(a, b, c, d, e).permutations)
+    assert(Best(p) == Some(a))
+  for (p <- Seq(b, c, d).permutations)
+    assert(Best(p) == None)
+  for (p <- Seq(b, c, d, e).permutations)
+    assert(Best(p) == None)
+  for (p <- Seq(a, b, c, d, e))
+    assert(Best(Seq(p)) == Some(p))
+}
