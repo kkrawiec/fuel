@@ -1,14 +1,11 @@
 package scevo.example
 
 import scala.collection.immutable.BitSet
+
 import scevo.func.RunExperiment
 import scevo.func.SimpleEA
 import scevo.moves.BitSetMoves
 import scevo.util.OptColl
-import scevo.moves.BoolVectNeigh
-import scevo.moves.LocalSearch
-import scevo.moves.BoolVectorMoves
-import scevo.moves.StateOne
 
 /**
   * MaxOnes with genetic algorithm (GA), using default parameter settings.

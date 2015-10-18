@@ -28,5 +28,5 @@ object Termination {
   }  
   def apply[S, E](otherCond: (S, E) => Boolean = (_: S, _: E) => false)(implicit config: Options) = Seq(
     MaxTime(config),
-    (s: StatePop[(S, E)]) => s.solutions.exists(es => otherCond(es._1, es._2)))
+    (s: StatePop[(S, E)]) => s.exists(es => otherCond(es._1, es._2)))
 }

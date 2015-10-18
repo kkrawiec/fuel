@@ -1,13 +1,8 @@
 package scevo.moves
 
-import scevo.func.Termination
-import scevo.func.ParallelEval
-import scevo.func.IterativeSearch
-import scevo.util.Options
-import scevo.core.StatePop
-import scevo.func.RandomStatePop
-import scevo.core.State
-import scevo.util.CallCounter
+import scala.IndexedSeq
+import scala.Stream
+import scala.collection.immutable.Stream.consWrapper
 
 /**
   * Neigborhood is a Stream of solutions, so that it can be infinite.
@@ -31,29 +26,4 @@ class BoolVectNeigh extends Neighborhood[IndexedSeq[Boolean]] {
 object TestNeigh extends App {
   println((new BoolVectNeigh)(IndexedSeq(false, false, false)))
   println((new BoolVectNeigh)(IndexedSeq(false, false, false)).toList)
-}
-
-class LocalSearch[S, E](neighborhood: Neighborhood[S],
-                        eval: S => E,
-                        stop: (S, E) => Boolean = ((s: S, e: E) => false))(
-                          implicit opt: Options, ord: Ordering[E])
-    extends IterativeSearch[StateSingle[(S, E)]] {
-
-  private val it = CallCounter(
-    (s: StateSingle[(S, E)]) =>
-      StateOne(neighborhood(s.solution._1).map(e => (e, eval(e))).minBy(_._2)))
-  override def iter: Function1[StateSingle[(S, E)], StateSingle[(S, E)]] = it
-  def apply(s: S) = super.apply(StateOne((s, eval(s))))
-  override def terminate = Seq(Termination.MaxIter(it), Termination.MaxTime(opt))
-}
-
-trait StateSingle[T] extends State {
-  def solution: T
-}
-
-class StateOne[T](override val solution: T)
-  extends StateSingle[T]
-
-object StateOne {
-  def apply[T](solution: T) = new StateOne(solution)
 }

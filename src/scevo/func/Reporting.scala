@@ -18,7 +18,7 @@ class BestSoFar[S, E](opt: Options, coll: Collector, o: Ordering[E], cnt: Counte
   val snapFreq = opt("snapshot-frequency", 0)
 
   def apply(s: StatePop[(S, E)]) = {
-    val bestOfGen = s.solutions.minBy(_._2)(o)
+    val bestOfGen = s.minBy(_._2)(o)
     if (bestSoFar.isEmpty || o.lt(bestOfGen._2, best.get._2)) best = Some(bestOfGen)
     println(f"Gen: ${cnt.count}  BestSoFar: ${bestSoFar.get}")
     if (snapFreq > 0 && cnt.count % snapFreq == 0) {

@@ -36,5 +36,5 @@ object RandomStatePop {
     new RandomStatePop(solutionGenerator)(opt)
 }
 object RemoveEvals {
-  def apply[S, E] = (s: StatePop[(S, E)]) => Population(s.solutions.unzip._1)
+  def apply[S, E] = (s: StatePop[(S, E)]) => Population(s.unzip._1)
 }

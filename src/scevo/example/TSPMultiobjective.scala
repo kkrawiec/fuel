@@ -59,7 +59,7 @@ object TSPMultiobjective extends App {
         override val iter = breeder andThen evaluate
         override def algorithm = super.algorithm andThen showParetoFront
         def showParetoFront(s: StatePop[(Seq[Int], Seq[Double])]) = {
-          val ranking = breeder.nsga.paretoRanking(s.solutions)
+          val ranking = breeder.nsga.paretoRanking(s)
           println("Pareto front:")
           println(ranking(0).map(_._2.eval).sortBy(_(0)).mkString("\n"))
           s

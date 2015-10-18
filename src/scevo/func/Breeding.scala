@@ -15,7 +15,7 @@ import scevo.core.Population
   *
   * Breeder combines these two actions because the number of solutions returned
   * by search operators may vary (even between the calls of the same operator), among
-  * others because some of the produced solutions may not pass faeasibility check. 
+  * others because some of the produced solutions may not pass faeasibility check.
   * Therefore, it
   * is in general impossible to determine in advance how many selection acts and
   * applications of search operators may be needed to populate next population.
@@ -40,19 +40,20 @@ class Breeder[S, E](val sel: Selection[S, E],
   }
 }
 
-/** In generational breeding, all bred solutions are new, and none of them has 
- *  an evaluation. 
- * 
- *  Note that in this setup, even if a new child solution is a clone of its parent, 
- *  we lose its evaluation anyway. 
- */
+/**
+  * In generational breeding, all bred solutions are new, and none of them has
+  *  an evaluation.
+  *
+  *  Note that in this setup, even if a new child solution is a clone of its parent,
+  *  we lose its evaluation anyway.
+  */
 trait GenerationalBreeder[S, E] extends (StatePop[(S, E)] => StatePop[S])
 
 class SimpleBreeder[S, E](override val sel: Selection[S, E],
                           override val searchOperator: () => SearchOperator[S])
     extends Breeder[S, E](sel, searchOperator) with GenerationalBreeder[S, E] {
 
-  override def apply(s: StatePop[(S, E)]) = Population(breedn(s.solutions.size, s.solutions))
+  override def apply(s: StatePop[(S, E)]) = Population(breedn(s.size, s))
 }
 object SimpleBreeder {
   def apply[S, E](sel: Selection[S, E],
@@ -60,10 +61,11 @@ object SimpleBreeder {
 
 }
 
-/** For steady-state EA, only one solution is added in each generation (and one
- *  removed). The other solutions remain intact, so the signature of the breeder
- *  must be different. 
- */
+/**
+  * For steady-state EA, only one solution is added in each generation (and one
+  *  removed). The other solutions remain intact, so the signature of the breeder
+  *  must be different.
+  */
 trait SteadyStateBreeder[S, E] extends (StatePop[(S, E)] => StatePop[(S, E)])
 
 class SimpleSteadyStateBreeder[S, E](override val sel: Selection[S, E],
@@ -73,11 +75,11 @@ class SimpleSteadyStateBreeder[S, E](override val sel: Selection[S, E],
     extends Breeder[S, E](sel, searchOperator) with SteadyStateBreeder[S, E] {
 
   override def apply(s: StatePop[(S, E)]) = {
-    val b = breedn(1, s.solutions).head
+    val b = breedn(1, s).head
     val r = (b, eval(b))
-    val toRemove = desel(s.solutions)
-    val pos = s.solutions.indexOf(toRemove)
-    val (h, t) = s.solutions.splitAt(pos)
+    val toRemove = desel(s)
+    val pos = s.indexOf(toRemove)
+    val (h, t) = s.splitAt(pos)
     Population(h ++ Seq(r) ++ t.tail)
   }
 }
@@ -94,7 +96,7 @@ class NSGABreeder[S, E](domain: Moves[S])(
   val nsga = new NSGA2Selection[S, E](opt)(rng)
   val breeder = SimpleBreeder[S, Rank[E]](nsga, RandomMultiOperator(domain.moves: _*))
   override def apply(s: StatePop[(S, Seq[E])]) = {
-    val ranking = nsga.rank(s.solutions.size, ordering)(s.solutions)
+    val ranking = nsga.rank(s.size, ordering)(s)
     breeder(Population[(S, Rank[E])](ranking))
   }
 }
@@ -110,8 +112,8 @@ class NSGABreederElitist[S, E](domain: Moves[S])(
   val breeder = SimpleBreeder[S, Rank[E]](nsga, RandomMultiOperator(domain.moves: _*))
   var previous = Seq[(S, Seq[E])]()
   override def apply(s: StatePop[(S, Seq[E])]) = {
-    val merged = s.solutions ++ previous
-    val ranking = nsga.rank(s.solutions.size, ordering)(merged)
+    val merged = s ++ previous
+    val ranking = nsga.rank(s.size, ordering)(merged)
     previous = ranking.map(s => (s._1, s._2.eval))
     breeder(Population[(S, Rank[E])](ranking))
   }

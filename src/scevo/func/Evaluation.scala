@@ -8,7 +8,7 @@ import scevo.core.Population
  *  
  */
 object SequentialEval {
-  def apply[S, E](f: S => E) = (s: StatePop[S]) => Population(s.solutions.map(x => (x, f(x))))
+  def apply[S, E](f: S => E) = (s: StatePop[S]) => Population(s.map(x => (x, f(x))))
 }
 
 /** Evaluates population in parallel. 
@@ -17,12 +17,12 @@ object SequentialEval {
  */
 object ParallelEval {
   def apply[S, E](f: S => E) =
-    (s: StatePop[S]) => Population(s.solutions.par.map(x => (x, f(x))).to)
+    (s: StatePop[S]) => Population(s.par.map(x => (x, f(x))).to)
 
   def apply[S, E](f: S => E, parLevel: Int) = {
     val ts = new ForkJoinTaskSupport(new scala.concurrent.forkjoin.ForkJoinPool(parLevel))
     (s: StatePop[S]) => Population({
-      val c = s.solutions.par
+      val c = s.par
       c.tasksupport = ts
       c.map(x => (x, f(x))).to
     })
