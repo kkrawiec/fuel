@@ -2,12 +2,12 @@ package scevo.func
 
 import scala.annotation.tailrec
 import scala.collection.immutable.Stream.consWrapper
-import scevo.moves.Moves
+
 import scevo.core.Dominance
+import scevo.core.StatePop
+import scevo.moves.Moves
 import scevo.util.Options
 import scevo.util.TRandom
-import scevo.core.StatePop
-import scevo.core.Population
 
 /**
   * Performs breeding, i.e., selection followed by application of search operators
@@ -53,7 +53,7 @@ class SimpleBreeder[S, E](override val sel: Selection[S, E],
                           override val searchOperator: () => SearchOperator[S])
     extends Breeder[S, E](sel, searchOperator) with GenerationalBreeder[S, E] {
 
-  override def apply(s: StatePop[(S, E)]) = Population(breedn(s.size, s))
+  override def apply(s: StatePop[(S, E)]) = StatePop(breedn(s.size, s))
 }
 object SimpleBreeder {
   def apply[S, E](sel: Selection[S, E],
@@ -80,7 +80,7 @@ class SimpleSteadyStateBreeder[S, E](override val sel: Selection[S, E],
     val toRemove = desel(s)
     val pos = s.indexOf(toRemove)
     val (h, t) = s.splitAt(pos)
-    Population(h ++ Seq(r) ++ t.tail)
+    StatePop(h ++ Seq(r) ++ t.tail)
   }
 }
 
@@ -97,7 +97,7 @@ class NSGABreeder[S, E](domain: Moves[S])(
   val breeder = SimpleBreeder[S, Rank[E]](nsga, RandomMultiOperator(domain.moves: _*))
   override def apply(s: StatePop[(S, Seq[E])]) = {
     val ranking = nsga.rank(s.size, ordering)(s)
-    breeder(Population[(S, Rank[E])](ranking))
+    breeder(StatePop[(S, Rank[E])](ranking))
   }
 }
 
@@ -115,7 +115,7 @@ class NSGABreederElitist[S, E](domain: Moves[S])(
     val merged = s ++ previous
     val ranking = nsga.rank(s.size, ordering)(merged)
     previous = ranking.map(s => (s._1, s._2.eval))
-    breeder(Population[(S, Rank[E])](ranking))
+    breeder(StatePop[(S, Rank[E])](ranking))
   }
 }
  

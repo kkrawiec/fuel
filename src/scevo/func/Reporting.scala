@@ -5,11 +5,12 @@ import scevo.util.Options
 import scevo.core.StatePop
 import scevo.util.Counter
 
-/** Simple helper function for maintaining the best-so-far solutions 
- *  
- *  Can be plugged anywhere in the algorithm workflow. 
- * Does also simple snapshots, i.e., saves the current state of Collector.   
- */
+/**
+  * Simple helper function for maintaining the best-so-far solutions
+  *
+  *  Can be plugged anywhere in the algorithm workflow.
+  * Does also simple snapshots, i.e., saves the current state of Collector.
+  */
 
 class BestSoFar[S, E](opt: Options, coll: Collector, o: Ordering[E], cnt: Counter)
     extends Function1[StatePop[(S, E)], StatePop[(S, E)]] {
@@ -19,20 +20,22 @@ class BestSoFar[S, E](opt: Options, coll: Collector, o: Ordering[E], cnt: Counte
 
   def apply(s: StatePop[(S, E)]) = {
     val bestOfGen = s.minBy(_._2)(o)
-    if (bestSoFar.isEmpty || o.lt(bestOfGen._2, best.get._2)) best = Some(bestOfGen)
-    println(f"Gen: ${cnt.count}  BestSoFar: ${bestSoFar.get}")
-    if (snapFreq > 0 && cnt.count % snapFreq == 0) {
+    if (bestSoFar.isEmpty || o.lt(bestOfGen._2, best.get._2)) {
+      best = Some(bestOfGen)
       updateBest(s)
-      coll.saveSnapshot(f"${cnt.count}%04d")
     }
+    println(f"Gen: ${cnt.count}  BestSoFar: ${bestSoFar.get}")
+    if (snapFreq > 0 && cnt.count % snapFreq == 0) 
+      coll.saveSnapshot(f"${cnt.count}%04d")
     s
   }
   def updateBest(state: StatePop[(S, E)]) = {
-    coll.setResult("lastGeneration", cnt.count)
-    coll.setResult("bestOfRun.eval",
+    coll.setResult("best.generation", cnt.count)
+    coll.setResult("best.eval",
       if (bestSoFar.isDefined) bestSoFar.get._2 else "NaN")
-    coll.setResult("bestOfRun", bestSoFar.toString)
-    coll.write("bestOfRun", bestSoFar)
+    coll.setResult("best", bestSoFar.get._1.toString)
+    // TODO
+//    coll.write("best", bestSoFar)
     state
   }
 }

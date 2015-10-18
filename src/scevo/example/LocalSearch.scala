@@ -8,7 +8,6 @@ import scevo.func.LocalSearch
 /**
   * Using local search for MaxOnes (see the MaxOnesExample)
   *
-  * TODO: rename boolvectmoves to bitvectmoves?
   * TODO: BestOfRun
   */
 object MaxOnesLocal extends App {

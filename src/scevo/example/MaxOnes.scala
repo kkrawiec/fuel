@@ -41,7 +41,7 @@ object MaxOnes1 extends App {
   *
   */
 object MaxOnes2 extends App {
-  new OptColl('numVars -> 500, 'maxGenerations -> 200) {
+  new OptColl('numVars -> 500, 'maxGenerations -> 200, 'printResults -> true) {
     RunExperiment(SimpleEA(
       moves = BitSetMoves(opt('numVars, (_: Int) > 0)),
       eval = (s: BitSet) => s.size,

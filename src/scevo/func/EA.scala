@@ -18,8 +18,8 @@ import scevo.util.CallCounter
 trait IterativeSearch[S <: State] extends Function1[S, S] {
   def iter: S => S
   def terminate: Seq[S => Boolean]
-  protected val iterWithCounter = CallCounter(iter)
-  def algorithm = Iteration(iterWithCounter)(terminate)
+  protected val it = CallCounter(identity[S])
+  def algorithm = Iteration(iter andThen it)(terminate)
   def apply(s: S) = algorithm(s)
 }
 
@@ -47,8 +47,8 @@ abstract class EACore[S, E](moves: Moves[S],
     extends IterativeSearch[StatePop[(S, E)]] with Function0[StatePop[(S, E)]] {
   def initialize: Unit => StatePop[(S, E)] = RandomStatePop(moves.newSolution _) andThen evaluate
   def evaluate = ParallelEval(eval) andThen report
-  override def terminate = Termination(stop).+:(Termination.MaxIter(iterWithCounter))
-  def report = (s: StatePop[(S, E)]) => { println(f"Gen: ${iterWithCounter.count}"); s }
+  override def terminate = Termination(stop).+:(Termination.MaxIter(it))
+  def report = (s: StatePop[(S, E)]) => { println(f"Gen: ${it.count}"); s }
   def apply() = (initialize andThen algorithm)()
 }
 
@@ -68,7 +68,7 @@ class SimpleEA[S, E](moves: Moves[S],
   def selection = TournamentSelection[S, E](ordering)
   override def iter = SimpleBreeder[S, E](selection, RandomMultiOperator(moves.moves: _*)) andThen evaluate
 
-  val bsf = BestSoFar[S, E](ordering, iterWithCounter)
+  val bsf = BestSoFar[S, E](ordering, it)
   override def report: Function1[StatePop[(S, E)], StatePop[(S, E)]] = bsf
 }
 

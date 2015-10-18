@@ -1,10 +1,10 @@
 package scevo.func
 
 import scala.annotation.tailrec
+
 import scevo.core.State
-import scevo.util.Options
 import scevo.core.StatePop
-import scevo.core.Population
+import scevo.util.Options
 
 /**
   * Component factories
@@ -22,19 +22,16 @@ object Iteration {
   }
 }
 
-// Must be defined as Unit => State, because ()=> State is not composable (no andThen method)
+// Must be defined as Unit => State, because ()=> State is not composable (has no andThen method)
 trait Initializer[S <: State] extends Function1[Unit, S]
 
 class RandomStatePop[S](solutionGenerator: () => S)(implicit opt: Options)
     extends Initializer[StatePop[S]] {
   val populationSize = opt.paramInt("populationSize", 1000, _ > 0)
-  def apply(x: Unit) = Population(for (i <- 0 until populationSize) yield solutionGenerator())
+  def apply(x: Unit) = StatePop(for (i <- 0 until populationSize) yield solutionGenerator())
 }
 
 object RandomStatePop {
   def apply[S](solutionGenerator: () => S)(implicit opt: Options) =
     new RandomStatePop(solutionGenerator)(opt)
-}
-object RemoveEvals {
-  def apply[S, E] = (s: StatePop[(S, E)]) => Population(s.unzip._1)
 }

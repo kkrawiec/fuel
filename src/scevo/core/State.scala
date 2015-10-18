@@ -1,33 +1,43 @@
 package scevo.core
 
+/**
+  * Search state.
+  */
 
-/** Search state. 
- */
-
-trait State extends Serializable 
-
-/** A working population is a state storing a Seq of solutions 
- *  (duplicates are thus allowed). 
- * 
- * The state itself implements the Seq trait, so it behaves like a sequence.   
- */
-trait StatePop[T] extends State with Seq[T] {
-  protected def solutions: Seq[T]
-}
-
-class Population[T](override val solutions: Seq[T])
-    extends StatePop[T] {
-  require(solutions.size > 0, "The set of solutions in a population cannot be empty")
-//  def this(s1: StatePop[T], s2: StatePop[T]) = this(s1.solutions ++ s2.solutions)
+trait State extends Serializable {
   
-  def iterator: Iterator[T] = solutions.iterator
-  def apply(idx: Int): T = solutions(idx)
-  def length: Int = solutions.length
 }
 
-/** The implicit parameter facilitates creating a population with the same iteration 
- *  number. 
+/**
+  * A working population is a state storing a Seq of solutions
+  *  (duplicates are thus allowed).
+  *
+  * The state itself implements the Seq trait, so it behaves like a sequence.
+  */
+trait StatePop[T] extends State with Seq[T]
+
+class Population[T](val solutions: Seq[T]) extends StatePop[T] {
+  require(solutions.size > 0, "Population cannot be empty")
+  def iterator = solutions.iterator
+  def apply(idx: Int) = solutions(idx)
+  def length = solutions.length
+}
+
+object StatePop {
+  def apply[T](sols: Seq[T]) = new Population[T](sols)
+}
+
+
+/** Traits and classes for representing single-solution states,
+ *  mostly for the local search algorithms. 
  */
-object Population {
-  def apply[T](sols: Seq[T]) = new Population[T](sols) 
+trait StateSingle[T] extends State {
+  def get: T
+}
+
+class StateOne[T](override val get: T)
+  extends StateSingle[T]
+
+object StateSingle {
+  def apply[T](solution: T) = new StateOne(solution)
 }

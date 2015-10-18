@@ -5,7 +5,6 @@ import scevo.func.SimpleEA
 import scevo.func.SimpleSteadyStateEA
 import scevo.util.GetOptCollRng
 import scevo.moves.DoubleVectorMoves
-import scevo.func.RemoveEvals
 import scevo.util.OptColl
 
 /** A simple example of creating a hybrid algorithm: generational EA followed by steady-state EA. 
