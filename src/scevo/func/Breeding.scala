@@ -52,8 +52,7 @@ class SimpleBreeder[S, E](override val sel: Selection[S, E],
                           override val searchOperator: () => SearchOperator[S])
     extends Breeder[S, E](sel, searchOperator) with GenerationalBreeder[S, E] {
 
-  override def apply(s: StatePop[(S, E)]) =
-    Population(breedn(s.solutions.size, s.solutions), s.iteration + 1)
+  override def apply(s: StatePop[(S, E)]) = Population(breedn(s.solutions.size, s.solutions))
 }
 object SimpleBreeder {
   def apply[S, E](sel: Selection[S, E],
@@ -79,7 +78,7 @@ class SimpleSteadyStateBreeder[S, E](override val sel: Selection[S, E],
     val toRemove = desel(s.solutions)
     val pos = s.solutions.indexOf(toRemove)
     val (h, t) = s.solutions.splitAt(pos)
-    Population(h ++ Seq(r) ++ t.tail, s.iteration + 1)
+    Population(h ++ Seq(r) ++ t.tail)
   }
 }
 
@@ -96,7 +95,7 @@ class NSGABreeder[S, E](domain: Moves[S])(
   val breeder = SimpleBreeder[S, Rank[E]](nsga, RandomMultiOperator(domain.moves: _*))
   override def apply(s: StatePop[(S, Seq[E])]) = {
     val ranking = nsga.rank(s.solutions.size, ordering)(s.solutions)
-    breeder(Population[(S, Rank[E])](ranking, s.iteration))
+    breeder(Population[(S, Rank[E])](ranking))
   }
 }
 
@@ -114,7 +113,7 @@ class NSGABreederElitist[S, E](domain: Moves[S])(
     val merged = s.solutions ++ previous
     val ranking = nsga.rank(s.solutions.size, ordering)(merged)
     previous = ranking.map(s => (s._1, s._2.eval))
-    breeder(Population[(S, Rank[E])](ranking, s.iteration))
+    breeder(Population[(S, Rank[E])](ranking))
   }
 }
  

@@ -7,6 +7,7 @@ import scevo.util.Options
 import scevo.core.StatePop
 import scevo.func.RandomStatePop
 import scevo.core.State
+import scevo.util.CallCounter
 
 /**
   * Neigborhood is a Stream of solutions, so that it can be infinite.
@@ -38,21 +39,21 @@ class LocalSearch[S, E](neighborhood: Neighborhood[S],
                           implicit opt: Options, ord: Ordering[E])
     extends IterativeSearch[StateSingle[(S, E)]] {
 
-  override def iter: Function1[StateSingle[(S, E)], StateSingle[(S, E)]] = (s: StateSingle[(S, E)]) => {
-    val best = neighborhood(s.solution._1).map(e => (e, eval(e))).minBy(_._2)
-    StateOne(best, s.iteration + 1)
-  }
+  private val it = CallCounter(
+    (s: StateSingle[(S, E)]) =>
+      StateOne(neighborhood(s.solution._1).map(e => (e, eval(e))).minBy(_._2)))
+  override def iter: Function1[StateSingle[(S, E)], StateSingle[(S, E)]] = it
   def apply(s: S) = super.apply(StateOne((s, eval(s))))
-  override def terminate = Seq(Termination.MaxIter(opt), Termination.MaxTime(opt))
+  override def terminate = Seq(Termination.MaxIter(it), Termination.MaxTime(opt))
 }
 
 trait StateSingle[T] extends State {
   def solution: T
 }
 
-class StateOne[T](override val solution: T, override val iteration: Int = 0)
+class StateOne[T](override val solution: T)
   extends StateSingle[T]
 
 object StateOne {
-  def apply[T](solution: T, iteration: Int = 0) = new StateOne(solution, iteration)
+  def apply[T](solution: T) = new StateOne(solution)
 }

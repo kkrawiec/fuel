@@ -28,7 +28,7 @@ trait Initializer[S <: State] extends Function1[Unit, S]
 class RandomStatePop[S](solutionGenerator: () => S)(implicit opt: Options)
     extends Initializer[StatePop[S]] {
   val populationSize = opt.paramInt("populationSize", 1000, _ > 0)
-  def apply(x: Unit) = Population(for (i <- 0 until populationSize) yield solutionGenerator(), 0)
+  def apply(x: Unit) = Population(for (i <- 0 until populationSize) yield solutionGenerator())
 }
 
 object RandomStatePop {
@@ -36,5 +36,5 @@ object RandomStatePop {
     new RandomStatePop(solutionGenerator)(opt)
 }
 object RemoveEvals {
-  def apply[S, E] = (s: StatePop[(S, E)]) => Population(s.solutions.unzip._1, s.iteration)
+  def apply[S, E] = (s: StatePop[(S, E)]) => Population(s.solutions.unzip._1)
 }

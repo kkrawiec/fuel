@@ -7,6 +7,9 @@ import scevo.util.Options
 import scevo.util.TRandom
 import scevo.core.State
 import scevo.util.CallEvery
+import scevo.util.Counter
+import scevo.util.Counter
+import scevo.util.CallCounter
 
 /**
   * Generic trait for iterative search.
@@ -42,10 +45,10 @@ abstract class EACore[S, E](moves: Moves[S],
                               implicit opt: Options)
     extends IterativeSearch[StatePop[(S, E)]] with Function0[StatePop[(S, E)]] {
   def initialize: Unit => StatePop[(S, E)] = RandomStatePop(moves.newSolution _) andThen evaluate
-  def evaluate = ParallelEval(eval) andThen report
-  override def terminate = Termination(stop)
-  def report = (s: StatePop[(S, E)]) => { println(f"Gen: ${s.iteration}"); s }
-
+  protected val ev = CallCounter(ParallelEval(eval))
+  def evaluate = ev andThen report
+  override def terminate = Termination(stop).+:(Termination.MaxIter(ev))
+  def report = (s: StatePop[(S, E)]) => { println(f"Gen: ${ev.count}"); s }
   def apply() = (initialize andThen algorithm)()
 }
 
@@ -65,7 +68,7 @@ class SimpleEA[S, E](moves: Moves[S],
   def selection = TournamentSelection[S, E](ordering)
   override def iter = SimpleBreeder[S, E](selection, RandomMultiOperator(moves.moves: _*)) andThen evaluate
 
-  val bsf = BestSoFar[S, E](ordering)
+  val bsf = BestSoFar[S, E](ordering, ev)
   override def report: Function1[StatePop[(S, E)], StatePop[(S, E)]] = bsf
 }
 
