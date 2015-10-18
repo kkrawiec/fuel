@@ -32,3 +32,36 @@ object CodeExecutor {
   }
 }
 
+/**
+  * Calls the underlying function f every n calls.
+  *
+  *  Can be used to make reporting less frequent (e.g., in steady-state EA)
+  *
+  */
+class CallEvery[S](n: Int, f: S => S) extends (S => S) {
+  require(n > 0)
+  var i = 0L
+  def apply(s: S) = {
+    val r = if (i % n == 0) f(s) else s
+    i = i + 1
+    r
+  }
+}
+object CallEvery {
+  def apply[S](n: Int, f: S => S) = new CallEvery(n, f)
+}
+
+trait Counter {
+  def count: Long
+}
+class CallCounter[-A, +B](f: A => B) extends (A => B) with Counter {
+  private var cnt = 0L
+  override def apply(a: A) = {
+    cnt = cnt + 1
+    f(a)
+  }
+  override def count = cnt
+}
+object CallCounter {
+  def apply[A, B](f: A => B) = new CallCounter(f)
+}

@@ -6,6 +6,7 @@ import scevo.util.Collector
 import scevo.util.Options
 import scevo.util.TRandom
 import scevo.core.State
+import scevo.util.CallEvery
 
 /**
   * Generic trait for iterative search.

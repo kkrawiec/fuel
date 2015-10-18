@@ -3,6 +3,7 @@ package scevo.func
 import scevo.core.State
 import scevo.util.Options
 import scevo.core.StatePop
+import scevo.util.Counter
 
 object Termination {
   object MaxIter {
@@ -17,6 +18,11 @@ object Termination {
       val startTime = System.currentTimeMillis()
       def timeElapsed = System.currentTimeMillis() - startTime
       s: Any => timeElapsed > maxMillisec
+    }
+  }
+  object Count {
+    def apply(cnt: Counter, max: Long) = {
+      s: Any => cnt.count >= max
     }
   }
   def apply[S, E](otherCond: (S, E) => Boolean = (_: S, _: E) => false)(implicit config: Options) = Seq(

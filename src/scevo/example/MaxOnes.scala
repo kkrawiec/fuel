@@ -52,22 +52,3 @@ object MaxOnes2 extends App {
   }
 }
 
-/**
-  * Using local search for the same task.
-  *
-  * TODO: rename boolvectmoves to bitvectmoves?
-  * TODO: BestOfRun
-  */
-object MaxOnesLocal extends App {
-  new OptColl('numVars -> 500, 'maxGenerations -> 200, 'printResults -> true) {
-    val n = opt('numVars, (_: Int) > 0)
-    val moves = BoolVectorMoves(n)
-    val neigh = new BoolVectNeigh
-    val init = IndexedSeq.fill(n)(true)
-    RunExperiment(Unit => {
-      val alg = new LocalSearch(neigh,
-        eval = (s: IndexedSeq[Boolean]) => s.count(_ == true))
-      alg.apply(init)
-    })
-  }
-}

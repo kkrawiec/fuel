@@ -41,20 +41,3 @@ object BestSoFar {
 }
 
 
-/** Calls the underlying function f every n calls. 
- *  
- *  Can be used to make reporting less frequent (e.g., in steady-state EA)
- *  
- */
-class CallEvery[S](n: Int, f: S => S) extends (S => S) {
-  require(n > 0)
-  var i = 0L
-  def apply(s: S) = {
-    val r = if (i % n == 0) f(s) else s
-    i = i + 1
-    r
-  }
-}
-object CallEvery {
-  def apply[S](n: Int, f: S => S) = new CallEvery(n, f)
-}
