@@ -7,7 +7,8 @@ trait State extends Serializable {
   def iteration: Int
 }
 
-/** A working population is a state storing a set of solutions 
+/** A working population is a state storing a Seq of solutions 
+ *  (duplicates are thus allowed). 
  *  
  */
 trait StatePop[T] extends State {

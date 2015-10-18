@@ -1,11 +1,14 @@
 package scevo.example
 
 import scala.collection.immutable.BitSet
-
 import scevo.func.RunExperiment
 import scevo.func.SimpleEA
 import scevo.moves.BitSetMoves
 import scevo.util.OptColl
+import scevo.moves.BoolVectNeigh
+import scevo.moves.LocalSearch
+import scevo.moves.BoolVectorMoves
+import scevo.moves.StateOne
 
 /**
   * MaxOnes with genetic algorithm (GA), using default parameter settings.
@@ -46,5 +49,25 @@ object MaxOnes2 extends App {
       moves = BitSetMoves(opt('numVars, (_: Int) > 0)),
       eval = (s: BitSet) => s.size,
       optimalValue = 0))
+  }
+}
+
+/**
+  * Using local search for the same task.
+  *
+  * TODO: rename boolvectmoves to bitvectmoves?
+  * TODO: BestOfRun
+  */
+object MaxOnesLocal extends App {
+  new OptColl('numVars -> 500, 'maxGenerations -> 200, 'printResults -> true) {
+    val n = opt('numVars, (_: Int) > 0)
+    val moves = BoolVectorMoves(n)
+    val neigh = new BoolVectNeigh
+    val init = IndexedSeq.fill(n)(true)
+    RunExperiment(Unit => {
+      val alg = new LocalSearch(neigh,
+        eval = (s: IndexedSeq[Boolean]) => s.count(_ == true))
+      alg.apply(init)
+    })
   }
 }
