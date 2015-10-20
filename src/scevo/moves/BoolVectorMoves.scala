@@ -8,7 +8,6 @@ import scevo.util.TRandom
   * The implementations of crossovers are identical as in BitSetDomain, but pulling them up to GADomain
   * would be a bit tricky.
   */
-
 class BoolVectorMoves(numVars: Int)(implicit rng: TRandom)
     extends VectorMoves[Boolean](numVars)(rng) {
 

@@ -1,12 +1,11 @@
 package scevo.core
 
 /**
-  * Search state.
+  * Search state. Can be basically anything. 
+  * 
+  * When defining your own derived State class, consider mixing-in the Serializable trait. 
   */
-
-trait State extends Serializable {
-  
-}
+trait State 
 
 /**
   * A working population is a state storing a Seq of solutions

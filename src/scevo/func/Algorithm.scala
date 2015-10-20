@@ -22,13 +22,18 @@ object Iteration {
   }
 }
 
-// Must be defined as Unit => State, because ()=> State is not composable (has no andThen method)
+/** Initializer is any function that can create a State 'out of nothing'
+ *  (e.g., at random). 
+ *  
+ *  Must be defined as Unit => State, because ()=> State is not composable 
+ *  (has no andThen method)
+ */
 trait Initializer[S <: State] extends Function1[Unit, S]
 
 class RandomStatePop[S](solutionGenerator: () => S)(implicit opt: Options)
     extends Initializer[StatePop[S]] {
-  val populationSize = opt.paramInt("populationSize", 1000, _ > 0)
-  def apply(x: Unit) = StatePop(for (i <- 0 until populationSize) yield solutionGenerator())
+  val populationSize = opt('populationSize, 1000, (_:Int) > 0)
+  def apply(x: Unit) = StatePop(Seq.fill(populationSize)(solutionGenerator()))
 }
 
 object RandomStatePop {

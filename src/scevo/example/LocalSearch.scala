@@ -3,7 +3,7 @@ package scevo.example
 import scevo.moves.BoolVectNeigh
 import scevo.util.OptColl
 import scevo.func.RunExperiment
-import scevo.func.LocalSearch
+import scevo.func.LocalSteepest
 
 /**
   * Using local search for MaxOnes (see the MaxOnesExample)
@@ -17,7 +17,7 @@ object MaxOnesLocal extends App {
     // Initial search state
     val init = IndexedSeq.fill(n)(true)
     RunExperiment(Unit => {
-      val alg = new LocalSearch(neigh,
+      val alg = new LocalSteepest(neigh,
         eval = (s: IndexedSeq[Boolean]) => s.count(_ == true))
       alg.apply(init)
     })

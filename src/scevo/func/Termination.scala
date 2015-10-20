@@ -15,6 +15,12 @@ object Termination {
       s: Any => timeElapsed > maxMillisec
     }
   }
+  class NoImprovement[S, E] {
+    def apply(ref: () => (S, E))(implicit ord: PartialOrdering[E]) = {
+      (s: StatePop[(S, E)]) => !s.exists(
+          es => ord.tryCompare(es._2, ref()._2).getOrElse(0) < 0)
+    }
+  }
   class Count {
     def apply(cnt: Counter, max: Long) = {
       s: Any => cnt.count >= max
@@ -22,10 +28,10 @@ object Termination {
   }
   object MaxIter extends Count {
     def apply[S <: State](cnt: Counter)(implicit opt: Options) = {
-      val maxGenerations = opt('maxGenerations, 50, (_:Int) > 0)
+      val maxGenerations = opt('maxGenerations, 50, (_: Int) > 0)
       super.apply(cnt, maxGenerations)
     }
-  }  
+  }
   def apply[S, E](otherCond: (S, E) => Boolean = (_: S, _: E) => false)(implicit config: Options) = Seq(
     MaxTime(config),
     (s: StatePop[(S, E)]) => s.exists(es => otherCond(es._1, es._2)))

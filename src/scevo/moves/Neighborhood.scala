@@ -1,6 +1,5 @@
 package scevo.moves
 
-import scala.IndexedSeq
 import scala.Stream
 import scala.collection.immutable.Stream.consWrapper
 
@@ -21,9 +20,4 @@ class BoolVectNeigh extends Neighborhood[IndexedSeq[Boolean]] {
     }
     stream(s.size - 1)
   }
-}
-
-object TestNeigh extends App {
-  println((new BoolVectNeigh)(IndexedSeq(false, false, false)))
-  println((new BoolVectNeigh)(IndexedSeq(false, false, false)).toList)
 }

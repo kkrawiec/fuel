@@ -46,7 +46,10 @@ object Dominance {
   }
 }
 
-object Best {
+/** Returns the greatest element of a partially ordered set, 
+ *  or None if such an element does not exist. 
+ */
+object Greatest {
   def apply[T](s: Seq[T])(implicit o: PartialOrdering[T]) = {
     if (s.isEmpty) None
     else {
@@ -80,21 +83,3 @@ object Best {
   }
 }
 
-object TestBest extends App {
-  val a = Seq(1, 1)
-  val b = Seq(2, 2)
-  val c = Seq(1, 3)
-  val d = Seq(3, 1)
-  val e = Seq(2, 2)
-
-  implicit val o = Dominance[Int]
-
-  for (p <- Seq(a, b, c, d, e).permutations)
-    assert(Best(p) == Some(a))
-  for (p <- Seq(b, c, d).permutations)
-    assert(Best(p) == None)
-  for (p <- Seq(b, c, d, e).permutations)
-    assert(Best(p) == None)
-  for (p <- Seq(a, b, c, d, e))
-    assert(Best(Seq(p)) == Some(p))
-}

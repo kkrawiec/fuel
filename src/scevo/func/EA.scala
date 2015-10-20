@@ -1,15 +1,13 @@
 package scevo.func
 
+import scevo.core.State
 import scevo.core.StatePop
 import scevo.moves.Moves
+import scevo.util.CallCounter
+import scevo.util.CallEvery
 import scevo.util.Collector
 import scevo.util.Options
 import scevo.util.TRandom
-import scevo.core.State
-import scevo.util.CallEvery
-import scevo.util.Counter
-import scevo.util.Counter
-import scevo.util.CallCounter
 
 /**
   * Generic trait for iterative search.

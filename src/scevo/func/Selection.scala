@@ -5,7 +5,7 @@ import scevo.Distribution
 import scevo.Preamble.RndApply
 import scevo.util.Options
 import scevo.util.TRandom
-import scevo.core.Best
+import scevo.core.Greatest
 
 /**
   * Selection can be applied to any set (Seq, so duplicates are OK) of solutions,
@@ -56,7 +56,7 @@ class PartialTournament[S, E](val tournamentSize: Int)(implicit ordering: Partia
 
   def apply(pop: Seq[(S, E)]) = {
     val sample = pop(rand, tournamentSize)
-    Best(sample).getOrElse(sample(rng))
+    Greatest(sample).getOrElse(sample(rng))
   }
 }
 

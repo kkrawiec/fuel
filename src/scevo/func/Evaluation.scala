@@ -2,7 +2,6 @@ package scevo.func
 
 import scala.collection.parallel.ForkJoinTaskSupport
 
-import scevo.core.State
 import scevo.core.StatePop
 
 /** Evaluates population solution by solution.
