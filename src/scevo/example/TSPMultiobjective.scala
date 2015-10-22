@@ -14,6 +14,7 @@ import scevo.util.Coll
 import scevo.util.Opt
 import scevo.util.TRandom
 import scevo.func.EACore
+import scevo.func.ParallelEval
 
 /**
   * Two-objective Traveling Salesperson problem: distance and cost.
@@ -33,20 +34,20 @@ object TSPMultiobjective extends App {
 
     // Using EACore because there is only partial order of solutions, 
     // so it does not make much sense to report online progress.
-    
+
     // 1. Naive algorithm using partial tournament (dominance tournament) of size 2
     // Running every experiment in a Coll environment creates separate collector files
     new Coll {
-      RunExperiment(new EACore(moves, problem.eval) {
+      RunExperiment(new EACore(moves, ParallelEval(problem.eval)) {
         def selection = new PartialTournament[Seq[Int], Seq[Double]](2)
-        override def iter = SimpleBreeder(selection, RandomMultiOperator(moves.moves: _*)) andThen
+        override def iter = SimpleBreeder(selection, moves.moves: _*) andThen
           evaluate
       })
     }
 
     // 2. NSGAII non-elitist version
     new Coll {
-      RunExperiment(new EACore(moves, problem.eval) {
+      RunExperiment(new EACore(moves, ParallelEval(problem.eval)) {
         override val iter = new NSGABreeder(moves) andThen evaluate
       })
     }
@@ -54,7 +55,7 @@ object TSPMultiobjective extends App {
     // 3. NSGAII elitist version (parents and offspring merged in mu+lambda style), 
     // plus simple reporting. 
     new Coll {
-      RunExperiment(new EACore(moves, problem.eval) {
+      RunExperiment(new EACore(moves, ParallelEval(problem.eval)) {
         val breeder = new NSGABreederElitist(moves)
         override val iter = breeder andThen evaluate
         override def algorithm = super.algorithm andThen showParetoFront

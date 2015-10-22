@@ -58,7 +58,12 @@ class SimpleBreeder[S, E](override val sel: Selection[S, E],
 object SimpleBreeder {
   def apply[S, E](sel: Selection[S, E],
                   searchOperator: () => SearchOperator[S]) = new SimpleBreeder[S, E](sel, searchOperator)
-
+  /**
+    * Constructs SimpleBreeder with particular search operators invoked according to given probabilities
+    */
+  def apply[S, E](sel: Selection[S, E], searchOperators: SearchOperator[S]*)(
+    implicit config: Options, rng: TRandom) =
+    new SimpleBreeder[S, E](sel, RandomMultiOperator(searchOperators: _*))
 }
 
 /**
@@ -94,7 +99,7 @@ class NSGABreeder[S, E](domain: Moves[S])(
   implicit opt: Options, rng: TRandom, ordering: Dominance[E])
     extends GenerationalBreeder[S, Seq[E]] {
   val nsga = new NSGA2Selection[S, E](opt)(rng)
-  val breeder = SimpleBreeder[S, Rank[E]](nsga, RandomMultiOperator(domain.moves: _*))
+  val breeder = SimpleBreeder[S, Rank[E]](nsga, RandomMultiOperator(domain: _*))
   override def apply(s: StatePop[(S, Seq[E])]) = {
     val ranking = nsga.rank(s.size, ordering)(s)
     breeder(StatePop[(S, Rank[E])](ranking))
@@ -109,7 +114,7 @@ class NSGABreederElitist[S, E](domain: Moves[S])(
   implicit opt: Options, rng: TRandom, ordering: Dominance[E])
     extends GenerationalBreeder[S, Seq[E]] {
   val nsga = new NSGA2Selection[S, E](opt)(rng)
-  val breeder = SimpleBreeder[S, Rank[E]](nsga, RandomMultiOperator(domain.moves: _*))
+  val breeder = SimpleBreeder[S, Rank[E]](nsga, RandomMultiOperator(domain: _*))
   var previous = Seq[(S, Seq[E])]()
   override def apply(s: StatePop[(S, Seq[E])]) = {
     val merged = s ++ previous

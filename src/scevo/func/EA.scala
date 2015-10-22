@@ -39,12 +39,17 @@ trait IterativeSearch[S <: State] extends Function1[S, S] {
   * TODO: if stop() is default, it should not be called
   */
 abstract class EACore[S, E](moves: Moves[S], evaluation: Evaluation[S, E],
-                            stop: (S, E) => Boolean)(
+                            stop: (S, E) => Boolean = ((s: S, e: E) => false))(
                               implicit opt: Options)
     extends IterativeSearch[StatePop[(S, E)]] with Function0[StatePop[(S, E)]] {
+
+  /*
   def this(moves: Moves[S], eval: S => E,
-           stop: (S, E) => Boolean  = ((s: S, e: E) => false))(
+           stop: (S, E) => Boolean = ((s: S, e: E) => false))(
              implicit opt: Options) = this(moves, ParallelEval(eval), stop)(opt)
+             * 
+             */
+
   def initialize: Unit => StatePop[(S, E)] = RandomStatePop(moves.newSolution _) andThen evaluate
   def evaluate = evaluation andThen report
   override def terminate = Termination(stop).+:(Termination.MaxIter(it))
@@ -63,10 +68,10 @@ class SimpleEA[S, E](moves: Moves[S],
                      eval: S => E,
                      stop: (S, E) => Boolean = ((s: S, e: E) => false))(
                        implicit opt: Options, coll: Collector, rng: TRandom, ordering: Ordering[E])
-    extends EACore[S, E](moves, eval, stop)(opt) {
+    extends EACore[S, E](moves, ParallelEval(eval), stop)(opt) {
 
   def selection = TournamentSelection[S, E](ordering)
-  override def iter = SimpleBreeder[S, E](selection, RandomMultiOperator(moves.moves: _*)) andThen evaluate
+  override def iter = SimpleBreeder[S, E](selection, moves:_*) andThen evaluate
 
   val bsf = BestSoFar[S, E](ordering, it)
   override def report: Function1[StatePop[(S, E)], StatePop[(S, E)]] = bsf
@@ -101,7 +106,7 @@ class SimpleSteadyStateEA[S, E](moves: Moves[S],
   val n = opt('populationSize, 1000)
   val deselection = TournamentSelection[S, E](ordering.reverse)
   override def iter = new SimpleSteadyStateBreeder[S, E](selection,
-    RandomMultiOperator(moves.moves: _*), deselection, eval) andThen CallEvery(n, report)
+    RandomMultiOperator(moves: _*), deselection, eval) andThen CallEvery(n, report)
 }
 
 object SimpleSteadyStateEA {

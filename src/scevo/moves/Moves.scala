@@ -10,7 +10,11 @@ import scevo.func.SearchOperator
  *  also a move (indeed it is, a move from nowhere to S: Unit => S).  
  *  
  */
-trait Moves[S] {
+trait Moves[S] extends Seq[SearchOperator[S]]{
   def newSolution: S
-  def moves: Seq[SearchOperator[S]]
+  protected def moves: Seq[SearchOperator[S]]
+
+  def iterator = moves.iterator
+  def apply(idx: Int) = moves(idx)
+  def length = moves.length
 }

@@ -1,11 +1,12 @@
 package scevo.example
 
 import scala.collection.immutable.BitSet
-
 import scevo.func.RunExperiment
 import scevo.func.SimpleEA
 import scevo.moves.BitSetMoves
 import scevo.util.OptColl
+import scevo.util.ScApp
+import scevo.util.IApp
 
 /**
   * MaxOnes with genetic algorithm (GA), using default parameter settings.
@@ -28,24 +29,27 @@ import scevo.util.OptColl
   * $ scala -cp ./bin -e scevo.example.MaxOnes1
   *
   */
-object MaxOnes1 extends App {
-  new OptColl {
-    RunExperiment(SimpleEA(moves = BitSetMoves(100),
-      eval = (s: BitSet) => s.size,
-      stop = (s: BitSet, e: Int) => e == 0))
-  }
+object MaxOnes1 extends ScApp {
+  RunExperiment(SimpleEA(moves = BitSetMoves(100),
+    eval = (s: BitSet) => s.size,
+    stop = (s: BitSet, e: Int) => e == 0))
 }
 
 /**
   * A variant with some parameters set manually.
   *
   */
-object MaxOnes2 extends App {
-  new OptColl('numVars -> 500, 'maxGenerations -> 200, 'printResults -> true) {
-    RunExperiment(SimpleEA(
-      moves = BitSetMoves(opt('numVars, (_: Int) > 0)),
-      eval = (s: BitSet) => s.size,
-      optimalValue = 0))
-  }
+object MaxOnes2 extends IApp('numVars -> 500, 'maxGenerations -> 200,
+  'printResults -> true) {
+  RunExperiment(SimpleEA(
+    moves = BitSetMoves(opt('numVars, (_: Int) > 0)),
+    eval = (s: BitSet) => s.size,
+    optimalValue = 0))
 }
 
+/** A super short variant 
+ *  
+ */
+object MaxOnes3 extends ScApp {
+  RunExperiment(SimpleEA(BitSetMoves(100), (s: BitSet) => s.size, 0))
+}

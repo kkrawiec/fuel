@@ -1,11 +1,10 @@
 package scevo.func
 
-import scala.annotation.tailrec
 import scevo.Distribution
 import scevo.Preamble.RndApply
+import scevo.core.Greatest
 import scevo.util.Options
 import scevo.util.TRandom
-import scevo.core.Greatest
 
 /**
   * Selection can be applied to any set (Seq, so duplicates are OK) of solutions,
@@ -78,30 +77,3 @@ class FitnessPropSelSlow[S](implicit rand: TRandom) extends Selection[S, Double]
   }
 }
 
-/**
-  * Lexicase selection by Spector et al. Applicable to test-based problems.
-  *
-  * Iteratively selects a random test and keeps only the solutions that pass it.
-  * It does so until only one solution is left, and that solution is the outcome of selection.
-  *
-  * Note: Here E stands for one objective, not entire evaluation.
-  */
-class LexicaseSelection[S, E](o: Ordering[E])(implicit rand: TRandom)
-    extends StochasticSelection[S, Seq[E]](rand) {
-  def apply(pop: Seq[(S, Seq[E])]) = {
-    @tailrec def sel(sols: Seq[(S, Seq[E])], cases: List[Int]): (S, Seq[E]) =
-      if (sols.size == 1) sols(0)
-      else if (cases.size == 1) sols(rand)
-      else {
-        val theCase = cases(rand)
-        val ord = new Ordering[(S, Seq[E])] {
-          override def compare(a: (S, Seq[E]), b: (S, Seq[E])) = o.compare(a._2(theCase), b._2(theCase))
-        }
-        val best = sols.min(ord)
-        //println("Sols:" + sols.size + " Cases: " + cases.size)
-        sel(sols.filter(s => ord.compare(s, best) <= 0), cases.diff(List(theCase)))
-      }
-    // assumes nonempty pop
-    sel(pop, 0.until(pop(0)._2.size).toList)
-  }
-}
