@@ -38,13 +38,15 @@ trait IterativeSearch[S <: State] extends Function1[S, S] {
   *
   * TODO: if stop() is default, it should not be called
   */
-abstract class EACore[S, E](moves: Moves[S],
-                            eval: S => E,
-                            stop: (S, E) => Boolean = ((s: S, e: E) => false))(
+abstract class EACore[S, E](moves: Moves[S], evaluation: Evaluation[S, E],
+                            stop: (S, E) => Boolean)(
                               implicit opt: Options)
     extends IterativeSearch[StatePop[(S, E)]] with Function0[StatePop[(S, E)]] {
+  def this(moves: Moves[S], eval: S => E,
+           stop: (S, E) => Boolean  = ((s: S, e: E) => false))(
+             implicit opt: Options) = this(moves, ParallelEval(eval), stop)(opt)
   def initialize: Unit => StatePop[(S, E)] = RandomStatePop(moves.newSolution _) andThen evaluate
-  def evaluate = ParallelEval(eval) andThen report
+  def evaluate = evaluation andThen report
   override def terminate = Termination(stop).+:(Termination.MaxIter(it))
   def report = (s: StatePop[(S, E)]) => { println(f"Gen: ${it.count}"); s }
   def apply() = (initialize andThen algorithm)()
