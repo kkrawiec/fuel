@@ -30,7 +30,7 @@ object Hiff {
 }
 
 class HiffProblem(val n: Int, trivial: Boolean)(implicit rng: TRandom) {
-  require((n & (n - 1)) == 0, "The number of variables must be a power of 2.")
+  assume((n & (n - 1)) == 0, "The number of variables must be a power of 2.")
   val blocks =
     if (trivial) Range(0, n).toVector
     else rng.shuffle(Range(0, n).toVector)

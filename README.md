@@ -6,15 +6,22 @@ June 2014 - Oct 2015
 Introduction
 ===================
 
-ScEvo is a succinct framework for implementing metaheuristic algorithms, in particular evolutionary algorithms, in Scala. It is written primarily in functional style, with most objects implemented as immutable, and using object-oriented style rather sparingly. The library is organized as a collection of components, which in general are allowed to be stateful. 
+ScEvo is a succinct framework for implementing metaheuristic algorithms, in particular evolutionary algorithms, in Scala. It is written primarily in functional style, with most objects implemented as immutable, and using object-oriented style rather sparingly. 
 
-A metaheuristic algorithm is a compound function. ScEvo's role is to
+Features: 
+- Simple and lightweight (< 2000 lines of code, including several examples of usage)
+- Easy manipulation of components (e.g., hybridizing algorithms, search operators, etc.)
+- Most components implemented as immutable
+- Applicable to single- and multiobjective problems
+- Ready-to-use basic operators for solutions represented as vectors and permutations.
+- Support for parallelization
+- Easily interoperable with Java
+- No dependencies on external libraries
 
-* help a user to build such a function using the components available in the library, 
-* facilitate running such algorithms/experiments, and 
-* provide convenient ways of parameterizing the algorithms and collecting results. 
 
 TODO minimalistic
+
+Includes ready-to-use basic operators for solutions represented as vectors and permutations. 
 
 ScEvo provides relatively few top-level components (complete algorithms), because composing them from the pieces described below is really easy in functional programming paradigm. For this reason, it can be particularly useful for using metaheuristics in innovative ways, e.g., for hybridizing them with other algorithms, devising 'homebrew' algorithms, or playing with hyperheuristics. 
 
@@ -23,6 +30,13 @@ What follows is a one-page description of the basic components and the relations
 
 General framework
 ===================
+
+The library is organized as a collection of components, which in general are allowed to be stateful.  A metaheuristic algorithm is a compound function. ScEvo's role is to
+
+* help a user to build such a function using the components available in the library, 
+* facilitate running such algorithms/experiments, and 
+* provide convenient ways of parameterizing the algorithms and collecting results. 
+
 
 A metaheuristics is an iterative algorithm that iterates over States. A single step of such iteration is a function State => State. The object Iteration constructs an iterative algorithm (a function State => State) with a given step function (also a function State => State) and stopping/termination condition(s) (functions State => Boolean). 
 
@@ -110,4 +124,6 @@ How to cite
 Some justifications 
 -------------------
 
+Uses assume and assert rather than require
+`-Xelide-below`
 

@@ -6,14 +6,14 @@ import scala.annotation.tailrec
 object Preamble {
   /** Draws uniformly a single element from the sequence */
   implicit class RndApply[T](s: Seq[T]) {
-    require(s.nonEmpty)
+    assume(s.nonEmpty)
     def apply(rnd: TRandom) = s(rnd.nextInt(s.size))
     // Note: with replacement!
     def apply(rnd: TRandom, n: Int) = for (i <- 0 until n) yield s(rnd.nextInt(s.size))
     def fapply(rnd: TRandom) = (() => s(rnd.nextInt(s.size)))
   }
   implicit class RndApplyS[T](s: Set[T]) {
-    require(s.nonEmpty)
+    assume(s.nonEmpty)
     val it = s.iterator
     def apply(rnd: TRandom) = it.drop(rnd.nextInt(s.size)).next
   }
@@ -23,10 +23,10 @@ object Preamble {
 
 /** Histogram is basically a non-normalized Distribution */
 class Histogram[T](val d: Seq[T])(implicit num: Numeric[T]) {
-  require(d.nonEmpty, "Histogram should contain at least one element")
-  require(d.forall(e => num.gteq(e, num.zero)), "Histogram elements should be non-negative")
+  assume(d.nonEmpty, "Histogram should contain at least one element")
+  assume(d.forall(e => num.gteq(e, num.zero)), "Histogram elements should be non-negative")
   val sum = d.sum
-  require(num.gt(sum, num.zero), "At least one histogram element must be non-zero")
+  assume(num.gt(sum, num.zero), "At least one histogram element must be non-zero")
   /** Draws a random index according to histogram */
   def apply(rng: TRandom): Int = {
     val r = num.toDouble( sum) * rng.nextDouble
@@ -35,7 +35,7 @@ class Histogram[T](val d: Seq[T])(implicit num: Numeric[T]) {
   }
   /** Draws multiple indices *without replacement* */
  def apply(rng: TRandom, n: Int): Seq[Int] = {
-    require(n <= d.size)
+    assume(n <= d.size)
     @tailrec def draw(k: Int, s: Double, remaining: Set[Int], selected: List[Int]): Seq[Int] = k match {
       case 0 => selected
       case _ => {
@@ -61,8 +61,8 @@ object Histogram {
 
 class Distribution(d: Seq[Double]) extends Histogram(d) {
   // This was problematic due to numerical roundoffs
-  // require(d.sum == 1.0, "Distribution should sum up to 1.0. And this one is: " + d)
-  require(sum > 0.999 && sum < 1.001, "Distribution should sum up to 1.0. And this one is: " + d)
+  // assume(d.sum == 1.0, "Distribution should sum up to 1.0. And this one is: " + d)
+  assume(sum > 0.999 && sum < 1.001, "Distribution should sum up to 1.0. And this one is: " + d)
 }
 object Distribution {
   def apply(d: Seq[Double]) = new Distribution(d)

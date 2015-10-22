@@ -11,7 +11,7 @@ trait Dominance[E] extends PartialOrdering[Seq[E]] {
   def ordering(i: Int): Ordering[E]
   def lteq(x: Seq[E], y: Seq[E]): Boolean = tryCompare(x, y).getOrElse(0) < 0
   override def tryCompare(x: Seq[E], y: Seq[E]): Option[Int] = {
-    require(x.size == y.size)
+    assume(x.size == y.size)
     // Not very elegant, but much faster than other method:
     var meBetter: Boolean = false
     var thatBetter: Boolean = false

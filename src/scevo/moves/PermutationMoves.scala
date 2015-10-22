@@ -10,7 +10,7 @@ import scevo.func.SearchOperator
   */
 abstract class AbstractPermutationMoves[T](n: Int)(rng: TRandom)
     extends Moves[Seq[T]] {
-  require(n > 0)
+  assume(n > 0)
 
   // Naive mutation: just swap two cities. 
   def mutation = (p: Seq[T]) => {

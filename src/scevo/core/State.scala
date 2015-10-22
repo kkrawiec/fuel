@@ -16,7 +16,7 @@ trait State
 trait StatePop[T] extends State with Seq[T]
 
 class Population[T](val solutions: Seq[T]) extends StatePop[T] {
-  require(solutions.size > 0, "Population cannot be empty")
+  assume(solutions.size > 0, "Population cannot be empty")
   def iterator = solutions.iterator
   def apply(idx: Int) = solutions(idx)
   def length = solutions.length

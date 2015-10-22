@@ -10,7 +10,7 @@ import scala.collection.immutable.BitSet
  
 class BitSetMoves(numVars: Int)(rng: TRandom)
     extends AbstractVectorMoves[BitSet] {
-  require(numVars > 0)
+  assume(numVars > 0)
 
   override def newSolution = BitSet.empty ++
     (for (i <- 0.until(numVars); if (rng.nextBoolean)) yield i)
