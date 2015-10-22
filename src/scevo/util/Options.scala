@@ -37,6 +37,7 @@ trait Options {
   // TODO: not consequent: paramString returns Option, while paramInt a value
   def paramString(id: String) = getOption(id)
   def paramString(id: String, default: String) = getOption(id, default)
+  def apply(id: Symbol, default: String) = getOption(id.name, default)
 
   // Int
   def paramInt(id: String): Int = getOption(id).getOrElse({ throw new Exception(s"Parameter $id not found"); "" }).toInt
@@ -129,7 +130,7 @@ object OptionsMap {
     if (params.trim == "") Array[String]() else params.trim.split("\\s+"))
 }
 
-class NoOptions extends Options {
+trait NoOptions extends Options {
   override def allOptions = Map[String, String]()
   override protected def options = (_: String) => None
   override def ++ (other : Options)  = this
@@ -137,7 +138,7 @@ class NoOptions extends Options {
   def + (entry : (Symbol,Any)) = this
 }
 object NoOptions {
-  def apply = new NoOptions
+  def apply = new NoOptions{}
 }
 
 object OptionParser {
