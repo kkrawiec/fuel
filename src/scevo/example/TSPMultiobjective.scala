@@ -62,7 +62,7 @@ object TSPMultiobjective extends App {
         def showParetoFront(s: StatePop[(Seq[Int], Seq[Double])]) = {
           val ranking = breeder.nsga.paretoRanking(s)
           println("Pareto front:")
-          println(ranking(0).map(_._2.eval).sortBy(_(0)).mkString("\n"))
+          println(ranking.head.map(_._2.eval).sortBy(_(0)).mkString("\n"))
           s
         }
       })

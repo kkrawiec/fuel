@@ -40,7 +40,6 @@ trait ScApp extends App with Environment with CollectorProvider with RngProvider
 
 // Instrumented app ?
 class IApp(options: Options) extends OptColl(options) with App {
-  override implicit val coll = new CollectorFile(opt)
   def this(args: (Symbol, Any)*) = this(OptionsMap(Map(args: _*)))
   def this(args: Map[Symbol, Any]) = this(OptionsMap(args))
   def this(args: Array[String]) = this(OptionsMap(args))
