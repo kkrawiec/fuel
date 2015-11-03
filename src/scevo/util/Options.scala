@@ -53,7 +53,7 @@ trait Options {
     assert(validator(v), s"Parameter $id invalidates validator")
     v
   }
-  def paramInt(id: Symbol, validator: Int => Boolean) : Int = paramInt(id.name,validator)
+  def paramInt(id: Symbol, validator: Int => Boolean): Int = paramInt(id.name, validator)
   def apply(id: String, validator: Int => Boolean) = paramInt(id, validator)
   def apply(id: Symbol, validator: Int => Boolean) = paramInt(id.name, validator)
 
@@ -80,7 +80,7 @@ trait Options {
     assert(validator(v), s"Parameter $id invalidates validator")
     v
   }
-  def paramDouble(id: Symbol, validator: Double => Boolean): Double = paramDouble(id.name,validator)
+  def paramDouble(id: Symbol, validator: Double => Boolean): Double = paramDouble(id.name, validator)
   def apply(id: String, validator: Double => Boolean): Double = paramDouble(id, validator)
   def apply(id: Symbol, validator: Double => Boolean): Double = paramDouble(id.name, validator)
 
@@ -95,35 +95,38 @@ trait Options {
     paramDouble(id.name, default, validator)
 
   // Boolean
-  def paramBoolReq(id: String) : Boolean = getOption(id) match {
+  def paramBoolReq(id: String): Boolean = getOption(id) match {
     case Some("true")  => true
     case Some("false") => false
     case _             => throw new Exception(s"Boolean value expected for parameter $id")
   }
-  def paramBoolReq(id: Symbol) : Boolean = paramBoolReq(id.name)
-  def paramBool(id: String, default: Boolean = false) : Boolean = getOption(id, default) match {
+  def paramBoolReq(id: Symbol): Boolean = paramBoolReq(id.name)
+  def paramBool(id: String, default: Boolean = false): Boolean = getOption(id, default) match {
     case "true"  => true
     case "false" => false
     case _       => throw new Exception(s"Boolean value expected for parameter $id")
   }
-  def paramBool(id: Symbol)  : Boolean= paramBool(id.name)
+  def paramBool(id: Symbol): Boolean = paramBool(id.name)
   def apply(id: String, default: Boolean) = paramBool(id, default)
   def apply(id: Symbol, default: Boolean) = paramBool(id.name, default)
-  
-  def ++ (other : Options) : Options
-  def ++ (other : Map[Symbol,Any]) : Options 
-  def + (entry : (Symbol,Any)) : Options 
+
+  def ++(other: Options): Options
+  def ++(other: Map[Symbol, Any]): Options
+  def +(entry: (Symbol, Any)): Options
 }
 
 class OptionsMap(opt: Map[String, String]) extends Options {
   override def allOptions = opt
   override protected def options = (id: String) => opt.get(id)
-  override def ++ (other : Options) : Options = new OptionsMap( allOptions ++ other.allOptions)
-  def ++ (other : Map[Symbol,Any]) : Options = this ++ OptionsMap(other)
-  def + (entry : (Symbol,Any)) : Options = this ++ OptionsMap(Map(entry))
+  override def ++(other: Options): Options = new OptionsMap(allOptions ++ other.allOptions)
+  def ++(other: Map[Symbol, Any]): Options = this ++ Options(other)
+  def +(entry: (Symbol, Any)): Options = this ++ Options(Map(entry))
 }
 
-object OptionsMap {
+object Options {
+  def apply(parentOpt: Options, m : (Symbol, Any)*) = new OptionsMap(
+      parentOpt.allOptions ++ m.map(e => (e._1.name, e._2.toString)).toMap)
+  def apply(m : (Symbol, Any)*) = new OptionsMap(m.map(e => (e._1.name, e._2.toString)).toMap)
   def apply(m: Map[Symbol, Any]) = new OptionsMap(m.map(e => (e._1.name, e._2.toString)))
   def apply(args: Array[String]) = new OptionsMap(OptionParser(args))
   def apply(params: String): OptionsMap = apply(
@@ -133,12 +136,12 @@ object OptionsMap {
 trait NoOptions extends Options {
   override def allOptions = Map[String, String]()
   override protected def options = (_: String) => None
-  override def ++ (other : Options)  = this
-  def ++ (other : Map[Symbol,Any]) = this
-  def + (entry : (Symbol,Any)) = this
+  override def ++(other: Options) = this
+  def ++(other: Map[Symbol, Any]) = this
+  def +(entry: (Symbol, Any)) = this
 }
 object NoOptions {
-  def apply = new NoOptions{}
+  def apply = new NoOptions {}
 }
 
 object OptionParser {

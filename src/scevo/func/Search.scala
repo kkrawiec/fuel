@@ -7,7 +7,7 @@ import scevo.util.TRandom
 /**
   * Search operator is any function that generates new solutions from existing solutions.
   * The SearchOperatror trait is intended to 'wrap' the actual move (a function Solution(s) => Solution(s))
-  * and optionally combine it with feasibility check. 
+  * and optionally combine it with feasibility check.
   *
   * Pulling parents from the previous population is implemented with streams (could be alternatively
   * done with iterators, but iterators are mutable). A search operator fetches parents from the stream and
@@ -43,22 +43,26 @@ class SearchOperator2_1[S](body: Function2[S, S, S],
  */
 object SearchOperator {
   def apply[S](body: S => S) = new SearchOperator1[S](body)
-   def apply[S](body: S => S, isFeasible: S => Boolean ) =
+  def apply[S](body: S => S, isFeasible: S => Boolean) =
     new SearchOperator1[S](body, isFeasible)
 
-  def apply[S](body: Function2[S, S, (S, S)]) = new SearchOperator2[S](body )
-   def apply[S](body: Function2[S, S, (S, S)], isFeasible: S => Boolean ) =
+  def apply[S](body: Function2[S, S, (S, S)]) = new SearchOperator2[S](body)
+  def apply[S](body: Function2[S, S, (S, S)], isFeasible: S => Boolean) =
     new SearchOperator2[S](body, isFeasible)
 
-  def apply[S](body: Function2[S, S, S]) = new SearchOperator2_1[S](body )
-  def apply[S](body: Function2[S, S, S], isFeasible: S => Boolean ) =
+  def apply[S](body: Function2[S, S, S]) = new SearchOperator2_1[S](body)
+  def apply[S](body: Function2[S, S, S], isFeasible: S => Boolean) =
     new SearchOperator2_1[S](body, isFeasible)
+
+  def Identity[S] = new SearchOperator1[S](identity)
+  def Identity[S](isFeasible: S => Boolean) = new SearchOperator1[S](identity, isFeasible)
 }
 
-/** Picks one of the search operators at random, according to the provided
- *  probability distribution (or uniform distribution if no distribution was provided). 
- *  
- */
+/**
+  * Picks one of the search operators at random, according to the provided
+  *  probability distribution (or uniform distribution if no distribution was provided).
+  *
+  */
 object RandomMultiOperator {
   def apply[S](pipes: SearchOperator[S]*)(implicit config: Options, rng: TRandom) = {
     val prob = config.paramString("operatorProbs")

@@ -7,15 +7,15 @@ package scevo.util
 
 object GetOptColl {
   def apply(args: Array[String]) = {
-    val opt = OptionsMap(args)
+    val opt = Options(args)
     (opt, new CollectorFile(opt))
   }
   def apply(args: String = "") = {
-    val opt = OptionsMap(args)
+    val opt = Options(args)
     (opt, new CollectorFile(opt))
   }
   def apply(args: Map[Symbol,Any]) = {
-    val opt = OptionsMap(args)
+    val opt = Options(args)
     (opt, new CollectorFile(opt))
   }
 }

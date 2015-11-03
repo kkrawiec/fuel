@@ -65,3 +65,17 @@ class CallCounter[-A, +B](f: A => B) extends (A => B) with Counter {
 object CallCounter {
   def apply[A, B](f: A => B) = new CallCounter(f)
 }
+
+class TrueCounter[-A](f: A => Boolean) extends CallCounter(f){
+  private var tcnt = 0L
+  override def apply(a: A) = {
+    val r = super.apply(a)
+    if(r) tcnt = tcnt +1
+    r
+  }
+  def trueCount = tcnt
+  def ratio = if(count==0) Double.NaN else tcnt.toDouble/count
+}
+object TrueCounter {
+  def apply[A](f: A => Boolean) = new TrueCounter(f)
+}
