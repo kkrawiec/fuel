@@ -13,7 +13,7 @@ trait State
   *
   * The state itself implements the Seq trait, so it behaves like a sequence.
   */
-trait StatePop[T] extends State with Seq[T]
+trait StatePop[+T] extends State with Seq[T]
 
 class Population[T](val solutions: Seq[T]) extends StatePop[T] {
   assume(solutions.size > 0, "Population cannot be empty")

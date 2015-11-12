@@ -110,6 +110,12 @@ trait Options {
   def apply(id: String, default: Boolean) = paramBool(id, default)
   def apply(id: Symbol, default: Boolean) = paramBool(id.name, default)
 
+  // Enumeration
+  def apply(id: Enumeration) = {
+    val enumName = id.getClass.getSimpleName.replace("$", "")
+    id.withName(paramString(enumName).get)
+  }
+
   def ++(other: Options): Options
   def ++(other: Map[Symbol, Any]): Options
   def +(entry: (Symbol, Any)): Options
@@ -124,9 +130,9 @@ class OptionsMap(opt: Map[String, String]) extends Options {
 }
 
 object Options {
-  def apply(parentOpt: Options, m : (Symbol, Any)*) = new OptionsMap(
-      parentOpt.allOptions ++ m.map(e => (e._1.name, e._2.toString)).toMap)
-  def apply(m : (Symbol, Any)*) = new OptionsMap(m.map(e => (e._1.name, e._2.toString)).toMap)
+  def apply(parentOpt: Options, m: (Symbol, Any)*) = new OptionsMap(
+    parentOpt.allOptions ++ m.map(e => (e._1.name, e._2.toString)).toMap)
+  def apply(m: (Symbol, Any)*) = new OptionsMap(m.map(e => (e._1.name, e._2.toString)).toMap)
   def apply(m: Map[Symbol, Any]) = new OptionsMap(m.map(e => (e._1.name, e._2.toString)))
   def apply(args: Array[String]) = new OptionsMap(OptionParser(args))
   def apply(params: String): OptionsMap = apply(

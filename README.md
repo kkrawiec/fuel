@@ -18,14 +18,15 @@ Features:
 - Easily interoperable with Java
 - No dependencies on external libraries
 
-
-TODO minimalistic
-
-Includes ready-to-use basic operators for solutions represented as vectors and permutations. 
-
 ScEvo provides relatively few top-level components (complete algorithms), because composing them from the pieces described below is really easy in functional programming paradigm. For this reason, it can be particularly useful for using metaheuristics in innovative ways, e.g., for hybridizing them with other algorithms, devising 'homebrew' algorithms, or playing with hyperheuristics. 
 
-What follows is a one-page description of the basic components and the relations between them. The names of components (traits, classes, objects) are capitalized. 
+What follows is a short description of the basic components and the relations between them. The names of components (traits, classes, objects) are capitalized. 
+
+
+Credits
+-------
+
+Much of inspiration for this library comes from chats with Jerry Swan. 
 
 
 General framework
@@ -87,7 +88,7 @@ Package organization
 scevo.core: Elementary concepts: State, Dominance, BestSelector
 scevo.func: Main components: Evaluation, Selection, Breeding, Algorithm, etc. 
 scevo.example: Ready-to-run examples (runnable as independent programs or from Scala REPL; see illustration in MaxOnes). 
-scevo.moves: Definitions of basic search operators for basic domains. 
+scevo.moves: Definitions of basic search operators for a few domains. 
 scevo.util: Helper objects and functions
 
 
@@ -102,28 +103,8 @@ Some search algorithms evaluate solutions in the context of other solutions in p
 
 A search operator is allowed to fail, in which case it returns an empty list of Solutions. 
 
-Other components
-----------------
 
-* Multiobjective selection: scevo.evo.NSGA
-* Interaction functions between candidate solutions and tests: scevo.evo.Iteration
-* Preliminary implementation of two-population coevolution: scevo.evo.Coevolution
-
-
-Credits
--------
-
-Much of inspiration for this library comes from chats with Jerry Swan. 
 
 How to cite 
 ===================
-
-:w
-
-
-Some justifications 
--------------------
-
-Uses assume and assert rather than require
-`-Xelide-below`
 
