@@ -74,7 +74,7 @@ object RandomMultiOperator {
         val p = List.fill(pipes.size - 1)(1.0 / pipes.size)
         (1.0 - p.sum) :: p
       })
-    assume(distribution.d.size == pipes.size, "Invalid number of operator probabilities")
+    assert(distribution.d.size == pipes.size, "Invalid number of operator probabilities")
     () => pipes(distribution(rng))
   }
 }

@@ -11,16 +11,18 @@ trait Dominance[E] extends PartialOrdering[Seq[E]] {
   def ordering(i: Int): Ordering[E]
   def lteq(x: Seq[E], y: Seq[E]): Boolean = tryCompare(x, y).getOrElse(0) < 0
   override def tryCompare(x: Seq[E], y: Seq[E]): Option[Int] = {
-    assume(x.size == y.size)
+    assert(x.size == y.size)
     // Not very elegant, but much faster than other method:
     var meBetter: Boolean = false
     var thatBetter: Boolean = false
-    for (i <- 0 until x.size) {
+    var i = 0
+    while (i < x.size) {
       val c = ordering(i).compare(x(i), y(i))
       if (c < 0)
         meBetter = true
       else if (c > 0)
         thatBetter = true
+      i += 1
     }
     (meBetter, thatBetter) match {
       case (true, true)  => None
@@ -46,9 +48,10 @@ object Dominance {
   }
 }
 
-/** Returns the greatest element of a partially ordered set, 
- *  or None if such an element does not exist. 
- */
+/**
+  * Returns the greatest element of a partially ordered set,
+  *  or None if such an element does not exist.
+  */
 object Greatest {
   def apply[T](s: Seq[T])(implicit o: PartialOrdering[T]) = {
     if (s.isEmpty) None
@@ -57,7 +60,8 @@ object Greatest {
       // at the subsequent positions
       var b = s.head
       var l = 0
-      for (i <- 1 until s.size) {
+      var i = 0
+      while (i < s.size) {
         val c = o.tryCompare(s(i), b)
         if (c.nonEmpty) {
           if (c.get < 0) {
@@ -65,6 +69,7 @@ object Greatest {
             l = i
           }
         } else l = -1
+        i += 1
       }
       // Second pass: check if that element is also <= than all elements
       // at positions from 0 to l

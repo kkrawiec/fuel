@@ -40,7 +40,7 @@ class NSGA2Selection[S, E](val tournSize: Int,
   // Should be called *once per generation*
   def rank(numToSelect: Int, po: Dominance[E]) =
     (pop: Seq[(S, Seq[E])]) => {
-      assume(numToSelect <= pop.size)
+      assert(numToSelect <= pop.size)
       // eliminate evaluation duplicates
       val toRank = if (removeEvalDuplicates) pop.groupBy(_._2).map(kv => kv._2(0)).toSeq else pop
       val ranking = paretoRanking(toRank)(po)

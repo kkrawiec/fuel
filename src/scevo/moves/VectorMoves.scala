@@ -4,7 +4,7 @@ import scevo.util.TRandom
 
 abstract class VectorMoves[T](val numVars: Int)(rng: TRandom)
     extends AbstractVectorMoves[IndexedSeq[T]] {
-  assume(numVars > 0)
+  assert(numVars > 0)
 
   override def onePointCrossover = (p1: IndexedSeq[T], p2: IndexedSeq[T]) => {
     val cuttingPoint = rng.nextInt(numVars)

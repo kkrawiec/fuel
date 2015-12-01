@@ -6,40 +6,35 @@ June 2014 - Oct 2015
 Introduction
 ===================
 
-ScEvo is a succinct framework for implementing metaheuristic algorithms, in particular evolutionary algorithms, in Scala. It is written primarily in functional style, with most objects implemented as immutable, and using object-oriented style rather sparingly. 
+ScEvo is a succinct Scala framework for implementing metaheuristic algorithms, in particular evolutionary algorithms. It is a side effect of my work on the book "Behavioral Program Synthesis with Genetic Programming" (Springer 2016).
+
+ScEvo is written primarily in functional style, with most classes implemented as immutable, and using object-oriented style rather sparingly. 
 
 Features: 
 - Simple and lightweight (< 2000 lines of code, including several examples of usage)
-- Easy manipulation of components (e.g., hybridizing algorithms, search operators, etc.)
+- Easy manipulation of components (e.g., hybridizing search algorithms, search operators, etc.)
 - Most components implemented as immutable
 - Applicable to single- and multiobjective problems
-- Ready-to-use basic operators for solutions represented as vectors and permutations.
 - Support for parallelization
 - Easily interoperable with Java
 - No dependencies on external libraries
+- Ready-to-use operators for solutions represented as vectors and permutations
 
-ScEvo provides relatively few top-level components (complete algorithms), because composing them from the pieces described below is really easy in functional programming paradigm. For this reason, it can be particularly useful for using metaheuristics in innovative ways, e.g., for hybridizing them with other algorithms, devising 'homebrew' algorithms, or playing with hyperheuristics. 
+ScEvo can be particularly useful for using metaheuristics in innovative ways, e.g., for hybridizing them with other algorithms or devising 'homebrew' algorithms. 
 
 What follows is a short description of the basic components and the relations between them. The names of components (traits, classes, objects) are capitalized. 
 
 
-Credits
--------
-
-Much of inspiration for this library comes from chats with Jerry Swan. 
-
-
-General framework
+Basic concepts
 ===================
 
-The library is organized as a collection of components, which in general are allowed to be stateful.  A metaheuristic algorithm is a compound function. ScEvo's role is to
+A metaheuristic algorithm is a compound function. ScEvo's role is to:
 
-* help a user to build such a function using the components available in the library, 
-* facilitate running such algorithms/experiments, and 
-* provide convenient ways of parameterizing the algorithms and collecting results. 
+* help building an algorithm from the components available in the library, 
+* provide convenient ways of parameterizing the algorithms, and 
+* facilitate running algorithms and collecting results. 
 
-
-A metaheuristics is an iterative algorithm that iterates over States. A single step of such iteration is a function State => State. The object Iteration constructs an iterative algorithm (a function State => State) with a given step function (also a function State => State) and stopping/termination condition(s) (functions State => Boolean). 
+ScEvo is organized as a collection of components, which in general are allowed to be stateful. A metaheuristics is an iterative algorithm that iterates over States. A single step of such iteration is a function State => State. The object Iteration constructs an iterative algorithm (a function State => State) with a given step function (also a function State => State) and stopping/termination condition(s) (functions State => Boolean). 
 
 State can be basically anything - we only require it to maintain the iteration number. Typically, a State will hold a candidate solution or a population of candidate solutions. For the latter case, we provide StatePop trait and Population class; population holds a *list* of solutions, so duplicates are permitted. If there is need of storing some form of history of search process (like e.g. in Tabu search), this should also be done in State.  
 
@@ -103,8 +98,14 @@ Some search algorithms evaluate solutions in the context of other solutions in p
 
 A search operator is allowed to fail, in which case it returns an empty list of Solutions. 
 
+ScEvo uses assertions to dynamically check invariants. Assertions can be disabled by passing the -Xdisable-assertions argument to Scala compiler, which may result in performance improvements. 
 
 
 How to cite 
 ===================
+
+Credits
+-------
+
+Much of inspiration for this library comes from chats with Jerry Swan. 
 

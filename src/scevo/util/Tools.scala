@@ -6,7 +6,7 @@ import scala.reflect.runtime.{ currentMirror => cm }
 object Combinations {
   // Generates all nonempty n-ary combinations with replacement of elements from elems
   def apply[T](elems: Seq[T], n: Int): Seq[Seq[T]] = {
-    assume(n > 0)
+    assert(n > 0)
     n match {
       case 1 => elems.map(e => Seq(e))
       case _ => elems.flatMap(e => apply(elems, n - 1).map(g => List(e) ++ g))
@@ -39,7 +39,7 @@ object CodeExecutor {
   *
   */
 class CallEvery[S](n: Int, f: S => S) extends (S => S) {
-  assume(n > 0)
+  assert(n > 0)
   var i = 0L
   def apply(s: S) = {
     val r = if (i % n == 0) f(s) else s

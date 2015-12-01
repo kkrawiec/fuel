@@ -10,10 +10,11 @@ import scevo.util.GetOptCollRng
 import scevo.util.TRandom
 
 /**
-  * Use case: Hierarchical If and only If
+  * Use case: Hierarchical If and only If problem by Watson, Hornby and Pollack.  
+  * 
+  * See: http://www.cs.brandeis.edu/~richardw/hiff.html
   *
   * Maximized fitness function
-  *
   *
   */
 object Hiff {
@@ -30,7 +31,7 @@ object Hiff {
 }
 
 class HiffProblem(val n: Int, trivial: Boolean)(implicit rng: TRandom) {
-  assume((n & (n - 1)) == 0, "The number of variables must be a power of 2.")
+  assert((n & (n - 1)) == 0, "The number of variables must be a power of 2.")
   val blocks =
     if (trivial) Range(0, n).toVector
     else rng.shuffle(Range(0, n).toVector)
