@@ -1,7 +1,6 @@
 package scevo.func
 
 import java.util.Calendar
-import scevo.core.State
 import scevo.util.Collector
 import scevo.util.Options
 import scevo.util.CollectorFile
@@ -11,7 +10,7 @@ import scevo.util.CollectorFile
   *
   */
 object Experiment {
-  def apply[S <: State](alg: => S)(implicit opt: Options, coll: Collector): (Unit => Option[S]) = {
+  def apply[S](alg: => S)(implicit opt: Options, coll: Collector): (Unit => Option[S]) = {
     _: Unit =>
       {
         coll.setResult("system.startTime", Calendar.getInstance().getTime().toString)
@@ -44,9 +43,9 @@ object Experiment {
 
 
 object RunExperiment {
-  def apply[S <: State](alg: Unit => S)(implicit opt: Options, coll: Collector) =
+  def apply[S](alg: Unit => S)(implicit opt: Options, coll: Collector) =
     Experiment(alg())(opt, coll)()
-  def apply[S <: State](alg: () => S)(implicit opt: Options, coll: Collector) =
+  def apply[S](alg: () => S)(implicit opt: Options, coll: Collector) =
     Experiment(alg())(opt, coll)()
 }
 

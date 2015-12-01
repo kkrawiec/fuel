@@ -1,6 +1,5 @@
 package scevo.func
 
-import scevo.core.StateSingle
 import scevo.moves.Neighborhood
 import scevo.util.CallCounter
 import scevo.util.Options
@@ -14,11 +13,9 @@ class LocalSteepest[S, E](neighborhood: Neighborhood[S],
                           eval: S => E,
                           stop: (S, E) => Boolean = ((s: S, e: E) => false))(
                             implicit opt: Options, ord: Ordering[E])
-    extends IterativeSearch[StateSingle[(S, E)]] {
+    extends IterativeSearch[S] {
 
-  override def iter = (s: StateSingle[(S, E)]) =>
-    StateSingle(neighborhood(s.get._1).map(e => (e, eval(e))).minBy(_._2))
-  def apply(s: S) = super.apply(StateSingle((s, eval(s))))
+  override def iter = (s: S) => (neighborhood(s).+:(s)).map(e => (e, eval(e))).minBy(_._2)._1
   override def terminate = Seq(Termination.MaxIter(it), Termination.MaxTime(opt))
 }
 
@@ -34,22 +31,22 @@ class LocalHillClimber[S, E](neighborhood: Neighborhood[S],
                              eval: S => E,
                              stop: (S, E) => Boolean = ((s: S, e: E) => false))(
                                implicit opt: Options, ord: Ordering[E])
-    extends IterativeSearch[StateSingle[(S, E)]] {
+    extends IterativeSearch[(S,E)] {
 
-  override def iter = (s: StateSingle[(S, E)]) => {
+  override def iter = (s: (S, E)) => {
     @tailrec def firstImproving(str: Stream[S]): Option[(S, E)] = str match {
       case Stream.Empty => None
       case h #:: tail => {
         val e = eval(h)
-        if (ord.lt(e, s.get._2)) Some((h, e))
+        if (ord.lt(e, s._2)) Some((h, e))
         else firstImproving(tail)
       }
     }
-    val neigh = neighborhood(s.get._1)
-    StateSingle(firstImproving(neigh).getOrElse(s.get))
+    val neigh = neighborhood(s._1)
+    firstImproving(neigh).getOrElse(s)
   }
 
-  def apply(s: S) = super.apply(StateSingle((s, eval(s))))
+  def apply(s: S) = super.apply((s, eval(s)))
   override def terminate = Seq(Termination.MaxIter(it), Termination.MaxTime(opt))
 }
 

@@ -2,7 +2,6 @@ package scevo.func
 
 import scala.annotation.tailrec
 
-import scevo.core.State
 import scevo.core.StatePop
 import scevo.util.Options
 
@@ -13,7 +12,7 @@ import scevo.util.Options
   */
 
 object Iteration {
-  def apply[S <: State](step: S => S)(stop: Seq[S => Boolean]): S => S = {
+  def apply[S](step: S => S)(stop: Seq[S => Boolean]): S => S = {
     @tailrec def iterate(s: S): S = stop.forall((sc: S => Boolean) => !sc(s)) match {
       case false => s
       case true  => iterate(step(s))
@@ -28,7 +27,7 @@ object Iteration {
  *  Must be defined as Unit => State, because ()=> State is not composable 
  *  (has no andThen method)
  */
-trait Initializer[S <: State] extends Function1[Unit, S]
+trait Initializer[S] extends Function1[Unit, S]
 
 class RandomStatePop[S](solutionGenerator: () => S)(implicit opt: Options)
     extends Initializer[StatePop[S]] {

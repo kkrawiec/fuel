@@ -1,6 +1,5 @@
 package scevo.func
 
-import scevo.core.State
 import scevo.core.StatePop
 import scevo.moves.Moves
 import scevo.util.CallCounter
@@ -13,7 +12,7 @@ import scevo.util.TRandom
   * Generic trait for iterative search.
   *
   */
-trait IterativeSearch[S <: State] extends Function1[S, S] {
+trait IterativeSearch[S] extends Function1[S, S] {
   def iter: S => S
   def terminate: Seq[S => Boolean]
   protected val it = CallCounter(identity[S])

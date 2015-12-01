@@ -1,6 +1,5 @@
 package scevo.func
 
-import scevo.core.State
 import scevo.util.Options
 import scevo.core.StatePop
 import scevo.util.Counter
@@ -27,7 +26,7 @@ object Termination {
     }
   }
   object MaxIter extends Count {
-    def apply[S <: State](cnt: Counter)(implicit opt: Options) = {
+    def apply[S](cnt: Counter)(implicit opt: Options) = {
       val maxGenerations = opt('maxGenerations, 50, (_: Int) > 0)
       super.apply(cnt, maxGenerations)
     }
