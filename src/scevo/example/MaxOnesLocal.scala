@@ -8,10 +8,9 @@ import scevo.func.LocalSteepest
 /**
   * Using local search for MaxOnes (see the MaxOnesExample)
   *
-  * TODO: BestOfRun
   */
 object MaxOnesLocal extends App {
-  new OptColl('numVars -> 500, 'maxGenerations -> 200, 'printResults -> true) {
+  new OptColl('numVars -> 20, 'maxGenerations -> 200, 'printResults -> true) {
     val n = opt('numVars, (_: Int) > 0)
     val neigh = new BoolVectNeigh
     // Initial search state
@@ -19,7 +18,8 @@ object MaxOnesLocal extends App {
     RunExperiment(Unit => {
       val alg = new LocalSteepest(neigh,
         eval = (s: IndexedSeq[Boolean]) => s.count(_ == true))
-      alg.apply(init)
+      val bestOfRun = alg.apply(init)
+      println("BestOfRun: " + bestOfRun)
     })
   }
 }

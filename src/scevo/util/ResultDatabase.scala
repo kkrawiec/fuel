@@ -11,19 +11,18 @@ import java.io.PrintWriter
 /**
   * A container for writing intermediate and final results to a file.
   *
-  * Intended to be created at the beginning of experiment, when it creates a new result file
-  * with a unique name.
+  * Intended to be created at the beginning of experiment. 
+  * It creates a new result file with a given name, or with a random file name. 
   */
-class ResultDatabase(val directory: String, defaultFName: String = "")
+class ResultDatabase(val directory: String, fileName: String = "")
     extends scala.collection.mutable.HashMap[String, Any] {
 
   val extension = ".txt"
   val resultPrefix = "result."
   val filePrefix = "res"
-  val fileNumFormat = "%06d"
 
-  val (f, fname) = if (defaultFName != "") {
-    val fullName = directory + File.separator + defaultFName
+  val (f, fname) = if (fileName != "") {
+    val fullName = directory + File.separator + fileName
     (new File(fullName), fullName)
   } else {
     var f: File = null
@@ -49,6 +48,9 @@ class ResultDatabase(val directory: String, defaultFName: String = "")
   def saveSnapshot(fnameSuffix: String): Unit =
     save(new File(fname + "." + fnameSuffix))
 
+    /** Serializes an object to a file if it's serializable; otherwise saves its 
+     *  textual representation. 
+     */
   def write(key: String, v: Any) = {
     val fn = fname + "." + key
     val os = new ObjectOutputStream(new FileOutputStream(fn))
@@ -57,8 +59,6 @@ class ResultDatabase(val directory: String, defaultFName: String = "")
       os.close()
     } catch {
       case e: NotSerializableException => {
-        // TODO: Warning about non-serializable object?
-        // TODO: Opens the same file, but still works - os is probably already closed here?
         val s = new PrintWriter(new File(fn))
         s.println(v.toString)
         s.close

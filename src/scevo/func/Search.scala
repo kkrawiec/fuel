@@ -64,8 +64,8 @@ object SearchOperator {
   *
   */
 object RandomMultiOperator {
-  def apply[S](pipes: SearchOperator[S]*)(implicit config: Options, rng: TRandom) = {
-    val prob = config.paramString("operatorProbs")
+  def apply[S](pipes: SearchOperator[S]*)(implicit opt: Options, rng: TRandom) = {
+    val prob = opt.getOption("operatorProbs")
     val distribution = Distribution(
       if (prob.isDefined)
         prob.get.split(",").map(_.toDouble)

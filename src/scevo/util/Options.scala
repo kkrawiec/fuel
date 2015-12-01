@@ -22,20 +22,24 @@ trait Options {
         nonRetrieved.mkString("\n"))
   }
 
-  protected def getOption(id: String) = {
+  def getOption(id: String) = {
     val v = options(id)
     if (v.isDefined)
       retrievedOptions.put(id, v.get)
     v
   }
-  protected def getOption(id: String, default: Any) = {
+  def getOption(id: String, default: Any) = {
     val v = options(id).getOrElse(default.toString)
     retrievedOptions.put(id, v)
     v
   }
+  
+  // Below we define getters for most common types, with and without default values, 
+  // retrieved by Strings or Symbols, etc. 
+  // When adding new getters, do not call options() directly; 
+  // rather than that, use getOption(), as it keeps track of the retrieved options. 
 
-  // TODO: not consequent: paramString returns Option, while paramInt a value
-  def paramString(id: String) = getOption(id)
+  def paramString(id: String) = getOption(id).toString
   def paramString(id: String, default: String) = getOption(id, default)
   def apply(id: Symbol, default: String) = getOption(id.name, default)
 
@@ -68,8 +72,8 @@ trait Options {
     paramInt(id.name, default, validator)
 
   // Double
-  def paramDouble(id: String) = options(id).get.toDouble
-  def paramDouble(id: Symbol) = options(id.name).get.toDouble
+  def paramDouble(id: String) = getOption(id).get.toDouble
+  def paramDouble(id: Symbol) = getOption(id.name).get.toDouble
   def paramDouble(id: String, default: Double) = getOption(id, default).toDouble
   def paramDouble(id: Symbol, default: Double) = getOption(id.name, default).toDouble
   def apply(id: String, default: Double) = getOption(id, default).toDouble
@@ -113,7 +117,7 @@ trait Options {
   // Enumeration
   def apply(id: Enumeration) = {
     val enumName = id.getClass.getSimpleName.replace("$", "")
-    id.withName(paramString(enumName).get)
+    id.withName(paramString(enumName))
   }
 
   def ++(other: Options): Options

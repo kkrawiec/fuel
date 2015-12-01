@@ -35,7 +35,6 @@ trait IterativeSearch[S] extends Function1[S, S] {
   * it may be used to either start from scratch (in the former case) or be applied
   * to some already existing State.
   *
-  * TODO: if stop() is default, it should not be called
   */
 abstract class EACore[S, E](moves: Moves[S], evaluation: Evaluation[S, E],
                             stop: (S, E) => Boolean = ((s: S, e: E) => false))(
