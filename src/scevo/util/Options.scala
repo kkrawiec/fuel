@@ -22,13 +22,13 @@ trait Options {
         nonRetrieved.mkString("\n"))
   }
 
-  def getOption(id: String) = {
+  def getOption(id: String): Option[String] = {
     val v = options(id)
     if (v.isDefined)
       retrievedOptions.put(id, v.get)
     v
   }
-  def getOption(id: String, default: Any) = {
+  def getOption(id: String, default: Any): String = {
     val v = options(id).getOrElse(default.toString)
     retrievedOptions.put(id, v)
     v
@@ -39,7 +39,7 @@ trait Options {
   // When adding new getters, do not call options() directly; 
   // rather than that, use getOption(), as it keeps track of the retrieved options. 
 
-  def paramString(id: String) = getOption(id).toString
+  def paramString(id: String) = getOption(id).get
   def paramString(id: String, default: String) = getOption(id, default)
   def apply(id: Symbol, default: String) = getOption(id.name, default)
 
