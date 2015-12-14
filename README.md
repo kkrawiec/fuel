@@ -11,7 +11,7 @@ ScEvo is a succinct Scala framework for implementing metaheuristic algorithms, i
 ScEvo is written primarily in functional style, with most classes implemented as immutable, and using object-oriented style rather sparingly. 
 
 Features: 
-- Simple and lightweight (< 2000 lines of code, including several examples of usage)
+- Simple and lightweight (around 2000 lines of code, including several examples of usage)
 - Easy manipulation of components (e.g., hybridizing search algorithms, search operators, etc.)
 - Most components implemented as immutable
 - Applicable to single- and multiobjective problems
@@ -34,9 +34,9 @@ A metaheuristic algorithm is a compound function. ScEvo's role is to:
 * provide convenient ways of parameterizing the algorithms, and 
 * facilitate running algorithms and collecting results. 
 
-ScEvo is organized as a collection of components, which in general are allowed to be stateful. A metaheuristics is an iterative algorithm that iterates over States. A single step of such iteration is a function State => State. The object Iteration constructs an iterative algorithm (a function State => State) with a given step function (also a function State => State) and stopping/termination condition(s) (functions State => Boolean). 
+ScEvo offers a range components, most of them stateless. A metaheuristics is an iterative algorithm that iterates over States. A single step of such iteration is a function State => State. The object Iteration constructs an iterative algorithm (a function State => State) with a given step function (also a function State => State) and stopping/termination condition(s) (functions State => Boolean). 
 
-State can be basically anything - we only require it to maintain the iteration number. Typically, a State will hold a candidate solution or a population of candidate solutions. For the latter case, we provide StatePop trait and Population class; population holds a *list* of solutions, so duplicates are permitted. If there is need of storing some form of history of search process (like e.g. in Tabu search), this should also be done in State.  
+A State can be basically anything; it will typically hold a candidate solution or a population of candidate solutions. For the latter case, we provide StatePop trait and Population class; population holds a *list* of solutions, so duplicates are permitted. If there is need of storing some form of history of search process (like e.g. in Tabu search), this should also be done in State.  
 
 Solutions can be anything and they are parameters of generic types/classes, typically denoted by S. So Population[Vector[Int]] is a population of solutions being vectors of Ints. 
 
