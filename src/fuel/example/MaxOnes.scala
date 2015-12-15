@@ -4,7 +4,7 @@ import scala.collection.immutable.BitSet
 import fuel.func.RunExperiment
 import fuel.func.SimpleEA
 import fuel.moves.BitSetMoves
-import fuel.util.ScApp
+import fuel.util.FApp
 import fuel.util.IApp
 
 /**
@@ -28,7 +28,7 @@ import fuel.util.IApp
   * $ scala -cp ./bin -e fuel.example.MaxOnes1
   *
   */
-object MaxOnes1 extends ScApp {
+object MaxOnes1 extends FApp {
   RunExperiment(SimpleEA(moves = BitSetMoves(100),
     eval = (s: BitSet) => s.size,
     stop = (s: BitSet, e: Int) => e == 0))
@@ -49,6 +49,6 @@ object MaxOnes2 extends IApp('numVars -> 500, 'maxGenerations -> 200,
 /** A super short variant 
  *  
  */
-object MaxOnes3 extends ScApp {
+object MaxOnes3 extends FApp {
   RunExperiment(SimpleEA(BitSetMoves(100), (s: BitSet) => s.size, 0))
 }

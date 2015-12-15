@@ -35,7 +35,7 @@ class OptColl(options: Options) extends Opt(options) with CollectorProvider {
   def this(args: String = "") = this(Options(args))
 }
 
-trait ScApp extends App with Environment with CollectorProvider with RngProvider {
+trait FApp extends App with Environment with CollectorProvider with RngProvider {
   // Need to be lazy because of the order in which args are initialized
   override implicit lazy val opt = Options(args)
   override implicit lazy val rng = Rng(opt)
