@@ -1,8 +1,6 @@
 package fuel.moves
 
 import fuel.func.SearchOperator
-import fuel.moves.Moves
-
 
 /**
   * The default set of operators for vector representations

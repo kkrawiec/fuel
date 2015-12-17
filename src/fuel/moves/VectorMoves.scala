@@ -2,7 +2,6 @@ package fuel.moves
 
 import fuel.util.TRandom
 
-import fuel.moves.AbstractVectorMoves
 abstract class VectorMoves[T](val numVars: Int)(rng: TRandom)
     extends AbstractVectorMoves[IndexedSeq[T]] {
   assert(numVars > 0)

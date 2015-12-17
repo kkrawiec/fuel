@@ -7,7 +7,7 @@ June 2014 - Nov 2015
 Introduction
 ===================
 
-FUEL is a succinct Scala framework for implementing metaheuristic algorithms, in particular evolutionary algorithms. It resulted from my work on the book "Behavioral Program Synthesis with Genetic Programming" (Springer 2016, <http://www.cs.put.poznan.pl/kkrawiec/bps/>, <http://www.springer.com/gp/book/9783319275635>)
+FUEL is a succinct Scala framework for implementing metaheuristic algorithms, in particular evolutionary algorithms. It originated in my work on the book "Behavioral Program Synthesis with Genetic Programming" (Springer 2016, <http://www.cs.put.poznan.pl/kkrawiec/bps/>, <http://www.springer.com/gp/book/9783319275635>)
 
 FUEL is written primarily in functional style, with most classes implemented as immutable, and using object-oriented style rather sparingly. 
 
