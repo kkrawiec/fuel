@@ -1,7 +1,7 @@
 FUEL = FUnctional Evolutionary aLgorithms
 ===================================================
 
-Krzysztof (Chris) Krawiec, <krawiec@cs.put.poznan.pl>
+Krzysztof (Chris) Krawiec, <krawiec at cs.put.poznan.pl>
 June 2014 - Nov 2015
 
 Introduction
@@ -76,12 +76,23 @@ Examples
 The package `fuel.example` presents several usage scenarios for discrete, continuous, and combinatorial optimization. 
 The recommended order looking at them is: `MaxOnes`, `MaxOnesVectors`, `Hiff`, `Rosenbrock`, `TSP`, `TSPMultiobjective`. 
 
+~~~~~{.scala}
+object MaxOnes2 extends IApp('numVars -> 500, 'maxGenerations -> 200,
+  'printResults -> true) {
+  RunExperiment(SimpleEA(
+    moves = BitSetMoves(opt('numVars, (_: Int) > 0)),
+    eval = (s: BitSet) => s.size,
+    optimalValue = 0))
+}
+~~~~~
+
+
 Package organization
 --------------------
 
-* `fuel.core`: Elementary concepts: State, Dominance 
-* `fuel.func`: Main components: Evaluation, Selection, Breeding, Algorithm, etc. 
-* `fuel.example`: Ready-to-run examples (runnable as independent programs or from Scala REPL; see illustration in MaxOnes). 
+* `fuel.core`: Elementary concepts: `Population`, `Dominance`
+* `fuel.func`: Main components: `Evaluation`, `Selection`, `Breeding`, `Algorithm`, etc. 
+* `fuel.example`: Ready-to-run examples (runnable as independent programs or from Scala REPL; see illustration in `MaxOnes`). 
 * `fuel.moves`: Definitions of basic search operators for a few domains. 
 * `fuel.util`: Helper objects and functions
 
@@ -93,7 +104,7 @@ For convenience, the components (particularly the top-level ones) often use impl
 
 The randomized operations rely on `util.TRandom`, which is intended to serve as a wrapper for `java.util.Random`, or any other (possibly better) random number generator of your choice. 
  
-FUEL uses assertions to dynamically check invariants. Assertions can be disabled by passing the -Xdisable-assertions argument to Scala compiler, which may result in some performance improvement. 
+FUEL uses assertions to dynamically check invariants. Assertions can be disabled by passing the `-Xdisable-assertions` argument to Scala compiler, which may result in some performance improvement. 
 
 
 How to cite 
@@ -103,6 +114,7 @@ If you decide to use FUEL and like it, please cite my book:
 
 Krawiec, Krzysztof, *Behavioral Program Synthesis with Genetic Programming*, Studies in Computational Intelligence Series, Vol. 618, Springer International Publishing, DOI:10.1007/978-3-319-27565-9}, 2016.  
 
+~~~~~{.bib}
 @book{KrawiecBPS2015,
     title = {Behavioral Program Synthesis with Genetic Programming},
     author = {Krzysztof Krawiec},
@@ -115,7 +127,7 @@ Krawiec, Krzysztof, *Behavioral Program Synthesis with Genetic Programming*, Stu
     url = { http://www.springer.com/gp/book/9783319275635 },
     note = { http://www.cs.put.poznan.pl/kkrawiec/bps }
  }
-
+~~~~~
 
 Credits
 -------
