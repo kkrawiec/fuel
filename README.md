@@ -35,63 +35,63 @@ A metaheuristic algorithm is a compound function. FUEL's role is to:
 * provide convenient ways of parameterizing the algorithms, and 
 * facilitate running algorithms and collecting results. 
 
-FUEL offers a range components, most of them stateless. A metaheuristics is an iterative algorithm that iterates over States. A single step of such iteration is a function State => State. The object Iteration constructs an iterative algorithm (a function State => State) with a given step function (also a function State => State) and stopping/termination condition(s) (functions State => Boolean). 
+FUEL offers a range components, most of them stateless. A metaheuristics is an iterative algorithm that iterates over states. A single step of such iteration is a function `State => State`. The object Iteration constructs an iterative algorithm (a function `State => State`) with a given step function (also a function `State => State`) and stopping/termination condition(s) (functions `State => Boolean`). 
 
-A State can be basically anything; it will typically hold a candidate solution or a population of candidate solutions. For the latter case, we provide StatePop trait and Population class; population holds a *list* of solutions, so duplicates are permitted. If there is need of storing some form of history of search process (like e.g. in Tabu search), this should also be done in State.  
+A State can be basically anything; it will typically hold a candidate solution or a population of candidate solutions. For the latter case, we provide `StatePop` trait and `Population` class; population holds a *list* of solutions, so duplicates are permitted. If there is need of storing some form of history of search process (like e.g. in Tabu search), this should also be done in State.  
 
-Solutions can be anything, so they are often parameters of generic types/classes, typically denoted by S (though S is also sometimes used for State). For instance, Population[Vector[Int]] is a population of solutions being vectors of Ints. 
+Solutions can be anything, so they are often parameters of generic types/classes, typically denoted by S (though S is also sometimes used for `State`). For instance, `Population[Vector[Int]]` is a population of solutions being vectors of `Int`s. 
 
-A solution can undergo an evaluation, the outcome of which can be anything (though in practice evaluations are usually Doubles, Ints, in general types implementing complete orders). Evaluation type is another parameter of many generics in FUEL, typically denoted by E. We often need to store solutions with their evaluations; the convention we use for that purpose is Scala's Tuple2 type. So for instance Population[Tuple2[Seq[Int],Double]] (or more succinctly Population[(Seq[Int],Double)]) is a population of sequences of Ints evaluated by Doubles. Multiobjective evaluation can be realized by defining evaluation as, e.g., a Seq[Double], and using an instance of Dominance trait (a kind of partial order). 
+A solution can undergo an evaluation, the outcome of which can be anything (though in practice evaluations are usually `Double`s, `Int`s, in general types implementing complete orders). Evaluation type is another parameter of many generics in FUEL, typically denoted by `E`. We often need to store solutions with their evaluations; the convention we use for that purpose is Scala's `Tuple2` type. So for instance `Population[Tuple2[Seq[Int],Double]]` (or more succinctly `Population[(Seq[Int],Double)]`) is a population of sequences of Ints evaluated by Doubles. Multiobjective evaluation can be realized by defining evaluation as, e.g., a `Seq[Double]`, and using an instance of Dominance trait (a kind of partial order). 
 
-New solutions are built from the existing ones using search operators, i.e. in general functions of signature S x ... x S => S x ... x S. For instance a typical mutation operator has the signature S => S. Such an operator is 'wrapped' using the SearchOperator trait. This trait is extended with convenience classes SearchOperator1, SearchOperator2, etc. for operators of different arity. A search operator is allowed to fail, in which case it returns an empty list of solutions. 
+New solutions are built from the existing ones using search operators, i.e. in general functions of signature `S x ... x S => S x ... x S`. For instance a typical mutation operator has the signature `S => S`. Such an operator is 'wrapped' using the `SearchOperator` trait. This trait is extended with convenience classes `SearchOperator1`, `SearchOperator2`, etc. for operators of different arity. A search operator is allowed to fail, in which case it returns an empty list of solutions. 
 
-In order to employ multiple search operators alongside each other, use an instance of Moves trait to keep them together and present them to a search algorithm. A class that extends Moves has to implement also a method for creating new solutions. The package fuel.moves provides basic implementations of moves for most popular solution representations: vectors of bits, vector of real numbers and for permutations. See moves.VectorMoves for an example.  
+In order to employ multiple search operators alongside each other, use an instance of `Moves` trait to keep them together and present them to a search algorithm. A class that extends Moves has to implement also a method for creating new solutions. The package fuel.moves provides basic implementations of moves for most popular solution representations: vectors of bits, vector of real numbers and for permutations. See `moves.VectorMoves` for an example.  
 
-To use Moves in an iterative search, you should use Breeder. A breeder uses a selection operator (Selection) to select parent solutions from the current population, applies a search operator from Moves, obtaining so children solutions, and then checks the children solutions for feasibility, rejecting the infeasible ones. A breeder repeats these steps until sufficiently many children are bred - in the case of the default SimpleBreeder, when the population of children reaches the size of parents' population. SimpleBreeder applies the particular search operators from Moves according to the given probability distribution. 
+To use `Moves` in an iterative search, you should use `Breeder`. A breeder uses a selection operator (`Selection`) to select parent solutions from the current population, applies a search operator from `Moves`, obtaining so children solutions, and then checks the children solutions for feasibility, rejecting the infeasible ones. A breeder repeats these steps until sufficiently many children are bred - in the case of the default SimpleBreeder, when the population of children reaches the size of parents' population. `SimpleBreeder` applies the particular search operators from `Moves` according to the given probability distribution. 
 
-The above components can be built either by calling constructors (or static methods in companion objects). The abstract class EACore provides the means for constructing basic evolutionary algorithms. Class SimpleEA extends it with simple reporting and default selection and breeding mechanisms (TournamentSelection and SimpleBreeder).  
+The above components can be built either by calling constructors (or static methods in companion objects). The abstract class `EACore` provides the means for constructing basic evolutionary algorithms. Class `SimpleEA` extends it with simple reporting and default selection and breeding mechanisms (`TournamentSelection` and `SimpleBreeder`).  
 
 
 Setup and reporting
 -------------------
 
 Other important components of FUEL are:
-* Options (provides options to set components' parameters), and
-* a Collector (offers the functionality to store experiment results). 
-* a random number generator (an instance of TRandom). 
+* `Options` (provides options to set components' parameters), and
+* a `Collector` (offers the functionality to store experiment results). 
+* a random number generator (an instance of `TRandom`). 
 
-Use OptCollRng to obtain a triple of these objects by parsing a parameter string, or an Array of strings, for instance passed from the command line (see example.MaxOnesVectors). An even more succinct way is to implement the FApp trait that does it for you (see example.MaxOnes). 
+Use OptCollRng to obtain a triple of these objects by parsing a parameter string, or an Array of strings, for instance passed from the command line (see `example.MaxOnesVectors`). An even more succinct way is to implement the FApp trait that does it for you (see `example.MaxOnes`). 
 
-The default Collector stores the results in a text file in the Java properties format. By default, the file is given a random unique name. To change its name and location use --outFile and --outDir options. 
+The default `Collector` stores the results in a text file in the Java properties format. By default, the file is given a random unique name. To change its name and location use --outFile and --outDir options. 
 
 
 Running a search 
 ----------------
 
-The algorithm obtained by calling SimpleAE.algorithm is a regular function that can be launched individual. However, it may be worthy running it within an Experiment.  The Experiment will run the Algorithm and safeguard against exceptions, reporting them (and a few other things like timing) via a Collector. Use --printResults to print the results collected by Collector to standard output (and not only to file). 
+The algorithm obtained by calling `SimpleAE.algorithm` is a regular function that can be launched individual. However, it may be worthy running it within an `Experiment`. The `Experiment` will run the `Algorithm` and safeguard against exceptions, reporting them (and a few other things like timing) via a `Collector`. Use --printResults to print the results collected by `Collector` to standard output (and not only to file). 
 
 Examples
 --------
 
-The package fuel.example presents several usage scenarios for discrete, continuous, and combinatorial optimization. 
-The recommended order looking at them is: MaxOnes, MaxOnesVectors, Hiff, Rosenbrock, TSP, TSPMultiobjective. 
+The package `fuel.example` presents several usage scenarios for discrete, continuous, and combinatorial optimization. 
+The recommended order looking at them is: `MaxOnes`, `MaxOnesVectors`, `Hiff`, `Rosenbrock`, `TSP`, `TSPMultiobjective`. 
 
 Package organization
 --------------------
 
-* fuel.core: Elementary concepts: State, Dominance 
-* fuel.func: Main components: Evaluation, Selection, Breeding, Algorithm, etc. 
-* fuel.example: Ready-to-run examples (runnable as independent programs or from Scala REPL; see illustration in MaxOnes). 
-* fuel.moves: Definitions of basic search operators for a few domains. 
-* fuel.util: Helper objects and functions
+* `fuel.core`: Elementary concepts: State, Dominance 
+* `fuel.func`: Main components: Evaluation, Selection, Breeding, Algorithm, etc. 
+* `fuel.example`: Ready-to-run examples (runnable as independent programs or from Scala REPL; see illustration in MaxOnes). 
+* `fuel.moves`: Definitions of basic search operators for a few domains. 
+* `fuel.util`: Helper objects and functions
 
 
 Technical comments
 --------------------
 
-For convenience, the components (particularly the top-level ones) often use implicit arguments (in particular for Options, Collector and RNG). This immensely reduces the number of parameters that need to be passed when setting up an algorithm/system. Note that, to be used in that mode, a value has to be declared with the 'implicit' keyword. Obviously, such arguments can be alternatively passed explicitly. 
+For convenience, the components (particularly the top-level ones) often use implicit arguments (in particular for `Options`, `Collector` and `RNG`). This immensely reduces the number of parameters that need to be passed when setting up an algorithm/system. Note that, to be used in that mode, a value has to be declared with the 'implicit' keyword. Obviously, such arguments can be alternatively passed explicitly. 
 
-The randomized operations rely on tools.TRandom, which is intended to serve as a wrapper for java.util.Random, or any other (possibly better) random number generator of your choice. 
+The randomized operations rely on `util.TRandom`, which is intended to serve as a wrapper for `java.util.Random`, or any other (possibly better) random number generator of your choice. 
  
 FUEL uses assertions to dynamically check invariants. Assertions can be disabled by passing the -Xdisable-assertions argument to Scala compiler, which may result in some performance improvement. 
 
