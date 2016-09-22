@@ -129,3 +129,7 @@ Credits
 
 Much of the inspiration for this library comes from chatting with Jerry Swan, whom I'm deeply indebted for his advice and encouragement. 
 
+Availability 
+============
+
+The most recent version of FUEL is avaliable at <http://github.com/kkrawiec/fuel>. 

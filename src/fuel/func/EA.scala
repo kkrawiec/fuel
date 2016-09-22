@@ -62,10 +62,12 @@ class SimpleEA[S, E](moves: Moves[S],
                      eval: S => E,
                      stop: (S, E) => Boolean = ((s: S, e: E) => false))(
                        implicit opt: Options, coll: Collector, rng: TRandom, ordering: Ordering[E])
-    extends EACore[S, E](moves, ParallelEval(eval), stop)(opt) {
+    extends EACore[S, E](moves,
+      if (opt('parEval, true)) ParallelEval(eval) else SequentialEval(eval),
+      stop)(opt) {
 
   def selection = TournamentSelection[S, E](ordering)
-  override def iter = SimpleBreeder[S, E](selection, moves:_*) andThen evaluate
+  override def iter = SimpleBreeder[S, E](selection, moves: _*) andThen evaluate
 
   val bsf = BestSoFar[S, E](ordering, it)
   override def report: Function1[StatePop[(S, E)], StatePop[(S, E)]] = bsf

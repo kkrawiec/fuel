@@ -18,6 +18,7 @@ class BestSoFar[S, E](opt: Options, coll: Collector, o: Ordering[E], cnt: Counte
   def bestSoFar = best
   val snapFreq = opt('snapshotFrequency, 0)
   val saveBestSoFar = opt('saveBestSoFar, false)
+  val quiet = opt('quiet, false)
 
   def apply(s: StatePop[(S, E)]) = {
     val bestOfGen = s.minBy(_._2)(o)
@@ -25,7 +26,7 @@ class BestSoFar[S, E](opt: Options, coll: Collector, o: Ordering[E], cnt: Counte
       best = Some(bestOfGen)
       updateBest(s)
     }
-    println(f"Gen: ${cnt.count}  BestSoFar: ${bestSoFar.get}")
+    if(!quiet) println(f"Gen: ${cnt.count}  BestSoFar: ${bestSoFar.get}")
     if (snapFreq > 0 && cnt.count % snapFreq == 0)
       coll.saveSnapshot(f"${cnt.count}%04d")
     s

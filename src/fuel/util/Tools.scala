@@ -3,6 +3,7 @@ package fuel.util
 import scala.tools.reflect.ToolBox
 import scala.reflect.runtime.{ currentMirror => cm }
 import scala.reflect.runtime.{currentMirror => cm}
+import scala.collection.immutable.Seq
 
 object Combinations {
   // Generates all nonempty n-ary combinations with replacement of elements from elems

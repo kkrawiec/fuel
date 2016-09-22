@@ -32,7 +32,7 @@ object Experiment {
           coll.setResult("system.endTime", Calendar.getInstance().getTime().toString)
           if (opt('printResults, false))
             println(coll.rdb.toString)
-          coll.close
+          coll.rdb.save()
           opt.warnNonRetrieved
           None
         }
