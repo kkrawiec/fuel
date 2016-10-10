@@ -4,27 +4,29 @@ import java.lang.management.ManagementFactory
 import java.net.InetAddress
 import java.net.UnknownHostException
 
-/** Collector of results. Each entry is a pair (key,value). 
- *  
- * setResult() should be used for the actual results for experiment, i.e., the
- * 'essential' reporting. set() is more for technical reporting (e.g., timing, 
- * location, files, etc.) 
- * 
- */
+/**
+  * Collector of results. Each entry is a pair (key,value).
+  *
+  * setResult() should be used for the actual results for experiment, i.e., the
+  * 'essential' reporting. set() is more for technical reporting (e.g., timing,
+  * location, files, etc.)
+  *
+  */
 trait Collector extends Closeable {
   def rdb: ResultDatabase
-  def set(key: String, v: Any):Unit
-  def setResult(key: String, v: Any):Unit
-  def write(key: String, v: Any):Unit
-  def writeString(key: String, v: String):Unit
-  def read(key: String):Object
+  def set(key: String, v: Any): Unit
+  def setResult(key: String, v: Any): Unit
+  def getResult(key: String): Option[Any]
+  def write(key: String, v: Any): Unit
+  def writeString(key: String, v: String): Unit
+  def read(key: String): Object
   def saveSnapshot(fnameSuffix: String): Unit
 }
 
 class CollectorFile(opt: Options) extends Collector {
   // Prepare result database and fill it with the technical parameters 
-  override val rdb = 
-    new ResultDatabase(opt.paramString("outDir", "./"),opt.paramString("outFile", ""))
+  override val rdb =
+    new ResultDatabase(opt.paramString("outDir", "./"), opt.paramString("outFile", ""))
   println("Result file: " + rdb.fname)
   rdb.put("thisFileName", rdb.fname)
 
@@ -42,6 +44,7 @@ class CollectorFile(opt: Options) extends Collector {
 
   override def set(key: String, v: Any) = rdb.put(key, v)
   override def setResult(key: String, v: Any) = rdb.setResult(key, v)
+  override def getResult(key: String) = rdb.getResult(key)
   override def write(key: String, v: Any) = rdb.write(key, v)
   override def writeString(key: String, v: String) = rdb.writeString(key, v)
   override def read(key: String) = rdb.read(key)

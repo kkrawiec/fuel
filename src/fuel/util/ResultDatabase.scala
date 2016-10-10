@@ -37,6 +37,7 @@ class ResultDatabase(val directory: String, fileName: String = "")
   }
 
   def setResult(key: String, v: Any) = put(resultPrefix + key, v)
+  def getResult(key: String) = get(resultPrefix + key)
 
   def save(file: File = f): Unit = {
     val s = new PrintWriter(file)
