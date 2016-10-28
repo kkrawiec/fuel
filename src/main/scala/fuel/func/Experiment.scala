@@ -34,6 +34,8 @@ object Experiment {
             println(coll.rdb.toString)
           coll.rdb.save()
           opt.warnNonRetrieved
+          if (opt('deleteOutputFile, true))
+            coll.rdb.f.delete()
           None
         }
       }

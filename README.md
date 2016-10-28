@@ -79,6 +79,7 @@ Parameters can be provided from command line, or as a string or list of (paramet
 | parEval           | Bool      | true           | Enables multithreaded evaluation  
 | outDir            | String    | .              | Output directory
 | outFile           | String    | (random)       | Output file 
+| deleteOutputFile  | Bool      | true           | Deletes output file upon successful completion of experiment
 | printResults      | Bool      | false          | Prints the content of result collector at the end of run  
 | saveLastState     | Bool      | false          | Saves the snapshot of the final search state to a file
 | saveBestSoFar     | Bool      | false          | Saves the best solution found so far after every iteration
