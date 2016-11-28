@@ -35,7 +35,7 @@ object Experiment {
           coll.rdb.save()
           opt.warnNonRetrieved
           if (opt('deleteOutputFile, true))
-            coll.rdb.f.delete()
+            coll.rdb.deleteArtifacts()
           None
         }
       }
