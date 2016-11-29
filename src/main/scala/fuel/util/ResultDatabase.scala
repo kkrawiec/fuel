@@ -8,17 +8,26 @@ import java.io.ObjectInputStream
 import java.io.ObjectOutputStream
 import java.io.PrintWriter
 
+trait ResultDatabase extends scala.collection.mutable.HashMap[String, Any] {
+  val resultPrefix = "result."
+  def setResult(key: String, v: Any): Unit
+  def getResult(key: String): Option[Any]
+  def write(key: String, v: Any): Unit
+  def writeString(key: String, v: String): Unit
+  def read(key: String): Object
+  def saveSnapshot(fnameSuffix: String): Unit
+  def save(): Unit
+  def deleteArtifacts(): Unit
+}
+
 /**
   * A container for writing intermediate and final results to a file.
   *
   * Intended to be created at the beginning of experiment. 
   * It creates a new result file with a given name, or with a random file name. 
   */
-class ResultDatabase(val directory: String, fileName: String = "")
-    extends scala.collection.mutable.HashMap[String, Any] {
-
+class ResultDatabaseFile(val directory: String, fileName: String = "") extends ResultDatabase {
   val extension = ".txt"
-  val resultPrefix = "result."
   val filePrefix = "res"
 
   val (f, fname) = if (fileName != "") {
@@ -39,11 +48,12 @@ class ResultDatabase(val directory: String, fileName: String = "")
   def setResult(key: String, v: Any) = put(resultPrefix + key, v)
   def getResult(key: String) = get(resultPrefix + key)
 
-  def save(file: File = f): Unit = {
+  def save(file: File): Unit = {
     val s = new PrintWriter(file)
     toSeq.sortBy(_._1).foreach(kv => s.println(kv._1 + " = " + kv._2))
     s.close()
   }
+  def save() = save(f)
   override def toString = toSeq.sortBy(_._1).map(kv => s"${kv._1} = ${kv._2}").mkString("\n")
 
   def saveSnapshot(fnameSuffix: String): Unit =
@@ -72,7 +82,7 @@ class ResultDatabase(val directory: String, fileName: String = "")
     val s = new PrintWriter(new File(fname + "." + key))
     s.print(v)
     s.close()
-    v
+    //v  // commented out to be consistent with write.
   }
 
   def read(key: String) = {
@@ -81,4 +91,28 @@ class ResultDatabase(val directory: String, fileName: String = "")
     is.close()
     obj
   }
+  
+  def deleteArtifacts() = f.delete()
+}
+
+
+/**
+  * A container for only storing evolution data during runtime.
+  * Any saving of stored values will result in printing them to the standard output.
+  * Use this container if you don't want to have any artifacts saved on the hard disk.
+  *
+  * Intended to be created at the beginning of experiment.
+  */
+class ResultDatabasePlain() extends ResultDatabase {
+  def setResult(key: String, v: Any) = put(resultPrefix + key, v)
+  def getResult(key: String) = get(resultPrefix + key)
+  def write(key: String, v: Any) = println(key + " = " + v)
+  def writeString(key: String, v: String) = println(key + " = " + v)
+  def read(key: String) = ???
+  def saveSnapshot(fnameSuffix: String): Unit = {
+    println(fnameSuffix)
+    this.foreach{case (k, v) => println(k + " = " + v)}
+  }
+  def save() = saveSnapshot("\nCOLLECTED DATA:")
+  def deleteArtifacts(): Unit = {}
 }
