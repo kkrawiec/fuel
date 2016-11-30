@@ -33,7 +33,7 @@ class BitSetMoves(numVars: Int)(rng: TRandom)
     val (myHead, myRest) = p1.splitAt(c._1)
     val (myMid, myTail) = myRest.splitAt(c._2)
     val (hisHead, hisRest) = p2.splitAt(c._1)
-    val (hisMid, hisTail) = myRest.splitAt(c._2)
+    val (hisMid, hisTail) = hisRest.splitAt(c._2)
     (myHead ++ hisMid ++ myTail, hisHead ++ myMid ++ hisTail)
   }
 }
