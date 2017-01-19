@@ -88,21 +88,42 @@ object SimpleEA {
     new SimpleEA(moves, eval, ((_: S, e: E) => e == optimalValue))(opt, coll, rng, ordering)
 }
 
+
 /**
-  * Simple steady-state EA, with reverse tournament selection
-  * for deselection of bad solutions.
+ * More general version of a steady-state EA, in which selection and deselection may
+ * be arbitrary.
+ */
+class SteadyStateEA[S, E](moves: Moves[S],
+                    eval: S => E,
+                    stop: (S, E) => Boolean = ((s: S, e: E) => false),
+                    selection: Selection[S, E],
+                    deselection: Selection[S, E])(
+                      implicit opt: Options, coll: Collector, rng: TRandom, ordering: Ordering[E])
+    extends EACore[S, E](moves,
+                         if (opt('parEval, true)) ParallelEval(eval) else SequentialEval(eval),
+                         stop)(opt) {
+
+  val n = opt('populationSize, 1000)
+  override def iter = new SimpleSteadyStateBreeder[S, E](selection,
+    RandomMultiOperator(moves: _*), deselection, eval) andThen CallEvery(n, report)
+  
+  val bsf = BestSoFar[S, E](ordering, it)
+  override def report: Function1[StatePop[(S, E)], StatePop[(S, E)]] = bsf
+}
+
+
+/**
+  * Simple steady-state EA, with reverse tournament selection for deselection of bad
+  * solutions and tournament selection of good solutions.
   *
   */
 class SimpleSteadyStateEA[S, E](moves: Moves[S],
                                 eval: S => E,
                                 stop: (S, E) => Boolean = ((s: S, e: E) => false))(
                                   implicit opt: Options, coll: Collector, rng: TRandom, ordering: Ordering[E])
-    extends SimpleEA[S, E](moves, eval, stop)(opt, coll, rng, ordering) {
-
-  val n = opt('populationSize, 1000)
-  val deselection = TournamentSelection[S, E](ordering.reverse)
-  override def iter = new SimpleSteadyStateBreeder[S, E](selection,
-    RandomMultiOperator(moves: _*), deselection, eval) andThen CallEvery(n, report)
+    extends SteadyStateEA[S, E](moves, eval, stop,
+                                TournamentSelection[S, E](ordering),
+                                TournamentSelection[S, E](ordering.reverse))(opt, coll, rng, ordering) {
 }
 
 object SimpleSteadyStateEA {
