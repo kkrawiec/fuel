@@ -12,8 +12,9 @@ trait IterativeSearch[S] extends Function1[S, S] {
   def iter: S => S
   def terminate: Seq[S => Boolean]
   protected val it = CallCounter(identity[S])
-  def algorithm = Iteration(iter andThen it)(terminate)
+  def algorithm = Iteration(iter andThen it)(terminate) andThen epilogue
   def apply(s: S) = algorithm(s)
+  def epilogue: S => S = (s => { println("Run finished."); s})
 }
 
 /**
