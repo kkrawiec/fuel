@@ -12,9 +12,8 @@ trait IterativeSearch[S] extends Function1[S, S] {
   def iter: S => S
   def terminate: Seq[S => Boolean]
   protected val it = CallCounter(identity[S])
-  def algorithm = Iteration(iter andThen it)(terminate) andThen epilogue
+  def algorithm = Iteration(iter andThen it)(terminate)
   def apply(s: S) = algorithm(s)
-  def epilogue: S => S = (s => { println("Run finished."); s})
 }
 
 /**
@@ -49,7 +48,8 @@ abstract class EACore[S, E](moves: Moves[S], evaluation: Evaluation[S, E],
   def evaluate = evaluation andThen report
   override def terminate = Termination(stop).+:(Termination.MaxIter(it))
   def report = (s: StatePop[(S, E)]) => { println(f"Gen: ${it.count}"); s }
-  def apply() = (initialize andThen algorithm)()
+  def apply() = epilogue((initialize andThen algorithm)())
+  def epilogue: StatePop[(S, E)] => StatePop[(S, E)] = s => { println("Run finished."); s}
 }
 
 /**
