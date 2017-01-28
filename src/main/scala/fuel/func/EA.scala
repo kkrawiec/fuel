@@ -44,8 +44,8 @@ abstract class EACore[S, E](moves: Moves[S], evaluation: Evaluation[S, E],
              * 
              */
 
-  def initialize: Unit => StatePop[(S, E)] = RandomStatePop(moves.newSolution _) andThen evaluate
-  def evaluate = evaluation andThen report
+  def initialize: Unit => StatePop[(S, E)] = RandomStatePop(moves.newSolution _) andThen evaluate andThen it
+  def evaluate = evaluation andThen report 
   override def terminate = Termination(stop).+:(Termination.MaxIter(it))
   def report = (s: StatePop[(S, E)]) => { println(f"Gen: ${it.count}"); s }
   def apply() = (initialize andThen algorithm)()
@@ -66,7 +66,7 @@ class SimpleEA[S, E](moves: Moves[S],
       if (opt('parEval, true)) ParallelEval(eval) else SequentialEval(eval),
       stop)(opt) {
 
-  def selection = TournamentSelection[S, E](ordering)
+  def selection : Selection[S,E] = TournamentSelection[S, E](ordering)
   override def iter = SimpleBreeder[S, E](selection, moves: _*) andThen evaluate
 
   val bsf = BestSoFar[S, E](ordering, it)

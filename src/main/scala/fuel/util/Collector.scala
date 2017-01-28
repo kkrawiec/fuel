@@ -56,12 +56,17 @@ class CollectorFile(opt: Options) extends Collector {
     rdb.save()
     super.close
   }
+  def toSimpleJSON = rdb.map(kv => kv match {
+    case (k, v: String)       => s"""\"$k\":\"$v\""""
+    case (k, v: Symbol)       => s"""\"$k\":\"${v.toString.tail}\""""
+    case (k, v: java.io.File) => s"""\"$k\":\"$v\""""
+    case (k, v: Any)          => s"""\"${k}\":${v}"""
+  }).mkString("{", ",", "}")
 }
 
 object CollectorFile {
   def apply(opt: Options) = new CollectorFile(opt)
 }
-
 
 class CollectorStdout(opt: Options) extends Collector {
   // Prepare result database and fill it with the technical parameters
