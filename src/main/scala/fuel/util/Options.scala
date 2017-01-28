@@ -18,7 +18,7 @@ trait Options {
   def warnNonRetrieved = {
     val nonRetrieved = allOptions.toList.diff(retrievedOptions.toList)
     if (nonRetrieved.nonEmpty)
-      println("WARNING: The following options have been set but not retrievied:\n" +
+      println("WARNING: The following options have been set but not retrieved:\n" +
         nonRetrieved.mkString("\n"))
   }
 
