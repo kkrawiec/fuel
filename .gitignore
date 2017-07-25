@@ -1,0 +1,9 @@
+/bin/
+res*.txt
+
+.cache-main
+.cache-tests
+.idea
+.settings
+project/
+target/

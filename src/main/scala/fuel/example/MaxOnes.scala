@@ -12,7 +12,7 @@ import fuel.util.IApp
   *
   * Actually implemented as MinOnes (i.e., all bits should be zeroed).
   *
-  * This demo shows the probably most compact way of running experiments in ScEvo:
+  * This demo shows the probably most compact way of running experiments in FUEL:
   * first create an environment (which holds the Options, Collector and TRandom),
   * then in the context of that environment create an algorithm, wrap it in Experiment,
   * and run it.
