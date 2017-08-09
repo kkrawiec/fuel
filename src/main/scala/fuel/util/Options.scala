@@ -48,8 +48,8 @@ trait Options {
 
   def paramString(id: String): String = getOption(id).getOrElse(throw new MissingArgumentException(id))
   def paramString(id: String, default: String): String = getOption(id, default)
-  def apply(id: Symbol): String = getOption(id.name).getOrElse(throw new MissingArgumentException(id.name))
-  def apply(id: Symbol, default: String): String = getOption(id.name, default)
+  def apply(id: Symbol): String = paramString(id.name)
+  def apply(id: Symbol, default: String): String = paramString(id.name, default)
 
   // Int
   def paramInt(id: String): Int = getOption(id).getOrElse(throw new MissingArgumentException(id)).toInt
