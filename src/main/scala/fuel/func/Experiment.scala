@@ -33,7 +33,7 @@ object Experiment {
           if (opt('printResults, false))
             println(coll.rdb.toString)
           coll.rdb.save()
-          opt.warnNonRetrieved
+          opt.warnNonRetrieved()
           if (opt('deleteOutputFile, true))
             coll.rdb.deleteArtifacts()
           None

@@ -2,6 +2,13 @@ package fuel.util
 
 import scala.collection.immutable.TreeMap
 
+class MissingArgumentException(paramName: String) extends
+                          RuntimeException(MissingArgumentException.message(paramName)) {}
+object MissingArgumentException {
+  def message(paramName: String) = s"Value for argument '$paramName' was not specified"
+}
+
+
 /*
  * Generic option/parameter provider. 
  * TODO: Consider renaming to Parameters
@@ -15,7 +22,7 @@ trait Options {
   // Stores the values of retrieved options, *including the default values*
   lazy val retrievedOptions = scala.collection.mutable.Map[String, String]()
 
-  def warnNonRetrieved = {
+  def warnNonRetrieved() {
     val nonRetrieved = allOptions.toList.diff(retrievedOptions.toList)
     if (nonRetrieved.nonEmpty)
       println("WARNING: The following options have been set but not retrieved:\n" +
@@ -39,18 +46,19 @@ trait Options {
   // When adding new getters, do not call options() directly; 
   // rather than that, use getOption(), as it keeps track of the retrieved options. 
 
-  def paramString(id: String) = getOption(id).get
-  def paramString(id: String, default: String) = getOption(id, default)
-  def apply(id: Symbol, default: String) = getOption(id.name, default)
+  def paramString(id: String): String = getOption(id).getOrElse(throw new MissingArgumentException(id))
+  def paramString(id: String, default: String): String = getOption(id, default)
+  def apply(id: Symbol): String = getOption(id.name).getOrElse(throw new MissingArgumentException(id.name))
+  def apply(id: Symbol, default: String): String = getOption(id.name, default)
 
   // Int
-  def paramInt(id: String): Int = getOption(id).getOrElse({ throw new Exception(s"Parameter $id not found"); "" }).toInt
+  def paramInt(id: String): Int = getOption(id).getOrElse(throw new MissingArgumentException(id)).toInt
   def paramInt(id: Symbol): Int = paramInt(id.name)
-  def apply(id: String) = paramInt(id)
+  def apply(id: String): Int = paramInt(id)
 
-  def paramInt(id: String, default: Int) = getOption(id, default).toInt
-  def apply(id: String, default: Int) = paramInt(id, default)
-  def apply(id: Symbol, default: Int) = paramInt(id.name, default)
+  def paramInt(id: String, default: Int): Int = getOption(id, default).toInt
+  def apply(id: String, default: Int): Int = paramInt(id, default)
+  def apply(id: Symbol, default: Int): Int = paramInt(id.name, default)
 
   def paramInt(id: String, validator: Int => Boolean): Int = {
     val v = paramInt(id)
@@ -58,8 +66,8 @@ trait Options {
     v
   }
   def paramInt(id: Symbol, validator: Int => Boolean): Int = paramInt(id.name, validator)
-  def apply(id: String, validator: Int => Boolean) = paramInt(id, validator)
-  def apply(id: Symbol, validator: Int => Boolean) = paramInt(id.name, validator)
+  def apply(id: String, validator: Int => Boolean): Int = paramInt(id, validator)
+  def apply(id: Symbol, validator: Int => Boolean): Int = paramInt(id.name, validator)
 
   def paramInt(id: String, default: Int, validator: Int => Boolean): Int = {
     val v = paramInt(id, default)
@@ -72,12 +80,12 @@ trait Options {
     paramInt(id.name, default, validator)
 
   // Double
-  def paramDouble(id: String) = getOption(id).get.toDouble
-  def paramDouble(id: Symbol) = getOption(id.name).get.toDouble
-  def paramDouble(id: String, default: Double) = getOption(id, default).toDouble
-  def paramDouble(id: Symbol, default: Double) = getOption(id.name, default).toDouble
-  def apply(id: String, default: Double) = getOption(id, default).toDouble
-  def apply(id: Symbol, default: Double) = getOption(id.name, default).toDouble
+  def paramDouble(id: String): Double = getOption(id).getOrElse(throw new MissingArgumentException(id)).toDouble
+  def paramDouble(id: Symbol): Double = paramDouble(id.name)
+  def paramDouble(id: String, default: Double): Double = getOption(id, default).toDouble
+  def paramDouble(id: Symbol, default: Double): Double = getOption(id.name, default).toDouble
+  def apply(id: String, default: Double): Double = paramDouble(id, default)
+  def apply(id: Symbol, default: Double): Double = paramDouble(id.name, default)
 
   def paramDouble(id: String, validator: Double => Boolean): Double = {
     val v = paramDouble(id)
@@ -111,8 +119,8 @@ trait Options {
     case _       => throw new Exception(s"Boolean value expected for parameter $id")
   }
   def paramBool(id: Symbol): Boolean = paramBool(id.name)
-  def apply(id: String, default: Boolean) = paramBool(id, default)
-  def apply(id: Symbol, default: Boolean) = paramBool(id.name, default)
+  def apply(id: String, default: Boolean): Boolean = paramBool(id, default)
+  def apply(id: Symbol, default: Boolean): Boolean = paramBool(id.name, default)
 
   // Enumeration
   def apply(id: Enumeration) = {
