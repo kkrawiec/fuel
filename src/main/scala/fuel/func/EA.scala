@@ -23,7 +23,8 @@ trait IterativeSearch[S] extends Function1[S, S] {
   *  Because of that, it is in general impossible to monitor progress, hence report and
   *  epilogue are stubs.
   *
-  * Uses parallel evaluation (number of threads set automatically).
+  * Can use parallel evaluation (number of threads set automatically) or sequential evaluation
+  * (only one thread).
   * All solutions are considered feasible.
   * Environment (options and collector) passed automatically as implicit parameters.
   *
@@ -33,22 +34,15 @@ trait IterativeSearch[S] extends Function1[S, S] {
   *
   */
 abstract class EACore[S, E](moves: Moves[S], evaluation: Evaluation[S, E],
-                            stop: (S, E) => Boolean = ((s: S, e: E) => false))(
-                              implicit opt: Options)
+                            stop: (S, E) => Boolean = ((s: S, e: E) => false))
+                           (implicit opt: Options)
     extends IterativeSearch[StatePop[(S, E)]] with Function0[StatePop[(S, E)]] {
-
-  /*
-  def this(moves: Moves[S], eval: S => E,
-           stop: (S, E) => Boolean = ((s: S, e: E) => false))(
-             implicit opt: Options) = this(moves, ParallelEval(eval), stop)(opt)
-             * 
-             */
 
   def initialize: Unit => StatePop[(S, E)] = RandomStatePop(moves.newSolution _) andThen evaluate andThen it
   def evaluate = evaluation andThen report 
   override def terminate = Termination(stop).+:(Termination.MaxIter(it))
   def report = (s: StatePop[(S, E)]) => { println(f"Gen: ${it.count}"); s }
-  def apply() = epilogue((initialize andThen algorithm)())
+  def apply(): StatePop[(S, E)] = epilogue((initialize andThen algorithm)())
   def epilogue: StatePop[(S, E)] => StatePop[(S, E)] = s => { println("Run finished."); s}
 }
 
@@ -61,8 +55,8 @@ abstract class EACore[S, E](moves: Moves[S], evaluation: Evaluation[S, E],
   */
 class SimpleEA[S, E](moves: Moves[S],
                      eval: S => E,
-                     stop: (S, E) => Boolean = ((s: S, e: E) => false))(
-                       implicit opt: Options, coll: Collector, rng: TRandom, ordering: Ordering[E])
+                     stop: (S, E) => Boolean = ((s: S, e: E) => false))
+                    (implicit opt: Options, coll: Collector, rng: TRandom, ordering: Ordering[E])
     extends EACore[S, E](moves,
       if (opt('parEval, true)) ParallelEval(eval) else SequentialEval(eval),
       stop)(opt) {
@@ -91,25 +85,31 @@ object SimpleEA {
 
 
 /**
- * More general version of a steady-state EA, in which selection and deselection may
- * be arbitrary.
- */
+  * More general version of a steady-state EA, in which selection and deselection may
+  * be arbitrary.
+  *
+  * SteadyStateEA during a single iteration in this order:
+  * 1) Generates exactly one new offspring and evaluates it using the provided eval function.
+  *    Parents are chosen by the selection function.
+  * 2) Removes from the population the individual chosen by deselection function. Position of
+  *    the removal is remembered.
+  * 3) Inserts the offspring generated in 1) at the position of the removal.
+  */
 class SteadyStateEA[S, E](moves: Moves[S],
                     eval: S => E,
                     stop: (S, E) => Boolean = ((s: S, e: E) => false),
                     selection: Selection[S, E],
-                    deselection: Selection[S, E])(
-                      implicit opt: Options, coll: Collector, rng: TRandom, ordering: Ordering[E])
+                    deselection: Selection[S, E])
+                    (implicit opt: Options, coll: Collector, rng: TRandom, ordering: Ordering[E])
     extends EACore[S, E](moves,
                          if (opt('parEval, true)) ParallelEval(eval) else SequentialEval(eval),
                          stop)(opt) {
-
-  val n = opt('populationSize, 1000)
+  val n = opt('reportFreq, opt('popultionSize, 1000))
   override def iter = new SimpleSteadyStateBreeder[S, E](selection,
     RandomMultiOperator(moves: _*), deselection, eval) andThen CallEvery(n, report)
   
   val bsf = BestSoFar[S, E](ordering, it)
-  override def report: Function1[StatePop[(S, E)], StatePop[(S, E)]] = bsf
+  override def report: (StatePop[(S, E)]) => StatePop[(S, E)] = bsf
 }
 
 
@@ -120,19 +120,19 @@ class SteadyStateEA[S, E](moves: Moves[S],
   */
 class SimpleSteadyStateEA[S, E](moves: Moves[S],
                                 eval: S => E,
-                                stop: (S, E) => Boolean = ((s: S, e: E) => false))(
-                                  implicit opt: Options, coll: Collector, rng: TRandom, ordering: Ordering[E])
+                                stop: (S, E) => Boolean = ((s: S, e: E) => false))
+                               (implicit opt: Options, coll: Collector, rng: TRandom, ordering: Ordering[E])
     extends SteadyStateEA[S, E](moves, eval, stop,
                                 TournamentSelection[S, E](ordering),
                                 TournamentSelection[S, E](ordering.reverse))(opt, coll, rng, ordering) {
 }
 
 object SimpleSteadyStateEA {
-  def apply[S, E](moves: Moves[S], eval: S => E, stop: (S, E) => Boolean)(
-    implicit opt: Options, coll: Collector, rng: TRandom, ordering: Ordering[E]) =
+  def apply[S, E](moves: Moves[S], eval: S => E, stop: (S, E) => Boolean)
+                 (implicit opt: Options, coll: Collector, rng: TRandom, ordering: Ordering[E]) =
     new SimpleSteadyStateEA(moves, eval, stop)(opt, coll, rng, ordering)
 
-  def apply[S, E](moves: Moves[S], eval: S => E)(
-    implicit opt: Options, coll: Collector, rng: TRandom, ordering: Ordering[E]) =
+  def apply[S, E](moves: Moves[S], eval: S => E)
+                 (implicit opt: Options, coll: Collector, rng: TRandom, ordering: Ordering[E]) =
     new SimpleSteadyStateEA(moves, eval)(opt, coll, rng, ordering)
 }

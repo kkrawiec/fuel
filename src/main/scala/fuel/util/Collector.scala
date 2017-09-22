@@ -15,6 +15,7 @@ import java.net.UnknownHostException
 trait Collector extends Closeable {
   def rdb: ResultDatabase
   def set(key: String, v: Any): Unit
+  def get(key: String): Option[Any]
   def setResult(key: String, v: Any): Unit
   def getResult(key: String): Option[Any]
   def write(key: String, v: Any): Unit
@@ -43,6 +44,7 @@ class CollectorFile(opt: Options) extends Collector {
   rdb.save()
 
   override def set(key: String, v: Any) = rdb.put(key, v)
+  override def get(key: String) = rdb.get(key)
   override def setResult(key: String, v: Any) = rdb.setResult(key, v)
   override def getResult(key: String) = rdb.getResult(key)
   override def write(key: String, v: Any) = rdb.write(key, v)
@@ -85,6 +87,7 @@ class CollectorStdout(opt: Options) extends Collector {
   rdb.put("status", "initialized")
 
   override def set(key: String, v: Any) = rdb.put(key, v)
+  override def get(key: String) = rdb.get(key)
   override def setResult(key: String, v: Any) = rdb.setResult(key, v)
   override def getResult(key: String) = rdb.getResult(key)
   override def write(key: String, v: Any) = rdb.write(key, v)
