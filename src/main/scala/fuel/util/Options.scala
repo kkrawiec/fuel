@@ -1,5 +1,7 @@
 package fuel.util
 
+import java.io.File
+
 import scala.collection.immutable.TreeMap
 
 class MissingArgumentException(paramName: String) extends
@@ -149,6 +151,11 @@ object Options {
   def apply(args: Array[String]) = new OptionsMap(OptionParser(args))
   def apply(params: String): OptionsMap = apply(
     if (params.trim == "") Array[String]() else params.trim.split("\\s+"))
+  def loadFromFile(file: File) = {
+    val content = scala.io.Source.fromFile(file).mkString
+    Parsers.parsePropertiesFile(content)
+  }
+  def loadFromFile(content: String) = Parsers.parsePropertiesFile(content)
 }
 
 trait NoOptions extends Options {

@@ -80,3 +80,20 @@ class TrueCounter[-A](f: A => Boolean) extends CallCounter(f){
 object TrueCounter {
   def apply[A](f: A => Boolean) = new TrueCounter(f)
 }
+
+
+class ParseErrorException(message: String = "", cause: Throwable = null)
+  extends Exception(message, cause)
+
+object Parsers {
+  def parsePropertiesFile(text: String): Options = {
+    val m = text.split("\n").collect{ case line if line.trim.nonEmpty =>
+      if (!line.contains('='))
+        throw new ParseErrorException("Wrong format of the properties file.")
+      val pos = line.indexOf('=')
+      val (name, value) = line.splitAt(pos)
+      (name.trim, value.drop(1).trim)
+    }.toMap
+    new OptionsMap(m)
+  }
+}
