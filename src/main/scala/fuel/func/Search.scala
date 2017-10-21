@@ -6,7 +6,7 @@ import fuel.util.TRandom
 
 /**
   * Search operator is any function that generates new solutions from existing solutions.
-  * The SearchOperatror trait is intended to 'wrap' the actual move (a function Solution(s) => Solution(s))
+  * The SearchOperator trait is intended to 'wrap' the actual move (a function Solution(s) => Solution(s))
   * and optionally combine it with feasibility check.
   *
   * Pulling parents from the previous population is implemented with streams (could be alternatively
