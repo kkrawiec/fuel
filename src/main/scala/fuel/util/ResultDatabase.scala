@@ -111,7 +111,7 @@ class ResultDatabasePlain() extends ResultDatabase {
   def read(key: String) = ???
   def saveSnapshot(fnameSuffix: String): Unit = {
     println(fnameSuffix)
-    this.foreach{case (k, v) => println(k + " = " + v)}
+    this.toList.sortBy(_._1).foreach{case (k, v) => println(k + " = " + v)}
   }
   def save() = saveSnapshot("\nCOLLECTED DATA:")
   def deleteArtifacts(): Unit = {}
