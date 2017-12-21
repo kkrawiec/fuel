@@ -42,6 +42,14 @@ trait Options {
     retrievedOptions.put(id, v)
     v
   }
+  def getOptionString(id: String): Option[String] =
+    if (allOptions.contains(id)) Some(paramString(id)) else None
+  def getOptionBool(id: String): Option[Boolean] =
+    if (allOptions.contains(id)) Some(paramBool(id)) else None
+  def getOptionInt(id: String): Option[Int] =
+    if (allOptions.contains(id)) Some(paramInt(id)) else None
+  def getOptionDouble(id: String): Option[Double] =
+    if (allOptions.contains(id)) Some(paramDouble(id)) else None
   
   // Below we define getters for most common types, with and without default values, 
   // retrieved by Strings or Symbols, etc. 
