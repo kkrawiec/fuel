@@ -97,3 +97,23 @@ object Parsers {
     new OptionsMap(m)
   }
 }
+
+
+object Utils {
+  /**
+    * Simple median algorithm based on sorting.
+    */
+  def median(seq: Seq[Double], isSorted: Boolean = false): Double = {
+    //In order if you are not sure that 'seq' is sorted
+    if (isSorted) {
+      if (seq.size % 2 == 1) seq(seq.size / 2)
+      else {
+         //val (up, down) = seq.splitAt(seq.size / 2)
+         //(up.last + down.head) / 2
+        (seq(seq.size / 2 - 1) + seq(seq.size / 2)) / 2
+      }
+    }
+    else
+      median(seq.sortWith(_ < _), isSorted=true)
+  }
+}
