@@ -14,7 +14,7 @@ import fuel.util.TRandom
   *
   * Breeder combines these two actions because the number of solutions returned
   * by search operators may vary (even between the calls of the same operator), among
-  * others because some of the produced solutions may not pass faeasibility check.
+  * others because some of the produced solutions may not pass feasibility check.
   * Therefore, it
   * is in general impossible to determine in advance how many selection acts and
   * applications of search operators may be needed to populate next population.
@@ -25,7 +25,7 @@ class Breeder[S, E](val sel: Selection[S, E],
 
   def selStream(src: Seq[(S, E)]): Stream[S] = sel(src)._1 #:: selStream(src)
 
-  def breedn(n: Int, s: Seq[(S, E)]) = {
+  def breedn(n: Int, s: Seq[(S, E)]): Seq[S] = {
 
     @tailrec def breed(parStream: Stream[S], offspring: List[S] = List()): Seq[S] =
       if (offspring.size >= n)
@@ -39,6 +39,7 @@ class Breeder[S, E](val sel: Selection[S, E],
   }
 }
 
+
 /**
   * In generational breeding, all bred solutions are new, and none of them has
   *  an evaluation.
@@ -47,6 +48,7 @@ class Breeder[S, E](val sel: Selection[S, E],
   *  we lose its evaluation anyway.
   */
 trait GenerationalBreeder[S, E] extends (StatePop[(S, E)] => StatePop[S])
+
 
 class SimpleBreeder[S, E](override val sel: Selection[S, E],
                           override val searchOperator: () => SearchOperator[S])

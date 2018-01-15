@@ -33,7 +33,8 @@ trait IterativeSearch[S] extends Function1[S, S] {
   * to some already existing State.
   *
   */
-abstract class EACore[S, E](moves: Moves[S], evaluation: Evaluation[S, E],
+abstract class EACore[S, E](moves: Moves[S],
+                            evaluation: Evaluation[S, E],
                             stop: (S, E) => Boolean = ((s: S, e: E) => false))
                            (implicit opt: Options)
     extends IterativeSearch[StatePop[(S, E)]] with Function0[StatePop[(S, E)]] {
