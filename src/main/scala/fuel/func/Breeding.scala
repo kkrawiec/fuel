@@ -62,10 +62,12 @@ object SimpleBreeder {
   /**
     * Constructs SimpleBreeder with particular search operators invoked according to given probabilities
     */
-  def apply[S, E](sel: Selection[S, E], searchOperators: SearchOperator[S]*)(
-    implicit config: Options, rng: TRandom) =
+  def apply[S, E](sel: Selection[S, E], searchOperators: SearchOperator[S]*)
+                 (implicit config: Options, rng: TRandom) =
     new SimpleBreeder[S, E](sel, RandomMultiOperator(searchOperators: _*))
 }
+
+
 
 /**
   * For steady-state EA, only one solution is added in each generation (and one

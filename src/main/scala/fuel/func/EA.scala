@@ -105,7 +105,7 @@ class SteadyStateEA[S, E](moves: Moves[S],
     extends EACore[S, E](moves,
                          if (opt('parEval, true)) ParallelEval(eval) else SequentialEval(eval),
                          stop)(opt) {
-  val n = opt('reportFreq, opt('popultionSize, 1000))
+  val n = opt('reportFreq, opt('populationSize, 1000))
   override def iter = new SimpleSteadyStateBreeder[S, E](selection,
     RandomMultiOperator(moves: _*), deselection, eval) andThen CallEvery(n, report)
   
