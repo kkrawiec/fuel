@@ -12,7 +12,7 @@ import fuel.func.SearchOperator
  */
 trait Moves[S] extends Seq[SearchOperator[S]]{
   def newSolution: S
-  protected def moves: Seq[SearchOperator[S]]
+  def moves: Seq[SearchOperator[S]]
 
   def iterator = moves.iterator
   def apply(idx: Int) = moves(idx)
