@@ -7,8 +7,8 @@ import fuel.util.Counter
 object Termination {
 
   object MaxTime {
-    def apply(opt: Options) = {
-      val maxMillisec = opt.paramInt("maxTime", 86400000, _ > 0)
+    def apply(opt: Options): Any => Boolean = apply(opt.paramInt("maxTime", 86400000, _ > 0))
+    def apply(maxMillisec: Int): Any => Boolean = {
       val startTime = System.currentTimeMillis()
       def timeElapsed = System.currentTimeMillis() - startTime
       s: Any => timeElapsed > maxMillisec
@@ -26,8 +26,10 @@ object Termination {
     }
   }
   object MaxIter extends Count {
-    def apply[S](cnt: Counter)(implicit opt: Options) = {
-      val maxGenerations = opt('maxGenerations, 50, (_: Int) > 0)
+    def apply[S](cnt: Counter)(implicit opt: Options): Any => Boolean = {
+      apply(cnt, opt('maxGenerations, 50, (_: Int) > 0))
+    }
+    def apply[S](cnt: Counter, maxGenerations: Int): Any => Boolean  = {
       super.apply(cnt, maxGenerations)
     }
   }
