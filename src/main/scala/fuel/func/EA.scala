@@ -137,3 +137,103 @@ object SimpleSteadyStateEA {
                  (implicit opt: Options, coll: Collector, rng: TRandom, ordering: Ordering[E]) =
     new SimpleSteadyStateEA(moves, eval)(opt, coll, rng, ordering)
 }
+
+
+
+/**
+  * At each iteration, MultipopulationEA proceeds in the following way:
+  * 1) Populations are sequentially evolved using the evolution object provided by eaCreator.
+  *    Stop conditions in that object determine the stop of the evolution in the currently
+  *    considered subpopulation.
+  * 2) A list of populations is passed to the popsDivide function, which may redistrubute
+  *    solutions, create/remove populations etc. For example in the island model, some
+  *    solutions can be exchanged between different populations.
+  * The above steps are repeated until the provided stop conditions of the multi-population
+  * EA scheme are met.
+  *
+  * @param popsDivide takes the current sequence of populations and creates a new
+  *                   sequence of populations.
+  * @param eaCreator a function to create a new search algorithm (e.g. EA) to be applied to
+  *                  a given population. It is created anew in order to avoid mutability.
+  * @param maxIter maximum number of iterations.
+  * @param maxTime maximum runtime in miliseconds.
+  * @param stop custom stop condition, e.g. optimal solution found in one of the subpopulations.
+  * @tparam S type of solution object.
+  * @tparam E type of evaluation object.
+  */
+class MultipopulationEA[S,E]
+      (val popsDivide: Seq[StatePop[(S,E)]] => Seq[StatePop[(S,E)]],
+       val eaCreator: () => EACore[S,E],
+       val maxIter: Option[Int] = Some(100),
+       val maxTime: Option[Int] = Some(86400000),
+       val stop: StatePop[(S, E)] => Boolean = (s: StatePop[(S, E)]) => false)
+      extends IterativeSearch[Seq[StatePop[(S,E)]]]() with Function0[Seq[StatePop[(S, E)]]] {
+
+  override def iter: Seq[StatePop[(S,E)]] => Seq[StatePop[(S,E)]] =
+    popsEvolve andThen popsDivide andThen report //andThen printPops
+
+  def apply(): Seq[StatePop[(S, E)]] =
+    epilogue((eaCreator().initialize andThen (s => Seq(s)) andThen //printPops andThen
+      popsDivide andThen algorithm)())
+
+  def report: Seq[StatePop[(S, E)]] => Seq[StatePop[(S, E)]] =
+    (s: Seq[StatePop[(S, E)]]) => s
+
+  def epilogue: Seq[StatePop[(S, E)]] => Seq[StatePop[(S, E)]] =
+    (s: Seq[StatePop[(S, E)]]) => s
+
+  /**
+    * Runs sequentially a local evolution of current populations.
+    */
+  def popsEvolve: Seq[StatePop[(S, E)]] => Seq[StatePop[(S, E)]] =
+    (pops: Seq[StatePop[(S,E)]]) => pops.map{ pop => eaCreator().apply(pop) }
+
+  /**
+    * Set of termination functions.
+    */
+  override def terminate: Seq[Seq[StatePop[(S,E)]] => Boolean] = {
+    val stopFun = (pops: Seq[StatePop[(S,E)]]) => pops.exists(stop(_))
+    (if (maxIter.isDefined) Seq(Termination.MaxIter(it, maxIter.get)) else Seq()) ++
+    (if (maxIter.isDefined) Seq(Termination.MaxTime(maxTime.get)) else Seq()) ++
+    Seq(stopFun)
+  }
+
+  def printPops(pops: Seq[StatePop[(S,E)]]): Seq[StatePop[(S,E)]] = {
+    pops.indices.toList.zip(pops).foreach { case (i, pop) =>
+      println(s"POPULATION $i")
+      for (x <- pop) println(x)
+      println()
+    }
+    pops
+  }
+}
+
+
+object MultipopulationEA {
+  /**
+    * Convection multi-population EA scheme in the EqualNumber variant as described in [1], [2].
+    * M populations are independently evolving, and after a certain number of iterations
+    * solutions from all populations are globally sorted on their fitnesses and divided
+    * again into M equally-sized populations with decreasing fitness values.
+    *
+    * There is no overlapping between fitness ranges used to divide solutions into populations.
+    *
+    * [1] M. Komosinski, K. Miazga, "Tournament-Based Convection Selection in Evolutionary
+    *     Algorithms", 2018, Parallel Processing and Applied Mathematics.
+    * [2] M. Komosinski, K. Miazga, "Comparison of the tournament-based convection selection
+    *     with the island model in evolutionary algorithms", 2018, submitted.
+    *
+    * @param pops sequence of populations.
+    * @param M number of subpopulations.
+    * @tparam S type of solution object.
+    * @tparam E type of evaluation object.
+    * @return
+    */
+  def convectionEqualNumber[S,E](M: Int, ordering: Ordering[E])
+                                (pops: Seq[StatePop[(S,E)]]): Seq[StatePop[(S,E)]] = {
+    // Merge all populations and sort the solutions on the fitness value
+    val sPop = pops.flatten.sortBy(_._2)(ordering)
+    // Divide on M subpopulations and return them
+    sPop.grouped(sPop.size / M).toList.map(StatePop(_))
+  }
+}
