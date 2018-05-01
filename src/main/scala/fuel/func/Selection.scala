@@ -26,7 +26,7 @@ class TournamentSelection[S, E](ordering: Ordering[E], val tournamentSize: Int)(
     extends StochasticSelection[S, E](rng) {
 
   def this(o: Ordering[E])(implicit opt: Options, rng: TRandom) =
-    this(o, opt('tournamentSize, 7, (_: Int) >= 2))(rng)
+    this(o, opt('tournamentSize, 7, (_: Int) >= 1))(rng)
 
   def apply(pop: Seq[(S, E)]) = pop(rand, tournamentSize).minBy(_._2)(ordering)
 }
