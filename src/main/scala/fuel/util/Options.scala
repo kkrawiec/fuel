@@ -62,11 +62,11 @@ trait Options {
   def apply(id: Symbol): String = paramString(id.name)
   def apply(id: Symbol, default: String): String = paramString(id.name, default)
   def apply(id: String, default: String): String = paramString(id, default)
+  def apply(id: String): String = paramString(id)
 
   // Int
   def paramInt(id: String): Int = getOption(id).getOrElse(throw new MissingArgumentException(id)).toInt
   def paramInt(id: Symbol): Int = paramInt(id.name)
-  def apply(id: String): Int = paramInt(id)
 
   def paramInt(id: String, default: Int): Int = getOption(id, default).toInt
   def apply(id: String, default: Int): Int = paramInt(id, default)
