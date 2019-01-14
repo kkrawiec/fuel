@@ -159,6 +159,7 @@ object Options {
   def apply(m: (Symbol, Any)*) = new OptionsMap(m.map(e => (e._1.name, e._2.toString)).toMap)
   def apply(m: Map[Symbol, Any]) = new OptionsMap(m.map(e => (e._1.name, e._2.toString)))
   def apply(args: Array[String]) = new OptionsMap(OptionParser(args))
+  def apply(args: List[String]) = new OptionsMap(OptionParser(args))
   def apply(params: String): OptionsMap = apply(
     if (params.trim == "") Array[String]() else params.trim.split("\\s+"))
   def loadFromFile(file: File) = {
