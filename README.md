@@ -75,7 +75,7 @@ Parameters can be provided from command line, or as a string or list of (paramet
 | maxGenerations    | Int       | 50             | Maximum number of generations (iterations)
 | maxTime           | Int       | 86400000       | Maximum search time in milliseconds (default: 24hrs)
 | operatorProbs     | [Double]+ | (uniform)      | Probabilities of engaging search operators (comma-separated list of doubles)
-| tournamenSize     | Int       | 7              | Size of tournament in tournament selection
+| tournamentSize    | Int       | 7              | Size of tournament in tournament selection
 | parEval           | Bool      | true           | Enables multithreaded evaluation  
 | outDir            | String    | .              | Output directory
 | outFile           | String    | (random)       | Output file 
