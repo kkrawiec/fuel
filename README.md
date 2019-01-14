@@ -69,22 +69,22 @@ Parameters
 
 Parameters can be provided from command line, or as a string or list of (parameter,values) pairs passed to the `IApp` constructor (see the examples in `fuel.example`). The complete list of parameters is as follows:
 
-| Parameter         | Type      | Default value  | Description                       
-| --------------    | --------  | -------------- | --------------------------------- 
-| populationSize    | Int       | 1000           | Size of the initial population    
-| maxGenerations    | Int       | 50             | Maximum number of generations (iterations)
-| maxTime           | Int       | 86400000       | Maximum search time in milliseconds (default: 24hrs)
-| operatorProbs     | [Double]+ | (uniform)      | Probabilities of engaging search operators (comma-separated list of doubles)
-| tournamentSize    | Int       | 7              | Size of tournament in tournament selection
-| parEval           | Bool      | true           | Enables multithreaded evaluation  
-| outDir            | String    | .              | Output directory
-| outFile           | String    | (random)       | Output file 
-| deleteOutputFile  | Bool      | true           | Deletes output file upon successful completion of experiment
-| printResults      | Bool      | false          | Prints the content of result collector at the end of run  
-| saveLastState     | Bool      | false          | Saves the snapshot of the final search state to a file
-| saveBestSoFar     | Bool      | false          | Saves the best solution found so far after every iteration
-| snapshotFrequency | Int       | 0              | Saves the snapshot of the current search state every n iterations (generations)
-| quiet             | Bool      | false          | Silences progress reporting 
+| Parameter            | Type      | Default value  | Description
+| -------------------- | --------  | -------------- | ---------------------------------
+| populationSize       | Int       | 1000           | Size of the initial population
+| maxGenerations       | Int       | 50             | Maximum number of generations (iterations)
+| maxTime              | Int       | 86400000       | Maximum search time in milliseconds (default: 24hrs)
+| operatorProbs        | [Double]+ | (uniform)      | Probabilities of engaging search operators (comma-separated list of doubles)
+| tournamentSize       | Int       | 7              | Size of tournament in tournament selection
+| parEval              | Bool      | true           | Enables multithreaded evaluation
+| outDir               | String    | .              | Output directory
+| outFile              | String    | (random)       | Output file
+| deleteOutputFile     | Bool      | true           | Deletes output file upon successful completion of experiment
+| printResults         | Bool      | false          | Prints the content of result collector at the end of run
+| saveLastState        | Bool      | false          | Saves the snapshot of the final search state to a file
+| saveBestSoFar        | Bool      | false          | Saves the best solution found so far after every iteration
+| snapshotFrequency    | Int       | 0              | Saves the snapshot of the current search state every n iterations (generations)
+| quiet                | Bool      | false          | Silences progress reporting
 | removeEvalDuplicates | Bool      | false          | Removes duplicates w.r.t. evaluation in NSGA2Selection
 
 
