@@ -15,6 +15,7 @@ trait ResultDatabase extends scala.collection.mutable.HashMap[String, Any] {
   def write(key: String, v: Any): Unit
   def writeString(key: String, v: String): Unit
   def read(key: String): Object
+  def deleteSnapshot(fnameSuffix: String): Unit
   def saveSnapshot(fnameSuffix: String): Unit
   def save(): Unit
   def deleteArtifacts(): Unit
@@ -55,6 +56,9 @@ class ResultDatabaseFile(val directory: String, fileName: String = "") extends R
   }
   def save() = save(f)
   override def toString = toSeq.sortBy(_._1).map(kv => s"${kv._1} = ${kv._2}").mkString("\n")
+
+  def deleteSnapshot(fnameSuffix: String): Unit =
+    new File(fname + "." + fnameSuffix).delete()
 
   def saveSnapshot(fnameSuffix: String): Unit =
     save(new File(fname + "." + fnameSuffix))
@@ -109,6 +113,7 @@ class ResultDatabasePlain() extends ResultDatabase {
   def write(key: String, v: Any) = println(key + " = " + v)
   def writeString(key: String, v: String) = println(key + " = " + v)
   def read(key: String) = ???
+  def deleteSnapshot(fnameSuffix: String): Unit = { /* do nothing */ }
   def saveSnapshot(fnameSuffix: String): Unit = {
     println(fnameSuffix)
     this.toList.sortBy(_._1).foreach{case (k, v) => println(k + " = " + v)}

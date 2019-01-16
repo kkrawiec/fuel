@@ -21,6 +21,7 @@ trait Collector extends Closeable {
   def write(key: String, v: Any): Unit
   def writeString(key: String, v: String): Unit
   def read(key: String): Object
+  def deleteSnapshot(fnameSuffix: String): Unit
   def saveSnapshot(fnameSuffix: String): Unit
 }
 
@@ -51,6 +52,7 @@ class CollectorFile(opt: Options) extends Collector {
   override def write(key: String, v: Any) = rdb.write(key, v)
   override def writeString(key: String, v: String) = rdb.writeString(key, v)
   override def read(key: String) = rdb.read(key)
+  def deleteSnapshot(fnameSuffix: String): Unit = rdb.deleteSnapshot(fnameSuffix)
   def saveSnapshot(fnameSuffix: String): Unit = {
     opt.retrievedOptions.foreach(t => rdb.put(t._1, t._2)) // in case something changed during run
     rdb.saveSnapshot(fnameSuffix)
@@ -97,6 +99,7 @@ class CollectorStdout(opt: Options) extends Collector {
   override def write(key: String, v: Any) = rdb.write(key, v)
   override def writeString(key: String, v: String) = rdb.writeString(key, v)
   override def read(key: String) = rdb.read(key)
+  def deleteSnapshot(fnameSuffix: String): Unit = rdb.deleteSnapshot(fnameSuffix)
   def saveSnapshot(fnameSuffix: String): Unit = rdb.saveSnapshot(fnameSuffix)
 
   override def close = {
