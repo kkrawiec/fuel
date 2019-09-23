@@ -54,6 +54,7 @@ object CallEvery {
 
 trait Counter {
   def count: Long
+  def reset(): Unit
 }
 class CallCounter[-A, +B](f: A => B) extends (A => B) with Counter {
   private[this] var cnt = 0L
@@ -61,7 +62,8 @@ class CallCounter[-A, +B](f: A => B) extends (A => B) with Counter {
     cnt = cnt + 1
     f(a)
   }
-  override def count = cnt
+  override def reset(): Unit = cnt = 0L
+  override def count: Long = cnt
 }
 object CallCounter {
   def apply[A, B](f: A => B) = new CallCounter(f)
@@ -74,8 +76,9 @@ class TrueCounter[-A](f: A => Boolean) extends CallCounter(f){
     if(r) tcnt = tcnt +1
     r
   }
-  def trueCount = tcnt
-  def ratio = if(count==0) Double.NaN else tcnt.toDouble/count
+  override def reset(): Unit = tcnt = 0L
+  def trueCount: Long = tcnt
+  def ratio: Double = if (count==0) Double.NaN else tcnt.toDouble/count
 }
 object TrueCounter {
   def apply[A](f: A => Boolean) = new TrueCounter(f)
