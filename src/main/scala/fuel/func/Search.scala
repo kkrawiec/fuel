@@ -70,7 +70,8 @@ object RandomMultiOperator {
       if (prob.isDefined)
         prob.get.split(",").map(_.toDouble)
       else {
-        println("Probability distribution for operators undefined. Equal probabilities set.")
+        if (!opt('silent, false))
+          println("Probability distribution for operators undefined. Equal probabilities set.")
         val p = List.fill(pipes.size - 1)(1.0 / pipes.size)
         (1.0 - p.sum) :: p
       })
